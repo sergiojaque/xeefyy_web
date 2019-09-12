@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="XEEFFY" uuid="9cbc87a4-c0f2-4e81-9ccb-d5fbc7ac7ce0">
+      <database-info product="PostgreSQL" version="9.4.13" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.2.5" dbms="POSTGRES" exact-version="9.4.13" exact-driver-version="42.2">
+        <identifier-quote-string>&quot;</identifier-quote-string>
+      </database-info>
+      <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact" />
+      <secret-storage>master_key</secret-storage>
+      <user-name>jcarrasco</user-name>
+      <introspection-schemas>*:*|@:@|ab2:|aballesteros:|afi:|agro:|amg:|casino:|casino_jtt:|cbenitez:|celta:|combustible:|combustible_2:|control:|ctb:|ctb_gestion:|ctb_gestion_ctb:|ctb_gestion_old:|dipan:|dte:|dte_cert:|durco:|durco_test:|durco_test_:|ecuador:|enunez:|erp:|escalada:|escalada2:|etl:|favatex:|fyr:|gestion:|icontacto:|ingepanel:|jpereira:|lbus:|lbus2:|lore_spa:|manzor:|mlopez:|mluna:|otrs:|pan:|parking:|petrohue:|planning:|pramos:|real:|real_orig:|rmorales:|romana:|romana1:|scp:|sgonzalez:|soluciones:|soluciones_gestion:|soper:|sotratal:|steelplus:|sup:|super:|super2:|taxutal:|taxutal_v1:|transporte:|turnos:|tutorial:|xbrl1:|xbus:|xci:|xdte:|xeeffy:|xfood:|xg_epereira:|xg_full:|xg_hvaldes:|xg_jbustamante:|xg_neuquen:|xg_rmorales:|xg_sgonzalez:|xgas_dj:|xguard:|xp_celta:|xp_jvasquez:|xpark:|xparking:|xrrhh:|xs_aromo:|xs_camagui:|xs_cwurth:|xs_ecuador:|xs_freemanglass:|xs_hypconsultora:|xs_pramos:|xs_robert:|xs_robertson:|xs_wmasv:|xsc_jimcentral:|xschool:|xsolucion:|xsolucion_demo:|xsolution_conf_rest:|xv_soler:|xv_starlet:</introspection-schemas>
+    </data-source>
+    <data-source name="localXeeffy" uuid="dc34c455-d86b-4856-b4bf-556662621d13">
+      <database-info product="SQLite" version="3.25.1" jdbc-version="2.1" driver-name="SQLite JDBC" driver-version="3.25.1" dbms="SQLITE" exact-version="3.25.1" exact-driver-version="3.25">
+        <identifier-quote-string>&quot;</identifier-quote-string>
+      </database-info>
+      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <secret-storage>master_key</secret-storage>
+      <auth-required>false</auth-required>
+      <introspection-schemas>*:@</introspection-schemas>
+    </data-source>
+  </component>
+</project>

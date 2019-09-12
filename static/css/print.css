@@ -1,0 +1,89 @@
+@media print {
+    body {
+        background: #fff !important;
+    }
+    header {
+        box-shadow: none;
+        background: #fff !important;
+    }
+
+    header h1 {
+        background: #fff;
+    }
+    
+    #navigation {
+        display: none;
+    }
+
+    .main-container #page {
+        background: #fff;
+        box-shadow: none;
+        border: 2px solid #000;
+    }
+    
+    .content aside.sidebar {
+        display: none;
+    }
+
+    .content article {
+        width: 100%;
+        float: none;
+        padding-left: 0;
+        background: #fff;
+        -webkit-print-color-adjust: exact; /*economy | exact*/        
+        color-adjust: exact;
+    }
+
+    .content article #content_box {
+        background: #fff;
+        box-shadow: none;
+        border-top: 2px solid #000
+    }
+
+    .content article a[target=_blank]:after {
+        content: " (" attr(href) ")";
+    }
+
+    .content article #content_box .related-posts {
+        display: none;
+    }
+
+    .content article #disqus_thread {
+        display: none;
+    }
+    
+    .content article .crayon-num {
+        display: none;
+    }
+
+    ins.adsbygoogle {
+        display: none !important;
+    }
+
+    footer {
+        background: #fff;
+    }
+
+    footer .container {
+        background: #fff;
+        box-shadow: none;
+        border: 2px solid #000;
+    }
+}
+.content article {
+    -webkit-print-color-adjust: exact; /*economy | exact*/
+    color-adjust: exact;
+}
+/*Todos los enlaces*/
+a:after {
+    content: " (" attr(href) ")";
+}
+/*Los enlaces que tienen una url que empieza con http*/
+a[href^=http]:after {
+    content: " (" attr(href) ")";
+}
+
+/*Enlaces que se abren en nueva pagina*/
+a[target=_blank]:after {
+    content: " (" attr(href) ")";
+}
