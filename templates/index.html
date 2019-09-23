@@ -22,9 +22,11 @@
     html.ie-10 .ie-panel, html.lt-ie-10 .ie-panel {
         display: block;
     }
+
     .disabled {
-    pointer-events:none; //This makes it not clickable
-    opacity:0.6;         //This grays it out to look disabled
+        pointer-events: none;
+    / / This makes it not clickable opacity: 0.6;
+    / / This grays it out to look disabled
     }</style>
 </head>
 <body>
@@ -79,12 +81,14 @@
                     <div class="rd-navbar-main">
                         <div class="rd-navbar-nav-wrap">
                             <ul class="rd-navbar-nav">
-                                {% if session['username'] != 'unknown'%}
-                                <li class="rd-nav-item active disabled"><a class="rd-nav-link" href="login">Iniciar Sesion</a>
-                                </li>
+                                {% if session['username'] != 'unknown' %}
+                                    <li class="rd-nav-item active disabled"><a class="rd-nav-link" href="login">Iniciar
+                                        Sesion</a>
+                                    </li>
                                 {% else %}
-                                <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar Sesion</a>
-                                </li>
+                                    <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar
+                                        Sesion</a>
+                                    </li>
                                 {% endif %}
                                 <li class="rd-nav-item"><a class="rd-nav-link" href="index">Sistema</a>
                                     <ul class="rd-menu rd-navbar-dropdown">
@@ -93,17 +97,18 @@
                                         <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="roles">Roles</a>
                                         </li>
                                         <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Documentos
-                                            Services</a>
+                                        </a>
                                             <ul class="rd-menu rd-navbar-dropdown">
-                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/documentos">Documentos
-                                                    Consulting</a>
+                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link"
+                                                                                href="/documentos">Documentos
+                                                </a>
                                                 </li>
-{#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/ndocumento">Nuevo Documento#}
-{#                                                    Management</a>#}
-{#                                                </li>#}
-{#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Tax#}
-{#                                                    Advisory</a>#}
-{#                                                </li>#}
+                                                {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/ndocumento">Nuevo Documento#}
+                                                {#                                                    Management</a>#}
+                                                {#                                                </li>#}
+                                                {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Tax#}
+                                                {#                                                    Advisory</a>#}
+                                                {#                                                </li>#}
                                             </ul>
                                         </li>
 
@@ -112,7 +117,8 @@
                                 <li class="rd-nav-item active"><a class="rd-nav-link" href="/logout">Cerrar Sesion</a>
                                 </li>
                                 <li></li>
-                                <li class="rd-nav-item"><a class="rd-nav-link disabled" href="">Usuario: {{session['username'] }}</a>
+                                <li class="rd-nav-item"><a class="rd-nav-link disabled"
+                                                           href="">Usuario: {{ session['username'] }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -141,7 +147,8 @@
                     <div class="container">
                         <div class="row justify-content-end">
                             <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Las mejores estrategias para tu negocio</h1>
+                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Las
+                                    mejores estrategias para tu negocio</h1>
                             </div>
                         </div>
                     </div>
@@ -152,7 +159,8 @@
                     <div class="container">
                         <div class="row justify-content-end">
                             <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Una amplia gama de información comercial global.</h1>
+                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Una
+                                    amplia gama de información comercial global.</h1>
                             </div>
                         </div>
                     </div>

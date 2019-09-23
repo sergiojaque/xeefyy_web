@@ -127,8 +127,6 @@
                                     <th data-field="ver"><i
                                             class="fa fa-print"></i>REPORT
                                     </th>
-
-
                                 </tr>
                                 </thead>
                                 <tbody id="myTable">
@@ -138,9 +136,8 @@
 
                                         <td>{{ d[1] }}</td>
                                         <td><a class="btn btn-danger"
-                                               href="/reportes/{{ dato[0][0] }}/{{ d[0] }}">
-                                            <i
-                                                    class="fa fa-print"></i></a></td>
+                                               href="/pdf/{{ dato[0][0] }}/{{ d[0] }}">
+                                            <i class="fa fa-print"></i></a></td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>

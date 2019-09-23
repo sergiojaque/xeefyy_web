@@ -6,98 +6,99 @@
 {% endblock %}
 {% block content %}
 
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-          crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-            crossorigin="anonymous"></script>
-    <style>.row-centered {
-        text-align: center;
-        margin: 0 auto;
-    }
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <script src="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
+        <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+              crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+                integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+                crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+                integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+                crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+                integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+                crossorigin="anonymous"></script>
+        <style>.row-centered {
+            text-align: center;
+            margin: 0 auto;
+        }
 
-    .col-centered {
-        display: block;
-        float: none;
-    }
+        .col-centered {
+            display: block;
+            float: none;
+        }
 
-    .pos {
-        top: 240px;
-    }
+        .pos {
+            top: 240px;
+        }
 
-    @media (min-width: 1200px) {
-        ...
-    }
+        @media (min-width: 1200px) {
+            ...
+        }
 
-    /* Portrait tablet to landscape and desktop */
-    @media (min-width: 768px) and (max-width: 979px) {
-        ...
-    }
+        /* Portrait tablet to landscape and desktop */
+        @media (min-width: 768px) and (max-width: 979px) {
+            ...
+        }
 
-    /* Landscape phone to portrait tablet */
-    @media (max-width: 767px) {
-        ...
-    }
+        /* Landscape phone to portrait tablet */
+        @media (max-width: 767px) {
+            ...
+        }
 
-    /* Landscape phones and down */
-    @media (max-width: 480px) {
-        ...
-    }
+        /* Landscape phones and down */
+        @media (max-width: 480px) {
+            ...
+        }
 
 
-    </style>
+        </style>
 
-</head>
-<body>
-<div class="container">
-    <div class="container-fluid">
-        <form method="get">
-            <div class="row">
-                <div class="col-md-11">
-                    <div class="demo-section k-content">
-                        <br>
-                        <h1><i class="fa fa-file-text"></i>{{ data[0][0] }}</h1>
-                        <br>
-                        <h4 align="center"><i class="fa fa-institution"></i>{{ data[0][13] }}</h4>
-                        <table id="tabla" class="table table-bordered table-striped">
-                            <thead>
-                            <tr>
-                                <th data-field="codigo">CUENTA</th>
-                                <th data-field="codigo">{{ data1[0][0] }}</th>
-                            </tr>
-                            </thead>
+    </head>
+    <body>
+    <div class="container">
+        <div class="container-fluid">
+            <form method="get">
+                <div class="row">
+                    <div class="col-md-11">
+                        <div class="demo-section k-content">
+                            <br>
+                            <h1><i class="fa fa-file-text"></i>{{ desc_role }}</h1>
+                            <br>
+                            <h4 align="center"><i class="fa fa-institution"></i>{{ entidad }}</h4>
+                            <table id="tabla" class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th data-field="codigo">CUENTA</th>
 
-                            <tbody id="myTable">
-                            {% for d in data %}
-                            <tr>
-                                <td>{{d[5] }}</td>
-                                <td>{{"{:,.0f}".format(d[8]|int|round)}}</td>
-                            </tr>
-                                 {% endfor %}
-                            </tbody>
-                        </table>
-                        <br>
+                                    <th>{{ fechas }}</th>
+
+                                </tr>
+                                </thead>
+                                <tbody id="myTable">
+                                {% for d in data %}
+                                    <tr>
+                                        <td>{{ d[5] }}</td>
+                                        <td>{{ "{:,.0f}".format(d[8]|int|round) }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <br>
+                        </div>
                     </div>
+
                 </div>
-
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
-</body>
+    </body>
 
-</html>
+    </html>
 {% endblock %}

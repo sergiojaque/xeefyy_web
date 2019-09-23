@@ -1,4 +1,6 @@
 import sys
+from pivot import pivot
+from reportlab.lib.styles import getSampleStyleSheet
 from xbrl import XBRLParser, GAAP, GAAPSerializer
 import matplotlib
 import pdfkit as pdfkit
@@ -18,8 +20,8 @@ import tempfile
 import openpyxl
 import string
 import urllib3
-import urllib3
 import pdfkit
+from datetime import datetime, timedelta
 
 dbdir = "sqlite:///" + "xeeffy.db"
 
@@ -155,7 +157,6 @@ def rolesCuenta(cod_role):
 def reportes(cod_documento, cod_role):
     if session["username"] != 'unknown':
         sql = cnx.cursor()
-        sqlPeriodos = cnx.cursor()
         sql.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
                     from detalle_documento 
                     join cuenta using (cod_cuenta) 
@@ -172,24 +173,19 @@ def reportes(cod_documento, cod_role):
                     --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
                     where cod_dimension is null  and cod_documento = %s and cod_role =%s
                     order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
-        sqlPeriodos.execute("""select distinct desc_periodo 
-                       from detalle_documento 
-                       join cuenta using (cod_cuenta) 
-                       left join role_cuenta using (cod_cuenta)
-                       left join role using(cod_role)
-                       join contexto using (cod_contexto) 
-                       join periodo using (cod_periodo)
-                       left join context_escenarios using (cod_contexto) 
-                       left join escenario using (cod_escenario) 
-                       left join dimension using (cod_dimension)
-                       where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                       order by desc_periodo desc""" % (cod_documento, cod_role))
         data = sql.fetchall()
-        data1 = sqlPeriodos.fetchall()
         if data[0] == []:
             flash("No Existe")
             return render_template("/detalle_documento")
-        return render_template("/reportes.html", data1=data1, data=data)
+        for d in data:
+            desc_role = d[0]
+            entidad = d[13]
+            cuenta = d[5]
+            dineros = d[8]
+            fechas = d[7]
+
+        return render_template("/reportes.html", data=data, desc_role=desc_role, entidad=entidad, cuenta=cuenta,
+                               dineros=dineros, fechas=fechas)
     return redirect("login")
 
 
@@ -294,10 +290,9 @@ public.detalle_documento.cod_documento ='%s'""" % cod_documento)
 
 @app.route('/pdf/<cod_documento>/<cod_role>', methods=["GET", "POST"])
 def pdf(cod_documento, cod_role):
-    if session["username"] != 'unknown':
-        sql = cnx.cursor()
-        sqlPeriodos = cnx.cursor()
-        sql.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+    sql = cnx.cursor()
+    sqlPeriodos = cnx.cursor()
+    sql.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
                             from detalle_documento 
                             join cuenta using (cod_cuenta) 
                             left join role_cuenta using (cod_cuenta)
@@ -313,7 +308,7 @@ def pdf(cod_documento, cod_role):
                             --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
                             where cod_dimension is null  and cod_documento = %s and cod_role =%s
                             order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
-        sqlPeriodos.execute("""select distinct desc_periodo 
+    sqlPeriodos.execute("""select distinct desc_periodo 
                                from detalle_documento 
                                join cuenta using (cod_cuenta) 
                                left join role_cuenta using (cod_cuenta)
@@ -325,31 +320,93 @@ def pdf(cod_documento, cod_role):
                                left join dimension using (cod_dimension)
                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
                                order by desc_periodo desc""" % (cod_documento, cod_role))
-        data = sql.fetchall()
-        data1 = sqlPeriodos.fetchall()
-        for d in data:
-            desc_role = d[0]
-            entidad = d[13]
-            cuenta = d[5]
-            dineros = d[8]
-        for a in data1:
-            fechas = a[0]
-        data1 = sqlPeriodos.fetchall()
-        cont = render_template("/pdf.html")
-        fileNameOutput = 'informe.pdf'
-        css = ['static/css/pdf.css']
-        pdfkit.from_string(cont, fileNameOutput, css=css)
-        pdfDownload = open(fileNameOutput, 'rb').read()
-        os.remove(fileNameOutput)
-        return Response(
-            pdfDownload,
-            mimetype="application/pdf",
-            headers={
-                "Content-disposition": "attachment; filename=" + fileNameOutput,
-                "Content-type": "application/force-download"
-            }
-        )
-    return redirect("/login")
+    data = sql.fetchall()
+    data1 = sqlPeriodos.fetchall()
+    for d in data:
+        cod_rol = d[1]
+        desc_role = d[0]
+        entidad = d[13]
+        cuenta = d[5]
+        dineros = d[8]
+        fechas = d[7]
+    hoy = datetime.now()
+    hoy = hoy.strftime("%Y-%m-%d")
+    report = PdfCustomDetail(filename="%s.pdf"(cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
+                             logo=getattr(sys, 'logo', 'xeeffy_logo_index.png'))
+    datas = data.custom_query(sql, dict=True)
+    per = data1.customquery(sqlPeriodos)
+    pvt_kms = pivot(datas, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
+    datas = []
+    columnas = ["CUENTA"]
+    data_linea = ['']
+    ancho_total = 0
+    colsWidth = [0]
+    colAlign = ['LEFT']
+    colType = ['str']
+    for p in per:
+        columnas.append(p[0])
+        data_linea.append(0.0)
+        colsWidth.append(60)
+        ancho_total += 60
+        colAlign.append("RIGHT")
+        colType.append("str")
+    colsWidth[0] = 540 - ancho_total
+    for f in pvt_kms:
+        dl = list(f.get(('cod_role_cuenta', 'desc_cuenta'), ['']))
+        for p in per:
+            dl.append(f.get((p[0],), 0))
+        datas.append(dl)
+    data_final = []
+    datas.sort()
+    for d in datas:
+        data_final.append(d[1:])
+    report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
+    report.go(tmp=True)
+    return render_template("/pdf.html", desc_role=desc_role, entidad=entidad,
+                           cuenta=cuenta,
+                           dineros=dineros, fechas=fechas, hoy=hoy, data=data)
+    # fileNameOutput = 'informe.pdf'
+    # # css = ['/static/css/pdf.css']
+    # pdfkit.from_string(cont, fileNameOutput)
+    # pdfDownload = open(fileNameOutput, 'rb').read()
+    # os.remove(fileNameOutput)
+    # return Response(
+    #     pdfDownload,
+    #     mimetype="application/pdf",
+    #     headers={
+    #         "Content-disposition": "attachment; filename=" + fileNameOutput,
+    #         "Content-type": "application/force-download"
+    #     }
+    # )
+    # return render_template("/documentos.html")
+
+
+class PdfCustomDetail:
+    def __init__(self, title="Documento Generico", filename="output.pdf", barcode=None, companyInfo=[], logo=None,
+                 distintoEncabezado=True):
+        self.Elements = []
+        self.Data = []
+        self.Headers = []
+        self.logo = logo
+        self.filename = filename.replace(" ", "_")
+        self.distintoEncabezado = distintoEncabezado
+
+        self.styleSheet = getSampleStyleSheet()
+
+        self.Title = title
+        self.Author = "XSolution ERP"
+
+        self.URL = "http://www.xsolution.cl"
+        if companyInfo == []:
+            self.CompanyInfo = [["Empresa.", 0],
+                                ["RUT: 99.000.000-0", 1],
+                                ["Direccion", 2],
+                                ["Fonos", 3]]
+        else:
+            self.CompanyInfo = companyInfo
+        self.email = "contacto@xsolution.cl"
+        self.pageinfo = "%s / %s / %s" % (self.Author, self.email, self.Title)
+        self.barcode = barcode
 
 
 @app.route('/importCMF', methods=["GET", "POST"])
@@ -395,57 +452,54 @@ def importCMF():
                 public.entidad
                 WHERE entidad.cod_entidad = '%s'""" % (CRut("%s-%s" % (rut, dv))))
                 dato = cur.fetchall()
-                if not dato[0]:
+                if not dato:
                     flash("No existe")
                     cur.execute("""INSERT INTO entidad(cod_entidad,desc_entidad)
-                    VALUES('%s','%s')""" % (CRut("%s-%s" % (rut, dv))), (razon_social))
-                    cur.commit()
+                    VALUES('%s','%s')""" % (CRut("%s-%s" % (rut, dv)), razon_social))
+                    cnx.commit()
                 tipo_envio = sh.cell(rx, 5).value
                 filtros = {'rut': rut, 'mes': mes, 'anio': ano, 'archivo': "Estados%20financieros%20(XBRL)",
                            'tipo': tipo_balance.upper()[0]}
-                cur.execute("""SELECT
-                public.documento.cod_documento,
-                public.documento.desc_documento,
-                public.documento.cod_entidad,
-                public.documento.anio,
-                public.documento.mes
-                FROM
-                public.documento
-                WHERE documento.cod_entidad='%s'""" % (CRut("%s-%s" % (rut, dv))))
-                doc = cur.fetchall()
                 desc_doc = "%(rut)s_%(anio)s%(mes)s_%(tipo)s.zip" % (filtros)
                 cur.execute("""SELECT
                 public.documento.cod_documento,
-                public.documento.cod_entidad,
                 public.documento.desc_documento,
+                public.documento.cod_entidad,
+                public.entidad.desc_entidad,
                 public.documento.anio,
                 public.documento.mes
                 FROM
-                public.documento
-                WHERE documento.desc_documento ='%s'""" % desc_doc)
-                if doc[0][1] != desc_doc:
+                public.documento,
+                public.entidad
+                WHERE documento.cod_entidad='%s' and documento.desc_documento ='%s' and entidad.desc_entidad = '%s' and documento.anio='%s' and documento.mes ='%s'""" % (
+                    CRut("%s-%s" % (rut, dv)), desc_doc, razon_social, ano, mes))
+                doc = cur.fetchall()
+                if not doc:
                     print("NUEVO!!!", desc_doc, rx, "de", sh.nrows)
-                    cur.execute("""INSERT INTO documento(desc_documento,anio,mes)VALUES('$s',%s,%s)""" % (desc_doc,mes,ano))
-                    doc = cur.commit()
+                    cur.execute(
+                        """INSERT INTO documento(desc_documento,cod_entidad,anio,mes)VALUES('%s','%s','%s','%s')""" % (
+                            desc_doc, CRut("%s-%s" % (rut, dv)), ano, mes))
+
                     url_zip = "http://www.cmfchile.cl/institucional/inc/inf_financiera/ifrs/safec_ifrs_verarchivo.php?auth=&send=&rut=%(rut)s&mm=%(mes)s&aa=%(anio)s&archivo=%(rut)s_%(anio)s%(mes)s_%(tipo)s.zip&desc_archivo=%(archivo)s&tipo_archivo=XBRL" % (
                         filtros)
                     filename_zip = tempfile._get_default_tempdir() + os.sep + tempfile._RandomNameSequence().__next__() + "%(rut)s_%(anio)s%(mes)s_C.zip" % (
                         filtros)
-
-                    try:
-                        data = urllib.request.urlretrieve(values)
-                        req = http.request(url_zip, data, headers)
-                        http1 = urllib3.PoolManager()
-                        response = http1.request(req)
-                        the_page = response.read()
-                        f = open(filename_zip, "wb")
-                        f.write(the_page)
-                        f.close()
-                        input_zip = zipfile.ZipFile(filename_zip)
-                        data = {name: input_zip.read(name) for name in input_zip.namelist() if
-                                name.upper().endswith('.XBRL')}
-                    except:
-                        print("ERROR", desc_doc, sys.exc_info()[1])
+                    cnx.commit()
+                    #
+                    # try:
+                    #     data1 = urllib.request.urlretrieve(values)
+                    #     req = http.request(url_zip,data1, headers)
+                    #     http1 = urllib3.PoolManager()
+                    #     response = http1.request(req)
+                    #     the_page = response.read()
+                    #     f = open(filename_zip, "wb")
+                    #     f.write(the_page)
+                    #     f.close()
+                    #     input_zip = zipfile.ZipFile(filename_zip)
+                    #     data = {name: input_zip.read(name) for name in input_zip.namelist() if
+                    #             name.upper().endswith('.XBRL')}
+                    # except:
+                    #     print("ERROR", desc_doc, sys.exc_info()[1])
                 else:
                     print("EXISTE!!!", desc_doc, rx, "de", sh.nrows)
 
