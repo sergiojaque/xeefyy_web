@@ -376,9 +376,10 @@ def pdf(cod_documento, cod_role):
         data_final.append(d[1:])
     report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
     report.go(tmp=True)
-    return render_template("/pdf.html", desc_role=desc_role, entidad=entidad,
-                           cuenta=cuenta,
-                           dineros=dineros, fechas=fechas, hoy=hoy, data=data)
+    return
+    # return render_template("/pdf.html", desc_role=desc_role, entidad=entidad,
+    #                        cuenta=cuenta,
+    #                        dineros=dineros, fechas=fechas, hoy=hoy, data=data)
     # fileNameOutput = 'informe.pdf'
     # # css = ['/static/css/pdf.css']
     # pdfkit.from_string(cont, fileNameOutput)

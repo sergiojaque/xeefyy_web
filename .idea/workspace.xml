@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="43cf4b27-51c3-48a2-ae21-247b2a41fd38" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -30,8 +29,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="527">
-              <caret line="348" column="84" selection-start-line="348" selection-start-column="84" selection-end-line="348" selection-end-column="84" />
+            <state relative-caret-position="477">
+              <caret line="398" selection-start-line="398" selection-end-line="398" selection-end-column="15" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -250,12 +249,12 @@
       <workItem from="1568205124035" duration="634000" />
       <workItem from="1568206585459" duration="232000" />
       <workItem from="1568207724103" duration="32427000" />
-      <workItem from="1569270160515" duration="11960000" />
+      <workItem from="1569270160515" duration="13095000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="186684000" />
+    <option name="totallyTimeSpent" value="187819000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1096" extended-state="6" />
@@ -314,18 +313,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app.py</url>
-          <line>309</line>
-          <option name="timeStamp" value="17" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app.py</url>
-          <line>349</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -336,7 +323,7 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/XEEFFY_WEB$XEEFFY_WEB.coverage" NAME="XEEFFY_WEB Coverage Results" MODIFIED="1569334758771" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/XEEFFY_WEB$XEEFFY_WEB.coverage" NAME="XEEFFY_WEB Coverage Results" MODIFIED="1569341357060" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/9cbc87a4-c0f2-4e81-9ccb-d5fbc7ac7ce0/console.sql">
@@ -550,8 +537,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="527">
-          <caret line="348" column="84" selection-start-line="348" selection-start-column="84" selection-end-line="348" selection-end-column="84" />
+        <state relative-caret-position="477">
+          <caret line="398" selection-start-line="398" selection-end-line="398" selection-end-column="15" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
