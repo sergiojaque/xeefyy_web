@@ -8,7 +8,7 @@
     <body>
     <header class="clearfix">
         <img src="/static/images/xeeffy_logo_index.png" width="20%" align="top">
-        <h1>{{ desc_role }}</h1>
+        <h1></h1>
         <div id="company" class="clearfix">
             <div>XEEFFY</div>
             <div>Casa Matriz • ,<br/> El Juncal 0240, Quilicura • Chile</div>
@@ -16,8 +16,8 @@
             <div><a href="mailto:company@example.com">aherrera@xeeffy.cl</a></div>
         </div>
         <div id="project">
-            <div><span>ENTIDAD</span> {{ entidad }}</div>
-            <div><span>FECHA</span>{{ hoy }}</div>
+            <div><span>ENTIDAD</span> </div>
+            <div><span>FECHA</span></div>
         </div>
     </header>
     <main>
@@ -25,14 +25,14 @@
             <thead>
             <tr>
                 <th class="service">CUENTA</th>
-                <th>{{ fechas }}</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
-            {% for a in data %}
+            {% for a in d %}
                 <tr>
-                    <td class="service">{{ a[5] }}</td>
-                    <td class="total">{{ "{:,.0f}".format(a[8]|int|round) }}</td>
+                    <td class="service">{{ a }}</td>
+
                 </tr>
             {% endfor %}
             </tbody>

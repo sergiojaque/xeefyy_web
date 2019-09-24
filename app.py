@@ -1,10 +1,6 @@
 import sys
 from pivot import pivot
 from reportlab.lib.styles import getSampleStyleSheet
-from xbrl import XBRLParser, GAAP, GAAPSerializer
-import matplotlib
-import pdfkit as pdfkit
-import wget as wget
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, flash, session, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -307,8 +303,24 @@ def pdf(cod_documento, cod_role):
                             --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
                             where cod_dimension is null  and cod_documento = %s and cod_role =%s
                             order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
-    data = cursor.fetchall()
-    dict = CursorPg()
+    data = dictfetchall(cursor)
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+                                from detalle_documento 
+                                join cuenta using (cod_cuenta) 
+                                left join role_cuenta using (cod_cuenta)
+                                left join role using(cod_role)
+                                left join unidad using (cod_unidad)
+                                join tipo_cuenta using (cod_tipo_cuenta)
+                                join contexto using (cod_contexto) 
+                                join entidad using (cod_entidad)
+                                join periodo using (cod_periodo) 
+                                left join context_escenarios using (cod_contexto) 
+                                left join escenario using (cod_escenario) 
+                                left join dimension using (cod_dimension) 
+                                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    date = cursor.fetchall()
     cursor.execute("""select distinct desc_periodo 
                                from detalle_documento 
                                join cuenta using (cod_cuenta) 
@@ -321,8 +333,8 @@ def pdf(cod_documento, cod_role):
                                left join dimension using (cod_dimension)
                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
                                order by desc_periodo desc""" % (cod_documento, cod_role))
-    per = cursor.fetchall()
-    for d in data:
+    per = dictfetchall(cursor)
+    for d in date:
         cod_rol = d[1]
         desc_role = d[0]
         entidad = d[13]
@@ -331,22 +343,6 @@ def pdf(cod_documento, cod_role):
         fechas = d[7]
     hoy = datetime.now()
     hoy = hoy.strftime("%Y-%m-%d")
-    sql = """select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, desc_detalle_documento valor 
-                from detalle_documento 
-                join cuenta using (cod_cuenta) 
-                left join role_cuenta using (cod_cuenta)
-                left join role using(cod_role)
-                left join unidad using (cod_unidad)
-                join tipo_cuenta using (cod_tipo_cuenta)
-                join contexto using (cod_contexto) 
-                join entidad using (cod_entidad)
-                join periodo using (cod_periodo) 
-                left join context_escenarios using (cod_contexto) 
-                left join escenario using (cod_escenario) 
-                left join dimension using (cod_dimension) 
-                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
-                where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role)
     report = PdfCustomDetail(filename="%s.pdf" % (cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
                              logo=getattr(sys, 'logo', 'xeeffy_logo_index.png'))
     pvt_kms = pivot(data, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
@@ -358,7 +354,7 @@ def pdf(cod_documento, cod_role):
     colAlign = ['LEFT']
     colType = ['str']
     for p in per:
-        columnas.append(p[0])
+        columnas.append(p['desc_periodo'])
         data_linea.append(0.0)
         colsWidth.append(60)
         ancho_total += 60
@@ -368,15 +364,16 @@ def pdf(cod_documento, cod_role):
     for f in pvt_kms:
         dl = list(f.get(('cod_role_cuenta', 'desc_cuenta'), ['']))
         for p in per:
-            dl.append(f.get((p[0],), 0))
+            dl.append(f.get((p['desc_periodo'],), 0))
         datas.append(dl)
     data_final = []
     datas.sort()
     for d in datas:
         data_final.append(d[1:])
-    report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
-    report.go(tmp=True)
-    return
+    return render_template("/pdf.html", d=data_final)
+    # report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
+    # report.go(tmp=True)
+
     # return render_template("/pdf.html", desc_role=desc_role, entidad=entidad,
     #                        cuenta=cuenta,
     #                        dineros=dineros, fechas=fechas, hoy=hoy, data=data)
@@ -396,29 +393,21 @@ def pdf(cod_documento, cod_role):
     # return render_template("/documentos.html")
 
 
-class CursorPg:
-    def dictfetchone(self, sql=None):
-        if sql != None:
-            try:
-                self.cursor.execute(sql)
-            except:
-                print(str(sys.exc_info()[1]))
-        r = self.cursor.dictfetchone()
-        return r
+def __build_dict(description, row):
+    res = {}
+    for i in range(len(description)):
+        res[description[i][0]] = row[i]
+    return res
 
-    def dictfetchall(self, sql=None):
-        if sql != None:
-            try:
-                self.cursor.execute(sql)
-            except:
-                print(str(sys.exc_info()[1]))
-        r = self.cursor.dictfetchall()
-        # aux = []
-        # for i in r:
-        #    daux = {}
-        #    for j in i:
-        #        i[j]
-        return r
+
+def dictfetchall(cursor):
+    res = []
+    rows = cursor.fetchall()
+    for row in rows:
+        res.append(__build_dict(cursor.description, row))
+    return res
+
+
 
 
 class PdfCustomDetail:
