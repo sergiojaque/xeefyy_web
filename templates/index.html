@@ -81,15 +81,9 @@
                     <div class="rd-navbar-main">
                         <div class="rd-navbar-nav-wrap">
                             <ul class="rd-navbar-nav">
-                                {% if session['username'] != 'unknown' %}
-                                    <li class="rd-nav-item active disabled"><a class="rd-nav-link" href="login">Iniciar
-                                        Sesion</a>
-                                    </li>
-                                {% else %}
                                     <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar
                                         Sesion</a>
                                     </li>
-                                {% endif %}
                                 <li class="rd-nav-item"><a class="rd-nav-link" href="index">Sistema</a>
                                     <ul class="rd-menu rd-navbar-dropdown">
                                         <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="entidades">Entidades</a>

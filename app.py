@@ -290,9 +290,8 @@ public.detalle_documento.cod_documento ='%s'""" % cod_documento)
 
 @app.route('/pdf/<cod_documento>/<cod_role>', methods=["GET", "POST"])
 def pdf(cod_documento, cod_role):
-    sql = cnx.cursor()
-    sqlPeriodos = cnx.cursor()
-    sql.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+    cursor = cnx.cursor()
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
                             from detalle_documento 
                             join cuenta using (cod_cuenta) 
                             left join role_cuenta using (cod_cuenta)
@@ -308,7 +307,9 @@ def pdf(cod_documento, cod_role):
                             --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
                             where cod_dimension is null  and cod_documento = %s and cod_role =%s
                             order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
-    sqlPeriodos.execute("""select distinct desc_periodo 
+    data = cursor.fetchall()
+    dict = CursorPg()
+    cursor.execute("""select distinct desc_periodo 
                                from detalle_documento 
                                join cuenta using (cod_cuenta) 
                                left join role_cuenta using (cod_cuenta)
@@ -320,8 +321,7 @@ def pdf(cod_documento, cod_role):
                                left join dimension using (cod_dimension)
                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
                                order by desc_periodo desc""" % (cod_documento, cod_role))
-    data = sql.fetchall()
-    data1 = sqlPeriodos.fetchall()
+    per = cursor.fetchall()
     for d in data:
         cod_rol = d[1]
         desc_role = d[0]
@@ -331,11 +331,25 @@ def pdf(cod_documento, cod_role):
         fechas = d[7]
     hoy = datetime.now()
     hoy = hoy.strftime("%Y-%m-%d")
-    report = PdfCustomDetail(filename="%s.pdf"(cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
+    sql = """select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, desc_detalle_documento valor 
+                from detalle_documento 
+                join cuenta using (cod_cuenta) 
+                left join role_cuenta using (cod_cuenta)
+                left join role using(cod_role)
+                left join unidad using (cod_unidad)
+                join tipo_cuenta using (cod_tipo_cuenta)
+                join contexto using (cod_contexto) 
+                join entidad using (cod_entidad)
+                join periodo using (cod_periodo) 
+                left join context_escenarios using (cod_contexto) 
+                left join escenario using (cod_escenario) 
+                left join dimension using (cod_dimension) 
+                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role)
+    report = PdfCustomDetail(filename="%s.pdf" % (cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
                              logo=getattr(sys, 'logo', 'xeeffy_logo_index.png'))
-    datas = data.custom_query(sql, dict=True)
-    per = data1.customquery(sqlPeriodos)
-    pvt_kms = pivot(datas, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
+    pvt_kms = pivot(data, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
     datas = []
     columnas = ["CUENTA"]
     data_linea = ['']
@@ -379,6 +393,31 @@ def pdf(cod_documento, cod_role):
     #     }
     # )
     # return render_template("/documentos.html")
+
+
+class CursorPg:
+    def dictfetchone(self, sql=None):
+        if sql != None:
+            try:
+                self.cursor.execute(sql)
+            except:
+                print(str(sys.exc_info()[1]))
+        r = self.cursor.dictfetchone()
+        return r
+
+    def dictfetchall(self, sql=None):
+        if sql != None:
+            try:
+                self.cursor.execute(sql)
+            except:
+                print(str(sys.exc_info()[1]))
+        r = self.cursor.dictfetchall()
+        # aux = []
+        # for i in r:
+        #    daux = {}
+        #    for j in i:
+        #        i[j]
+        return r
 
 
 class PdfCustomDetail:
