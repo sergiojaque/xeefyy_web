@@ -32,6 +32,8 @@ Documentos
                                     <th data-field="codigo">MES</th>
                                     <th data-field="codigo">HASH</th>
                                     <th data-field="codigo">VER</th>
+                                    <th data-field="codigo">BALANCE</th>
+                                    <th data-field="codigo">ESTADOR.</th>
 
                                 </tr>
                                 </thead>
@@ -48,6 +50,14 @@ Documentos
                                     <td>{{ d[6] }}</td>
                                     <td><a class="btn btn-primary"
                                                href="/detalle_documento/{{ d[5] }}">
+                                            <i
+                                                    class="fa fa-eye"></i></a></td>
+                                     <td><a class="btn btn-primary"
+                                               href="/balance/{{ d[5] }}/210000">
+                                            <i
+                                                    class="fa fa-eye"></i></a></td>
+                                     <td><a class="btn btn-primary"
+                                               href="/eresultado/{{ d[5] }}/310000">
                                             <i
                                                     class="fa fa-eye"></i></a></td>
 

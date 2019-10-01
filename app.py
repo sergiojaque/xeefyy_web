@@ -1,4 +1,8 @@
+import hashlib
 import sys
+
+import xmljson as xmljson
+import xmltodict
 from pivot import pivot
 from reportlab.lib.styles import getSampleStyleSheet
 from bs4 import BeautifulSoup
@@ -18,6 +22,7 @@ import string
 import urllib3
 import pdfkit
 from datetime import datetime, timedelta
+from xbrl import XBRLParser, GAAP, GAAPSerializer
 
 dbdir = "sqlite:///" + "xeeffy.db"
 
@@ -370,7 +375,7 @@ def pdf(cod_documento, cod_role):
     datas.sort()
     for d in datas:
         data_final.append(d[1:])
-    return render_template("/pdf.html", d=data_final)
+    return render_template("/pdf.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role, hoy=hoy)
     # report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
     # report.go(tmp=True)
 
@@ -408,8 +413,6 @@ def dictfetchall(cursor):
     return res
 
 
-
-
 class PdfCustomDetail:
     def __init__(self, title="Documento Generico", filename="output.pdf", barcode=None, companyInfo=[], logo=None,
                  distintoEncabezado=True):
@@ -443,6 +446,8 @@ def importCMF():
     if session["username"] != 'unknown':
         if request.method == "POST":
             import urllib.request
+            import urllib
+
             cur = cnx.cursor()
             ano = request.form["ano"]
             mes = request.form["mes"]
@@ -505,36 +510,723 @@ def importCMF():
                 doc = cur.fetchall()
                 if not doc:
                     print("NUEVO!!!", desc_doc, rx, "de", sh.nrows)
+                    has = "*"
                     cur.execute(
-                        """INSERT INTO documento(desc_documento,cod_entidad,anio,mes)VALUES('%s','%s','%s','%s')""" % (
-                            desc_doc, CRut("%s-%s" % (rut, dv)), ano, mes))
+                        """INSERT INTO documento(desc_documento,cod_entidad,anio,mes,hash)VALUES('%s','%s','%s','%s','%s')""" % (
+                            desc_doc, CRut("%s-%s" % (rut, dv)), ano, mes, has))
 
                     url_zip = "http://www.cmfchile.cl/institucional/inc/inf_financiera/ifrs/safec_ifrs_verarchivo.php?auth=&send=&rut=%(rut)s&mm=%(mes)s&aa=%(anio)s&archivo=%(rut)s_%(anio)s%(mes)s_%(tipo)s.zip&desc_archivo=%(archivo)s&tipo_archivo=XBRL" % (
                         filtros)
                     filename_zip = tempfile._get_default_tempdir() + os.sep + tempfile._RandomNameSequence().__next__() + "%(rut)s_%(anio)s%(mes)s_C.zip" % (
                         filtros)
-                    cnx.commit()
-                    #
-                    # try:
-                    #     data1 = urllib.request.urlretrieve(values)
-                    #     req = http.request(url_zip,data1, headers)
-                    #     http1 = urllib3.PoolManager()
-                    #     response = http1.request(req)
-                    #     the_page = response.read()
-                    #     f = open(filename_zip, "wb")
-                    #     f.write(the_page)
-                    #     f.close()
-                    #     input_zip = zipfile.ZipFile(filename_zip)
-                    #     data = {name: input_zip.read(name) for name in input_zip.namelist() if
-                    #             name.upper().endswith('.XBRL')}
-                    # except:
-                    #     print("ERROR", desc_doc, sys.exc_info()[1])
+                    try:
+                        values = {'name': 'Michael Foord',
+                                  'location': 'Northampton',
+                                  'language': 'Python'}
+                        data1 = urllib.parse.urlencode(values).encode("utf-8")
+                        req = urllib.request.Request(url_zip, data1, headers)
+                        with urllib.request.urlopen(req, data=data1) as f:
+                            resp = f.read()
+                        f = open(filename_zip, "wb")
+                        f.write(resp)
+                        f.close()
+                        input_zip = zipfile.ZipFile(filename_zip)
+                        data = {name: input_zip.read(name) for name in input_zip.namelist() if
+                                name.upper().endswith('.XBRL')}
+                        for arch in data.keys():
+                            # jxbrl = jsobXBrl(cod_documento=doc.get_cod_documento())
+                            cursor = cnx.cursor()
+                            cursor.execute("SELECT currval('documento_cod_documento_seq')")
+                            jxbrl = jsobXBrl(cod_documento=cursor.fetchone()[0])
+                            jxbrl.loadXBrlFromMenory(data.get(arch))
+                            jxbrl.processJsonXbrl()
+                            print("hola")
+                        #     del jxbrl
+                        # del data
+                        cnx.commit()
+                    except:
+                        print("ERROR", desc_doc, sys.exc_info()[1])
                 else:
                     print("EXISTE!!!", desc_doc, rx, "de", sh.nrows)
-
+                del doc
             return redirect("/documentos")
         return render_template("/importCMF.html")
     return redirect("/login")
+
+
+class jsobXBrl():
+    def __init__(self, xbrlFile=None, cod_documento=None):
+        self.cod_documento = cod_documento
+        self.xbrlFile = xbrlFile
+        self.jsonXBrl = None
+        self.contexts = {}
+        self.data = []
+        self.entity = {}
+        self.period = {}
+        self.scenario = {}
+        self.tipo_scenario = {}
+        self.dimension = {}
+        self.tipoCuenta = {}
+        self.cuentas = {}
+        self.unidades = {}
+        self.loadUnidades()
+        self.loadTipoCuenta()
+        self.loadCuentas()
+        self.loadEntity()
+        self.loadPeriod()
+        self.loadDimension()
+        self.loadTipoScenario()
+
+        pass
+
+    def processJsonXbrl(self):
+        for i in self.jsonXBrl:
+            if i.split(":")[-1] == 'context':
+                for c in self.jsonXBrl.get(i):
+                    self.addContext(c)
+            elif i.split(":")[-1] == 'unit':
+                for u in self.jsonXBrl.get(i):
+                    self.addUnit(u)
+            else:
+                pass
+        for i in self.jsonXBrl:
+            if i == 'context':
+                pass
+            elif i == 'unit':
+                pass
+            else:
+                self.addData(i, self.jsonXBrl.get(i))
+        print("OK")
+
+    def addCuenta(self, data):
+        # from orm.common_services.public.cms_cuenta import cms_cuenta
+        # from orm.common_services.public.cms_tipo_cuenta import cms_tipo_cuenta
+        tc, cta = data.split(":")
+        ccta = self.cuentas.get(":".join([{'ifrs': "ifrs-full"}.get(tc, tc), cta]))
+
+        if ccta:
+            return ccta
+        if not self.tipoCuenta.get(tc):
+            cursor = cnx.cursor()
+            cursor.execute("insert into tipo_cuenta(desc_tipo_cuenta) values ('%s')"%(tc))
+            # tcta = cms_tipo_cuenta()
+            # tcta.set_desc_tipo_cuenta(tc)
+            cnx.commit()
+            # tcta.save()
+            cursor.execute("SELECT currval('tipo_cuenta_cod_tipo_cuenta_seq')")
+            # ctc = tcta.get_cod_tipo_cuenta()
+            self.tipoCuenta[tc] = cursor.fetchone()[0]
+        else:
+            ctc = self.tipoCuenta.get(tc)
+        cursor = cnx.cursor()
+        cursor.execute("insert into cuenta(cod_tipo_cuenta,desc_cuenta) values ('%s','%s')"%(ctc,cta))
+        cnx.commit()
+        cursor.execute("SELECT currval('cuenta_cod_cuenta_seq')")
+        # objcta = cms_cuenta()
+        # objcta.set_desc_cuenta(cta)
+        # objcta.set_cod_tipo_cuenta(ctc)
+        # objcta.save()
+        # ccta = objcta.get_cod_cuenta()
+        ccta = cursor.fetchone()[0]
+        self.cuentas[data] = ccta
+        return ccta
+
+    def loadTipoCuenta(self):
+        #from orm.common_services.public.cms_tipo_cuenta import cms_tipo_cuenta
+        #tc = cms_tipo_cuenta()
+        cursor = cnx.cursor()
+        cursor.execute("select cod_tipo_cuenta, desc_tipo_cuenta from tipo_cuenta")
+        for t in cursor.fetchall():
+            # self.tipoCuenta[t.get_desc_tipo_cuenta()] = t.get_cod_tipo_cuenta()
+            self.tipoCuenta[t[1]] = t[0]
+
+    def loadCuentas(self):
+        #from orm.common_services.public.cms_cuenta import cms_cuenta
+        #cs = cms_cuenta()
+        cursor = cnx.cursor()
+        cursor.execute("""SELECT
+        public.tipo_cuenta.desc_tipo_cuenta,
+        public.cuenta.desc_cuenta,
+        public.cuenta.cod_cuenta,
+        public.cuenta.cod_tipo_cuenta
+        FROM
+        public.cuenta
+        INNER JOIN public.tipo_cuenta ON public.cuenta.cod_tipo_cuenta = public.tipo_cuenta.cod_tipo_cuenta""")
+        #for c in cs.custom_query(
+                # "select desc_tipo_cuenta||':'||desc_cuenta, cod_cuenta from cuenta join tipo_cuenta using (cod_tipo_cuenta)"):
+        for c in cursor.fetchall():
+            self.cuentas[c[0]] = c[1]
+
+    def addData(self, t, data):
+        try:
+            cursor = cnx.cursor()
+            cta = self.cuentas.get(t)
+            if not cta:
+                cta = self.addCuenta(t)
+
+            if isinstance(data, dict):
+                c = self.contexts.get(data.get("@contextRef"), {}).get('id')
+                d = data.get('@decimals')
+                u = self.unidades.get(data.get('@unitRef'))
+                valor = data.get("#text")
+                cursor.execute(
+                    """insert into detalle_documento (cod_documento, cod_cuenta, cod_contexto ,decimales, cod_unidad,desc_detalle_documento)values('%s','%s','%s','%s','%s','%s')""" % (
+                        self.cod_documento, cta, c, d, u, valor))
+                # dd = cms_detalle_documento()
+                # dd.set_cod_documento(self.cod_documento)
+                # dd.set_cod_cuenta(cta)
+                # dd.set_cod_contexto(c)
+                # dd.set_decimales(d)
+                # dd.set_cod_unidad(u)
+                # dd.set_desc_detalle_documento(valor)
+                # dd.save()
+                cnx.commit()
+                self.data.append([cta, c, d, u, valor])
+            elif isinstance(data, list):
+                for i in data:
+                    c = self.contexts.get(i.get("@contextRef"), {}).get('id')
+                    d = i.get('@decimals')
+                    u = self.unidades.get(i.get('@unitRef'))
+                    valor = i.get("#text")
+                    cursor.execute(
+                        """insert into detalle_documento (cod_documento, cod_cuenta, cod_contexto ,decimales, cod_unidad,desc_detalle_documento)values('%s','%s','%s','%s','%s','%s')""" % (
+                        self.cod_documento, cta, c, d, u, valor))
+                    # dd = cms_detalle_documento()
+                    # dd.set_cod_documento(self.cod_documento)
+                    # dd.set_cod_cuenta(cta)
+                    # dd.set_cod_contexto(c)
+                    # dd.set_decimales(d)
+                    # dd.set_cod_unidad(u)
+                    # dd.set_desc_detalle_documento(valor)
+                    # dd.save()
+                    cnx.commit()
+                    self.data.append([cta, c, d, u, valor])
+            else:
+                print(t, data)
+        except:
+            print(t, data)
+        # print len(self.data)
+
+    def loadUnidades(self):
+        #from orm.common_services.public.cms_unidad import cms_unidad
+        cursor = cnx.cursor()
+        cursor.execute("select cod_unidad,desc_unidad from unidad")
+        for u in cursor.fetchall():
+            # self.unidades[u.get_desc_unidad()] = u.get_cod_unidad()
+            self.unidades[u[1]] = u[0]
+
+    def addUnit(self, data):
+        cursor = cnx.cursor()
+        # from orm.common_services.public.cms_unidad import cms_unidad
+        if self.unidades.get(data.get("@id")):
+            return
+        # uni = cms_unidad()
+        # uni.set_desc_unidad(data.get("@id"))
+        # uni.save()
+        cursor.execute("insert into unidad(desc_unidad)values ('%s')" % (data.get("@id")))
+        cnx.commit()
+        # cursor.execute("select cod_unidad from unidad where desc_unidad ='%s'"% (data.get("@id")))
+        # uni = cursor.fetchall()
+        cursor.execute("SELECT currval('unidad_cod_unidad_seq')")
+        self.unidades[data.get("@id")] = cursor.fetchone()[0]
+        print(data)
+
+    def addDimension(self, data):
+        cod = self.dimension.get(data.get('@dimension'))
+        if not cod:
+            # from orm.common_services.public.cms_dimension import cms_dimension
+            cursor = cnx.cursor()
+            cursor.execute("insert into dimension(desc_dimension)values('%s')" % (data.get('@dimension')))
+            cnx.commit()
+            # cursor.execute("select cod_dimension from dimension where desc_dimension = '%s'" % (data.get('@dimension')))
+            # cod = cursor.fetchall()
+            cursor.execute("SELECT currval('dimension_cod_dimension_seq')")
+            # obj = cms_dimension()
+            # obj.set_desc_dimension(data.get('@dimension'))
+            # obj.save()
+            # cod = obj.get_cod_dimension()
+            self.dimension[data.get('@dimension')] = cursor.fetchone()[0]
+        return cod
+
+    def loadDimension(self):
+        #from orm.common_services.public.cms_dimension import cms_dimension
+        # obj = cms_dimension()
+        cursor = cnx.cursor()
+        cursor.execute("select cod_dimension , desc_dimension from dimension")
+        for obj in cursor.fetchall():
+            #self.dimension[obj.get_desc_dimension()] = obj.get_cod_dimension()
+            self.dimension[obj[1]] = obj[0]
+
+    def loadScenario(self):
+        #from orm.common_services.public.cms_escenario import cms_escenario
+        cursor = cnx.cursor()
+        cursor.execute("""SELECT
+        public.escenario.desc_escenario,
+        public.tipo_escenario.desc_tipo_escenario,
+        public.dimension.desc_dimension,
+        public.escenario.cod_escenario
+        FROM
+        public.escenario
+        INNER JOIN public.tipo_escenario ON public.escenario.cod_tipo_escenario = public.tipo_escenario.cod_tipo_escenario
+        INNER JOIN public.dimension ON public.escenario.cod_dimension = public.dimension.cod_dimension""")
+        #es = cms_escenario()
+        for es in cursor.fetchall():
+            # self.scenario[(es.get_desc_escenario(), es.get_tipo_escenario().__str__(),
+            #                es.get_dimension().__str__())] = es.get_cod_escenario()
+            self.scenario[es[0],es[1],es[2]] = es[3]
+
+    def addScenario(self, data):
+        cods = []
+        if data:
+            for key in data.keys():
+                if isinstance(data.get(key), dict):
+                    escenarios = [data.get(key)]
+                else:
+                    escenarios = data.get(key)
+                for escenario in escenarios:
+                    cod = self.scenario.get((escenario.get('#text'), key, escenario.get('@dimension')))
+                    if not cod:
+                        cursor = cnx.cursor()
+                        ts = self.addTipoScenario(key)
+                        d = self.addDimension(escenario)
+                        #from orm.common_services.public.cms_escenario import cms_escenario
+                        cursor.execute(
+                            "insert into escenario(desc_escenario,cod_dimension,cod_tipo_escenario)values('%s','%s','%s')" % (
+                                escenario.get('#text'), d, ts))
+                        cursor.execute("SELECT currval('escenario_cod_escenario_seq')")
+                        cnx.commit()
+                        cod = cursor.fetchone()[0]
+                        self.scenario[(escenario.get('#text'), key, escenario.get('@dimension'))] = cod
+                    cods.append(cod)
+        return cods
+
+    def addTipoScenario(self, key):
+        cod = self.tipo_scenario.get(key)
+        if not cod:
+            # from orm.common_services.public.cms_tipo_escenario import cms_tipo_escenario as clas
+            cursor = cnx.cursor()
+            cursor.execute("insert into tipo_escenario(desc_tipo escenario)values('%s')" % (key))
+            cnx.commit()
+            # obj = clas()
+            # obj.set_desc_tipo_escenario(key)
+            # obj.save()
+            cursor.execute("SELECT currval('tipo_escenario_cod_tipo_escenario_seq')")
+            # cursor.execute("select cod_tipo_escenario from tipo_escenario where desc_tipo_escenario='%s'" % (key))
+            # cod = obj.get_cod_tipo_escenario()
+            # cod = cursor.fetchall()
+            self.tipo_scenario[key] = cursor.fetchone()[0]
+        return cod
+
+    def loadTipoScenario(self):
+        #from orm.common_services.public.cms_tipo_escenario import cms_tipo_escenario as clas
+        # obj = clas()
+        cursor = cnx.cursor()
+        cursor.execute("select cod_tipo_escenario,desc_tipo_escenario from tipo_escenario")
+        for obj in cursor.fetchall():
+            # self.tipo_scenario[obj.get_desc_tipo_escenario()] = obj.get_cod_tipo_escenario()
+            self.tipo_scenario[obj[1]] = obj[0]
+
+    def loadXBrlFromFile(self):
+        md5 = self.hash_bytestr_iter(self.file_as_blockiter(open(self.xbrlFile, 'rb')), hashlib.sha256(), True)
+        fxml = open(self.xbrlFile)
+        xml = fxml.read()
+        xml = eval(xmltodict.parse(xml))
+        self.jsonXBrl = None
+        keys = ['xbrli:xbrl', 'xbrl']
+        for key in keys:
+            self.jsonXBrl = xml.get(key)
+            if self.jsonXBrl:
+                return
+        print("No Encontro XBRL")
+
+    def hash_bytestr_iter(self, bytesiter, hasher, ashexstr=False):
+        for block in bytesiter:
+            hasher.update(block)
+        return (hasher.hexdigest() if ashexstr else hasher.digest())
+
+    def file_as_blockiter(self, afile, blocksize=65536):
+        with afile:
+            block = afile.read(blocksize)
+            while len(block) > 0:
+                yield block
+                block = afile.read(blocksize)
+
+    def loadEntity(self):
+        #from orm.common_services.public.cms_entidad import cms_entidad
+        cursor = cnx.cursor()
+        cursor.execute("select cod_entidad from entidad")
+        for e in cursor.fetchall():
+            #self.entity[e.get_cod_entidad()] = e.get_cod_entidad()
+            self.entity[e[0]] = e[0]
+
+    def addEntity(self, data):
+        cod = self.entity.get(CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')))
+        cod1 = cod
+        if not cod:
+            cursor = cnx.cursor()
+            #from orm.common_services.public.cms_entidad import cms_entidad
+            cursor.execute("insert into entidad (cod_entidad, desc_entidad) values ('%s','%s')" % (CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')),data.get('identifier', data.get('xbrli:identifier')).get('#text')))
+            cnx.commit()
+            # enty = cms_entidad()
+            # enty.set_cod_entidad((CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text'))))
+            # enty.set_desc_entidad(data.get('identifier', data.get('xbrli:identifier')).get('#text'))
+            # enty.save()
+            cursor.execute("select cod_entidad from entidad where cod_entidad ='%s' and desc_entidad ='%s'" % (
+            (CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')))),
+                           data.get('identifier', data.get('xbrli:identifier')).get('#text'))
+            cod = cursor.fetchall()
+            # cod = enty.get_cod_entidad()
+            # self.entity[enty.get_cod_entidad()] = cod
+            self.entity[CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text'))] = cod[0][0]
+        return cod
+
+    def addContext(self, data):
+        cursor = cnx.cursor()
+        if [k for k in data.keys() if not k.split(":")[-1] in ("entity", 'period', 'scenario', '@id')]:
+            print(data)
+        if self.contexts.get(data['@id']):
+            return
+        e = self.addEntity(data.get("entity", data.get("xbrli:entity")))
+        self.addPeriod(data.get('period', data.get('xbrli:period')))
+        p = self.getPeriod(data.get('period', data.get('xbrli:period')))
+        scenarios = self.addScenario(data.get('scenario', data.get('xbrli:scenario')))
+        #scenarios = self.getScenario(data.get('scenario',data.get('xbrli:scenario')))
+        # from orm.common_services.public.cms_contexto import cms_contexto
+        # c = cms_contexto()
+        # c.set_cod_entidad(e)
+        # c.set_cod_periodo(p)
+        # # c.set_cod_escenario(s)
+        # c.set_desc_contexto(data['@id'])
+        # c.save()
+        cursor.execute(
+            "insert into contexto(cod_entidad, cod_periodo, desc_contexto) values ('%s','%s','%s')" % (e, p, data['@id']))
+        cnx.commit()
+        cursor.execute("SELECT currval('contexto_cod_contexto_seq')")
+        codigo_contexto = cursor.fetchone()[0]
+        self.contexts[data['@id']] = {"entity": e, "period": p, "id": codigo_contexto}
+        #from orm.common_services.public.cms_context_escenarios import cms_context_escenarios
+        for s in scenarios:
+
+            cursor.execute("insert into context_escenarios(cod_contexto,cod_escenario,desc_context_escenarios) values('%s','%s','.')"%(codigo_contexto,s))
+            # ce = cms_context_escenarios()
+            # ce.set_cod_contexto(c.get_cod_contexto())
+            # ce.set_cod_escenario(s)
+            # ce.set_desc_context_escenarios(".")
+            # ce.save()
+            cnx.commit()
+
+    def getScenario(self, data):
+        if data:
+            for key in data.keys():
+                return self.scenario[(data.get(key).get('#text'), key, data.get(key).get('@dimension'))]
+
+        # def getScenario(self, data):
+        #     if data:
+        #         for key in data.keys():
+        #             return self.scenario[(data.get(key).get('#text'), key, data.get(key).get('@dimension'))]
+        # cursor.execute("select cod_contexto from contexto where cod_entidad='%s'and cod_periodo='%s' and desc_contexto = '%s'"%(e, p, data['@id']))
+        # a = cursor.fetchall()
+        # self.contexts[data['@id']] = {"entity": e, "period": p, "id": a}
+        #self.contexts[data['@id']] = {"entity": e, "period": p, "id": c.get_cod_contexto()}
+        # from orm.common_services.public.cms_context_escenarios import cms_context_escenarios
+        # for s in scenarios:
+        #     cursor.execute = (
+        #             "insert into context_excenarios(cod_contexto,cod_escenario,desc_context_escenario) values ('%s','%s','%s')" % (a, s, "."))
+        #     f = cursor.fetchall()
+        #     cnx.commit()
+            # ce = cms_context_escenarios()
+            # ce.set_cod_contexto(c.get_cod_contexto())
+            # ce.set_cod_escenario(s)
+            # ce.set_desc_context_escenarios(".")
+            # ce.save()
+
+    def getPeriod(self, data):
+        return self.period.get((data.get('startDate', data.get('xbrli:startDate')),
+                                data.get('endDate', data.get('xbrli:endDate')),
+                                data.get("instant", data.get("xbrli:instant"))))
+
+    def addPeriod(self, data):
+        cursor =cnx.cursor()
+        if not self.period.get((data.get('startDate', data.get('xbrli:startDate')),
+                                data.get('endDate', data.get('xbrli:endDate')),
+                                data.get("instant", data.get("xbrli:instant")))):
+            #from orm.common_services.public.cms_periodo import cms_periodo
+            sql = "insert into periodo(desc_periodo,"
+            valores = "('.',"
+            for d in data:
+                if data[d]:
+                    sql += d.replace('xbrli:','')+ ","
+                    valores += "'"+data[d] + "',"
+            sql=sql[:-1]+ ") values "+ valores [:-1] + ")"
+            cursor.execute(sql)
+            # if data.get("xbrli:instant"):
+            #     cursor.execute("insert into periodo (startdate,enddate,instant,desc_periodo)values ('%s','%s','%s','.')"%(data.get('startDate', data.get('xbrli:startDate')),data.get('endDate', data.get('xbrli:endDate')),data.get('instant', data.get('xbrli:instant'))or 'Null'))
+            # else:
+            #     cursor.execute("insert into periodo (startdate,enddate,desc_periodo)values ('%s','%s','.')" % (
+            #     data.get('startDate', data.get('xbrli:startDate')), data.get('endDate', data.get('xbrli:endDate'))
+            #     ))
+
+            cnx.commit()
+            cursor.execute("SELECT currval ('periodo_cod_periodo_seq')")
+            self.period[(
+                data.get('startDate', data.get('xbrli:startDate')), data.get('endDate', data.get('xbrli:endDate')),
+                data.get("instant", data.get("xbrli:instant")))] = cursor.fetchone()[0]
+            # p = cms_periodo()
+            # p.set_startdate(data.get('startDate', data.get('xbrli:startDate')))
+            # p.set_enddate(data.get('endDate', data.get('xbrli:endDate')))
+            # p.set_instant(data.get('instant', data.get('xbrli:instant')))
+            # p.set_desc_periodo(".")
+            # p._pre_save()
+            # p.save()
+            # self.period[(
+            #     data.get('startDate', data.get('xbrli:startDate')), data.get('endDate', data.get('xbrli:endDate')),
+            #     data.get("instant", data.get("xbrli:instant")))] = p.get_cod_periodo()
+
+
+    def loadPeriod(self):
+        #from orm.common_services.public.cms_periodo import cms_periodo
+        cursor = cnx.cursor()
+        cursor.execute("select cod_periodo, startdate, enddate,instant from periodo")
+        # per = cms_periodo()
+        for p in cursor.fetchall():
+            # s = p.get_startdate().__str__() if p.get_startdate() else None
+            # e = p.get_enddate().__str__() if p.get_enddate() else None
+            # i = p.get_instant().__str__() if p.get_instant() else None
+            self.period[(p[1], p[2], p[3])] = p[0]
+
+
+    def loadXBrlFromMenory(self, dataXML):
+        xbrl_parser = XBRLParser()
+        soup = BeautifulSoup(dataXML, 'lxml')
+        btree = BeautifulSoup(dataXML, 'lxml')
+        Terms = btree.select('xbrli > xbrli')
+        jsonObj = {"xbrli": []}
+        for term in Terms:
+            termDetail = {
+                "xbrli:xbrl": term.find('xbrli:xbrl').text,
+                "xbrl": term.find('xbrl').text
+            }
+            RelatedTerms = term.select('RelatedTerms > Term')
+            if RelatedTerms:
+                termDetail["RelatedTerms"] = []
+                for rterm in RelatedTerms:
+                    termDetail["RelatedTerms"].append({
+                        "Title": rterm.find('Title').text,
+                        "Relationship": rterm.find('Relationship').text
+                    })
+            jsonObj["thesaurus"].append(termDetail)
+        tag_list = soup.find_all()
+        for tag in tag_list:
+            if tag.name == 'us-gaap:liabilities':
+                print('Liabilities: ' + tag.text)
+        import json
+        import xmltodict
+        # xml = eval(xmljson(dataXML).replace("null", "None"))
+        jsonString = xmltodict.parse(dataXML)
+
+        self.jsonXBrl = None
+        keys = ['xbrli:xbrl', 'xbrl']
+        for key in keys:
+            self.jsonXBrl = jsonString.get(key)
+            if self.jsonXBrl:
+                return
+        print("No Encontro XBRL")
+
+    def loadContext(self):
+        #from orm.common_services.public.cms_contexto import cms_contexto
+        #c = cms_contexto()
+        cursor = cnx.cursor()
+        cursor.execute("select cod_contexto,cod_entidad,cod_periodo,desc_contexto from cotexto")
+        for c in cursor.fetchall():
+            # self.contexts[c.get_desc_contexto()] = {"entity": c.get_cod_entidad(), "period": c.get_cod_periodo(),
+            #                                         "id": c.get_cod_contexto()}
+            self.contexts[c[3]] = {"entity": c[1], "period": c[2], "id": c[0]}
+
+
+
+@app.route('/eresultado/<cod_documento>/<cod_role>', methods=["GET", "POST"])
+def eresultado(cod_documento, cod_role):
+    cursor = cnx.cursor()
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+                            from detalle_documento 
+                            join cuenta using (cod_cuenta) 
+                            left join role_cuenta using (cod_cuenta)
+                            left join role using(cod_role)
+                            left join unidad using (cod_unidad)
+                            join tipo_cuenta using (cod_tipo_cuenta)
+                            join contexto using (cod_contexto) 
+                            join entidad using (cod_entidad)
+                            join periodo using (cod_periodo) 
+                            left join context_escenarios using (cod_contexto) 
+                            left join escenario using (cod_escenario) 
+                            left join dimension using (cod_dimension) 
+                            --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                            where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                            order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    data = dictfetchall(cursor)
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+                                from detalle_documento 
+                                join cuenta using (cod_cuenta) 
+                                left join role_cuenta using (cod_cuenta)
+                                left join role using(cod_role)
+                                left join unidad using (cod_unidad)
+                                join tipo_cuenta using (cod_tipo_cuenta)
+                                join contexto using (cod_contexto) 
+                                join entidad using (cod_entidad)
+                                join periodo using (cod_periodo) 
+                                left join context_escenarios using (cod_contexto) 
+                                left join escenario using (cod_escenario) 
+                                left join dimension using (cod_dimension) 
+                                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    date = cursor.fetchall()
+    cursor.execute("""select distinct desc_periodo 
+                               from detalle_documento 
+                               join cuenta using (cod_cuenta) 
+                               left join role_cuenta using (cod_cuenta)
+                               left join role using(cod_role)
+                               join contexto using (cod_contexto) 
+                               join periodo using (cod_periodo)
+                               left join context_escenarios using (cod_contexto) 
+                               left join escenario using (cod_escenario) 
+                               left join dimension using (cod_dimension)
+                               where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                               order by desc_periodo desc""" % (cod_documento, cod_role))
+    per = dictfetchall(cursor)
+    for d in date:
+        cod_rol = d[1]
+        desc_role = d[0]
+        entidad = d[13]
+        cuenta = d[5]
+        dineros = d[8]
+        fechas = d[7]
+    hoy = datetime.now()
+    hoy = hoy.strftime("%Y-%m-%d")
+    report = PdfCustomDetail(filename="%s.pdf" % (cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
+                             logo=getattr(sys, 'logo', 'xeeffy_logo_index.png'))
+    pvt_kms = pivot(data, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
+    datas = []
+    columnas = ["CUENTA"]
+    data_linea = ['']
+    ancho_total = 0
+    colsWidth = [0]
+    colAlign = ['LEFT']
+    colType = ['str']
+    for p in per:
+        columnas.append(p['desc_periodo'])
+        data_linea.append(0.0)
+        colsWidth.append(60)
+        ancho_total += 60
+        colAlign.append("RIGHT")
+        colType.append("str")
+    colsWidth[0] = 540 - ancho_total
+    for f in pvt_kms:
+        dl = list(f.get(('cod_role_cuenta', 'desc_cuenta'), ['']))
+        for p in per:
+            dl.append(f.get((p['desc_periodo'],), 0))
+        datas.append(dl)
+    data_final = []
+    datas.sort()
+    for d in datas:
+        data_final.append(d[1:])
+    return render_template("/eresultado.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
+                           hoy=hoy)
+
+
+@app.route('/ratioLiquidez/<currentA>/<currentL>', methods=["GET", "POST"])
+def ratioLiquidez(currentA, currentL):
+    return render_template("/ratioLiquidez.html")
+
+
+@app.route('/balance/<cod_documento>/<cod_role>', methods=["GET", "POST"])
+def balance(cod_documento, cod_role):
+    cursor = cnx.cursor()
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+                            from detalle_documento 
+                            join cuenta using (cod_cuenta) 
+                            left join role_cuenta using (cod_cuenta)
+                            left join role using(cod_role)
+                            left join unidad using (cod_unidad)
+                            join tipo_cuenta using (cod_tipo_cuenta)
+                            join contexto using (cod_contexto) 
+                            join entidad using (cod_entidad)
+                            join periodo using (cod_periodo) 
+                            left join context_escenarios using (cod_contexto) 
+                            left join escenario using (cod_escenario) 
+                            left join dimension using (cod_dimension) 
+                            --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                            where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                            order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    data = dictfetchall(cursor)
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
+                                from detalle_documento 
+                                join cuenta using (cod_cuenta) 
+                                left join role_cuenta using (cod_cuenta)
+                                left join role using(cod_role)
+                                left join unidad using (cod_unidad)
+                                join tipo_cuenta using (cod_tipo_cuenta)
+                                join contexto using (cod_contexto) 
+                                join entidad using (cod_entidad)
+                                join periodo using (cod_periodo) 
+                                left join context_escenarios using (cod_contexto) 
+                                left join escenario using (cod_escenario) 
+                                left join dimension using (cod_dimension) 
+                                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    date = cursor.fetchall()
+    cursor.execute("""select distinct desc_periodo 
+                               from detalle_documento 
+                               join cuenta using (cod_cuenta) 
+                               left join role_cuenta using (cod_cuenta)
+                               left join role using(cod_role)
+                               join contexto using (cod_contexto) 
+                               join periodo using (cod_periodo)
+                               left join context_escenarios using (cod_contexto) 
+                               left join escenario using (cod_escenario) 
+                               left join dimension using (cod_dimension)
+                               where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                               order by desc_periodo desc""" % (cod_documento, cod_role))
+    per = dictfetchall(cursor)
+    for d in date:
+        cod_rol = d[1]
+        desc_role = d[0]
+        entidad = d[13]
+        cuenta = d[5]
+        dineros = d[8]
+        fechas = d[7]
+    hoy = datetime.now()
+    hoy = hoy.strftime("%Y-%m-%d")
+    report = PdfCustomDetail(filename="%s.pdf" % (cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
+                             logo=getattr(sys, 'logo', 'xeeffy_logo_index.png'))
+    pvt_kms = pivot(data, ('cod_role_cuenta', 'desc_cuenta'), ('desc_periodo',), 'valor')
+    datas = []
+    columnas = ["CUENTA"]
+    data_linea = ['']
+    ancho_total = 0
+    colsWidth = [0]
+    colAlign = ['LEFT']
+    colType = ['str']
+    for p in per:
+        columnas.append(p['desc_periodo'])
+        data_linea.append(0.0)
+        colsWidth.append(60)
+        ancho_total += 60
+        colAlign.append("RIGHT")
+        colType.append("str")
+    colsWidth[0] = 540 - ancho_total
+    for f in pvt_kms:
+        dl = list(f.get(('cod_role_cuenta', 'desc_cuenta'), ['']))
+        for p in per:
+            dl.append(f.get((p['desc_periodo'],), 0))
+        datas.append(dl)
+    data_final = []
+    datas.sort()
+    for d in datas:
+        data_final.append(d[1:])
+    return render_template("/balance.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
+                           hoy=hoy)
 
 
 # funciones de ordenado y calculos de cada uno de los servicios
@@ -590,4 +1282,4 @@ def CRut(rut):
 
 if __name__ == "__main__":
     db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=5555)
