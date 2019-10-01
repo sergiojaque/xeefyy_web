@@ -1134,8 +1134,44 @@ def eresultado(cod_documento, cod_role):
                            hoy=hoy)
 
 
-@app.route('/ratioLiquidez/<currentA>/<currentL>', methods=["GET", "POST"])
-def ratioLiquidez(currentA, currentL):
+@app.route('/ratioLiquidez', methods=["GET", "POST"])
+def ratioLiquidez():
+    cursor = cnx.cursor()
+    # Activos
+    sql_activos = """
+        select 
+            sum(COALESCE(detalle_documento.desc_detalle_documento::numeric, 0)) total_activos_corriente 
+        from detalle_documento 
+            join cuenta using (cod_cuenta) 
+        left join role_cuenta using (cod_cuenta)
+        left join role using(cod_role)
+        where detalle_documento.cod_cuenta = 608 and role.cod_role = 210000
+        group by detalle_documento.cod_cuenta, role.cod_role
+    """
+    cursor.execute(sql_activos)
+    activos_corriente = cursor.fetchone()[0]
+
+    # Pasivos
+    sql_pasivos = """
+        select 
+            sum(COALESCE(detalle_documento.desc_detalle_documento::numeric, 0)) total_pasivos_corriente 
+        from detalle_documento 
+            join cuenta using (cod_cuenta) 
+        left join role_cuenta using (cod_cuenta)
+        left join role using(cod_role)
+        where detalle_documento.cod_cuenta = 668 and role.cod_role = 210000
+        group by detalle_documento.cod_cuenta, role.cod_role
+    """
+    cursor.execute(sql_pasivos)
+    pasivos_corriente = cursor.fetchone()[0]
+
+    liquidez = activos_corriente / pasivos_corriente
+
+    print("HEREEEEEEEEEEEEEEEEEEEEE")
+    print(activos_corriente)
+    print(pasivos_corriente)
+    print(liquidez)
+
     return render_template("/ratioLiquidez.html")
 
 
