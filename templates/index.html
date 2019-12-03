@@ -61,10 +61,10 @@
                         <div class="rd-navbar-panel">
                             <!--RD Navbar Brand-->
                             <div class="rd-navbar-brand">
-                                <!--Brand--><a class="brand" href="index.html"><img class="brand-logo-dark"
-                                                                                    src="/static/images/xeeffy_logo_index.jpeg"
-                                                                                    alt="top" align="top" width="200"
-                                                                                    height="300"/></a>
+                                <!--Brand--><a class="brand" href="/login"><img class="brand-logo-dark"
+                                                                                src="/static/images/xeeffy_logo_index.jpeg"
+                                                                                alt="top" align="top" width="200"
+                                                                                height="300"/></a>
                             </div>
                         </div>
                         <br>
@@ -73,40 +73,54 @@
                                 <div class="info-modern-icon fa-phone"></div>
                                 <a class="info-modern-link" href="#">+56988295769</a>
                             </article>
-                            <p>Llámenos ahora para obtener una consulta comercial gratuita de nuestros expertos</p>
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    <div class="notification is-danger">
+                                        {{ messages[0] }}..
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
                 </div>
+
                 <div class="rd-navbar-main-outer">
                     <div class="rd-navbar-main">
                         <div class="rd-navbar-nav-wrap">
                             <ul class="rd-navbar-nav">
-                                    <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar
-                                        Sesion</a>
-                                    </li>
-                                <li class="rd-nav-item"><a class="rd-nav-link" href="index">Sistema</a>
-                                    <ul class="rd-menu rd-navbar-dropdown">
-                                        <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="entidades">Entidades</a>
-                                        </li>
-                                        <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="roles">Roles</a>
-                                        </li>
-                                        <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Documentos
-                                        </a>
-                                            <ul class="rd-menu rd-navbar-dropdown">
-                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link"
-                                                                                href="/documentos">Documentos
-                                                </a>
-                                                </li>
-                                                {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/ndocumento">Nuevo Documento#}
-                                                {#                                                    Management</a>#}
-                                                {#                                                </li>#}
-                                                {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Tax#}
-                                                {#                                                    Advisory</a>#}
-                                                {#                                                </li>#}
-                                            </ul>
-                                        </li>
+                                <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar
+                                    Sesion</a>
+                                </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link" href="index">Sistema</a>
+                                        <ul class="rd-menu rd-navbar-dropdown">
+                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="entidades">Entidades</a>
+                                            </li>
+                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link"
+                                                                            href="roles">Roles</a>
+                                            </li>
+                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Documentos
+                                            </a>
+                                                <ul class="rd-menu rd-navbar-dropdown">
+                                                    <li class="rd-dropdown-item"><a class="rd-dropdown-link"
+                                                                                    href="/documentos">Documentos
+                                                    </a>
+                                                    </li>
+                                                    <li class="rd-dropdown-item"><a class="rd-dropdown-link"
+                                                                                    href="/docEmpresa">DocxEmpresa
+                                                    </a>
+                                                    </li>
+                                                    {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/ndocumento">Nuevo Documento#}
+                                                    {#                                                    Management</a>#}
+                                                    {#                                                </li>#}
+                                                    {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Tax#}
+                                                    {#                                                    Advisory</a>#}
+                                                    {#                                                </li>#}
+                                                </ul>
+                                            </li>
 
-                                    </ul>
+                                        </ul>
+                                    </li>
+
 
                                 <li class="rd-nav-item active"><a class="rd-nav-link" href="/logout">Cerrar Sesion</a>
                                 </li>
@@ -115,6 +129,7 @@
                                                            href="">Usuario: {{ session['username'] }}</a>
                                 </li>
                             </ul>
+
                         </div>
                     </div>
                 </div>
@@ -153,8 +168,8 @@
                     <div class="container">
                         <div class="row justify-content-end">
                             <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Una
-                                    amplia gama de información comercial global.</h1>
+                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Ingresa
+                                    al Sistema</h1>
                             </div>
                         </div>
                     </div>
@@ -174,23 +189,19 @@
                 <div class="col-sm-6 col-lg-3 wow fadeInUp">
                     <article class="box-default box-default-3">
                         <div class="box-default-icon fa-globe"></div>
-                        <h4 class="box-default-title">Global <br>research</h4>
-                        <div class="box-default-text">Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do
-                            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-                            nostrud.
+                        <h4 class="box-default-title">Global <br>xEEFFy</h4>
+                        <div class="box-default-text">Ingrersa a nuestro sistema
                         </div>
-                        <a class="box-default-link fa-chevron-right" href="#"></a>
+                        <a class="box-default-link fa-chevron-right" href="/docEmpresa"></a>
                     </article>
                 </div>
                 <div class="col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay=".05s">
                     <article class="box-default box-default-2">
                         <div class="box-default-icon fa-lightbulb-o"></div>
-                        <h4 class="box-default-title">Creative <br>ideas</h4>
-                        <div class="box-default-text">Experimentum grauiter ducunt ad azureus terror. Hercle, omnia
-                            altus!, gratis olla! Hilotae nobilis habena est. Ubi est bassus urbs? Cum adgium prarere,
-                            omnes lapsuses.
+                        <h4 class="box-default-title">Iniciar Sesión <br>Ingresa al sistema</h4>
+                        <div class="box-default-text">Financiero
                         </div>
-                        <a class="box-default-link fa-chevron-right" href="#"></a>
+                        <a class="box-default-link fa-chevron-right" href="/login"></a>
                     </article>
                 </div>
                 <div class="col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay=".1s">

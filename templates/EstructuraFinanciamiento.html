@@ -1,0 +1,801 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>EstructuraFinanciamiento</title>
+    <!-- Custom fonts for this template-->
+
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <style>.loader {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background: url('/static/images/loading1.gif') 50% 50% no-repeat rgb(249, 249, 249);
+        opacity: .8;
+    }</style>
+    <script>
+        $(".loader").fadeOut("slow");
+    </script>
+    <style>table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }</style>
+</head>
+
+<body id="page-top">
+
+<!-- Page Wrapper -->
+<div id="wrapper" style="top: auto">
+    <div class="loader"></div>
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <!-- Sidebar - Brand -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/index">
+            <div class="sidebar-brand-icon rotate-n-15">
+                <i class="fas fa-laugh-wink"></i>
+            </div>
+            <div class="sidebar-brand-text mx-3">XEFFY <sup>®</sup></div>
+        </a>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider my-0">
+
+        <!-- Nav Item - Dashboard -->
+        <li class="nav-item active">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-fw fa-tachometer-alt"></i>
+                <span>Sistema IFRS</span></a>
+        </li>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+
+        <!-- Heading -->
+        <div class="sidebar-heading">
+            Maestro
+        </div>
+
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+               aria-expanded="true" aria-controls="collapseTwo">
+                <i class="fas fa-fw fa-cog"></i>
+                <span>Maestro</span>
+            </a>
+            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <h6 class="collapse-header">Custom Maestro:</h6>
+                    <a class="collapse-item" href="/roles">Roles</a>
+                    <a class="collapse-item" href="/entidades">Entidades</a>
+                </div>
+            </div>
+        </li>
+
+
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+
+        <!-- Heading -->
+        <div class="sidebar-heading">
+            Sistema
+        </div>
+
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
+               aria-expanded="true" aria-controls="collapsePages">
+                <i class="fas fa-fw fa-folder"></i>
+                <span>Volver</span>
+            </a>
+            <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <form method="get" id="content">
+                                <a class="collapse-item" type="submit" class="btn btn-warning"
+                                   href="/ResumenEmpresa/{{ cod_entidad }}/2018/12">VOLVER</a>
+                    </form>
+                </div>
+            </div>
+        </li>
+
+        <!-- Nav Item - Charts -->
+
+
+        <!-- Divider -->
+        <hr class="sidebar-divider d-none d-md-block">
+
+        <!-- Sidebar Toggler (Sidebar) -->
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+
+    </ul>
+    <!-- End of Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Main Content -->
+        <form method="get" id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                <!-- Sidebar Toggle (Topbar) -->
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+
+                <!-- Topbar Search -->
+                <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                    <div class="input-group">
+                        <input type="search" id="myInput" class="form-control bg-light border-0 small"
+                               placeholder="Search for..."
+                               aria-label="Search" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="button">
+                                <i class="fas fa-search fa-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+
+                <div class="topbar-divider d-none d-sm-block"></div>
+
+                <!-- Nav Item - User Information -->
+                <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ session['username'] }}</span>
+                        <img class="img-profile rounded-circle" src="/static/images/xeeffy_logo_index.png">
+                    </a>
+                    <!-- Dropdown - User Information -->
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                         aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="/login">
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Login
+                        </a>
+                        <a class="dropdown-item" href="/signup">
+                            <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Registrar
+                        </a>
+                        <a class="dropdown-item" href="/logout">
+                            <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Cerrar Sesión
+                        </a>
+
+                    </div>
+                </li>
+
+                </ul>
+
+            </nav>
+            <!-- End of Topbar -->
+
+            <!-- Begin Page Content -->
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">Sistema XEFFY(Financiamiento): Empresa({{ entidad }})</h1>
+                </div>
+
+                <form method="get" id="content">
+                    <div class="col-md-2">
+                        <div class="demo-section k-content">
+                            <label><i class="fa fa-calendar"></i>Mes(3,6,9,12)
+                            </label>
+                            <input type="text" name="mes" id="datepicker1" class="form-control"
+                                   value="{{ mes }}"/>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="col-md-2">
+                        <div class="demo-section k-content">
+                            <button type="submit" class="btn btn-outline-info">PERIODO</button>
+                        </div>
+                    </div>
+                    <br>
+            </div>
+            <table class="table table-striped table-bordered" id="tabla_familia">
+                <thead class="thead-dark">
+                <tr>
+                    {% for c in columnas %}
+                        <th scope="col">{{ c }}</th>
+                    {% endfor %}
+
+                </tr>
+                </thead>
+                <tbody>
+                {% for d in data %}
+                    <tr>
+                        <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
+                        {% for c in range(d | length -1) %}
+                            <td>
+                                {% if c +1 <= d|length -2 %}
+                                    {% if d[c+1] > d[c+2] %}
+                                        <i class="fas fa-arrow-up text-success mr-3"></i>
+                                    {% else %}
+                                        <i class="fas fa-arrow-down text-warning mr-3"></i>
+                                    {% endif %}
+                                {% endif %}
+                                {% if (d[c+1] == d[1:]|max) and (d[c+1]!=0) %}
+                                    <i class="fas fa-circle text-warning mr-3"></i>
+                                {% endif %}
+                                {{ "{:,.2f}".format(d[c+1]) }}
+                            </td>
+                        {% endfor %}
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+        </form>
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Añadir empresa</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="get">
+                        <div class="modal-body" class="table table-striped table-bordered">
+                            <label><i class="fa fa-calendar"></i>Rut Empresa
+                            </label>
+                            <input type="text" id="empresa" name="empresa">
+                            <input type="submit" value="Buscar" class="btn btn-primary">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </table>
+
+        <!-- End of Main Content -->
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+                <div class="copyright text-center my-auto">
+                    <span>Copyright &copy; XEEFFY 2019</span>
+                </div>
+            </div>
+        </footer>
+
+
+        <!-- Footer -->
+
+        <!-- End of Footer -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+</div>
+<!-- End of Page Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+<iframe id="txtArea1" style="display:none"></iframe>
+
+<script>
+    /* Documentation for this tablesorter FORK can be found at
+    * http://mottie.github.io/tablesorter/docs/
+    */
+    $(function () {
+        $('table').tablesorter({
+
+            // *** APPEARANCE ***
+            // Add a theme - 'blackice', 'blue', 'dark', 'default', 'dropbox',
+            // 'green', 'grey' or 'ice' stylesheets have all been loaded
+            // to use 'bootstrap' or 'jui', you'll need to include "uitheme"
+            // in the widgets option - To modify the class names, extend from
+            // themes variable. Look for "$.extend($.tablesorter.themes.jui"
+            // at the bottom of this window
+            // this option only adds a table class name "tablesorter-{theme}"
+            theme: 'jui',
+
+            // fix the column widths
+            widthFixed: false,
+
+            // Show an indeterminate timer icon in the header when the table
+            // is sorted or filtered
+            showProcessing: false,
+
+            // header layout template (HTML ok); {content} = innerHTML,
+            // {icon} = <i/> (class from cssIcon)
+            headerTemplate: '{content}{icon}',
+
+            // return the modified template string
+            onRenderTemplate: null, // function(index, template){ return template; },
+
+            // called after each header cell is rendered, use index to target the column
+            // customize header HTML
+            onRenderHeader: function (index) {
+                // the span wrapper is added by default
+                $(this).find('div.tablesorter-header-inner').addClass('roundedCorners');
+            },
+
+            // *** FUNCTIONALITY ***
+            // prevent text selection in header
+            cancelSelection: true,
+
+            // add tabindex to header for keyboard accessibility
+            tabIndex: true,
+
+            // other options: "ddmmyyyy" & "yyyymmdd"
+            dateFormat: "mmddyyyy",
+
+            // The key used to select more than one column for multi-column
+            // sorting.
+            sortMultiSortKey: "shiftKey",
+
+            // key used to remove sorting on a column
+            sortResetKey: 'ctrlKey',
+
+            // false for German "1.234.567,89" or French "1 234 567,89"
+            usNumberFormat: true,
+
+            // If true, parsing of all table cell data will be delayed
+            // until the user initializes a sort
+            delayInit: false,
+
+            // if true, server-side sorting should be performed because
+            // client-side sorting will be disabled, but the ui and events
+            // will still be used.
+            serverSideSorting: false,
+
+            // default setting to trigger a resort after an "update",
+            // "addRows", "updateCell", etc has completed
+            resort: true,
+
+            // *** SORT OPTIONS ***
+            // These are detected by default,
+            // but you can change or disable them
+            // these can also be set using data-attributes or class names
+            headers: {
+                // set "sorter : false" (no quotes) to disable the column
+                0: {sorter: "text"},
+                1: {sorter: "text"}
+            },
+
+            // ignore case while sorting
+            ignoreCase: true,
+
+            // forces the user to have this/these column(s) sorted first
+            sortForce: null,
+            // initial sort order of the columns, example sortList: [[0,0],[1,0]],
+            // [[columnIndex, sortDirection], ... ]
+            sortList: [[0, 0], [1, 0], [2, 0]],
+            // default sort that is added to the end of the users sort
+            // selection.
+            sortAppend: null,
+
+            // when sorting two rows with exactly the same content,
+            // the original sort order is maintained
+            sortStable: false,
+
+            // starting sort direction "asc" or "desc"
+            sortInitialOrder: "asc",
+
+            // Replace equivalent character (accented characters) to allow
+            // for alphanumeric sorting
+            sortLocaleCompare: false,
+
+            // third click on the header will reset column to default - unsorted
+            sortReset: false,
+
+            // restart sort to "sortInitialOrder" when clicking on previously
+            // unsorted columns
+            sortRestart: false,
+
+            // sort empty cell to bottom, top, none, zero, emptyMax, emptyMin
+            emptyTo: "bottom",
+
+            // sort strings in numerical column as max, min, top, bottom, zero
+            stringTo: "max",
+
+            // extract text from the table
+            textExtraction: {
+                0: function (node, table) {
+                    // this is how it is done by default
+                    return $(node).attr(table.config.textAttribute) ||
+                        node.textContent ||
+                        node.innerText ||
+                        $(node).text() ||
+                        '';
+                },
+                1: function (node) {
+                    return $(node).text();
+                }
+            },
+
+            // data-attribute that contains alternate cell text
+            // (used in default textExtraction function)
+            textAttribute: 'data-text',
+
+            // use custom text sorter
+            // function(a,b){ return a.sort(b); } // basic sort
+            textSorter: null,
+
+            // choose overall numeric sorter
+            // function(a, b, direction, maxColumnValue)
+            numberSorter: null,
+
+            // *** WIDGETS ***
+            // apply widgets on tablesorter initialization
+            initWidgets: true,
+
+            // table class name template to match to include a widget
+            widgetClass: 'widget-{name}',
+
+            // include zebra and any other widgets, options:
+            // 'columns', 'filter', 'stickyHeaders' & 'resizable'
+            // 'uitheme' is another widget, but requires loading
+            // a different skin and a jQuery UI theme.
+            widgets: ['zebra', 'columns', 'uitheme'],
+
+            widgetOptions: {
+
+                // zebra widget: adding zebra striping, using content and
+                // default styles - the ui css removes the background
+                // from default even and odd class names included for this
+                // demo to allow switching themes
+                // [ "even", "odd" ]
+                zebra: [
+                    "ui-widget-content even",
+                    "ui-state-default odd"
+                ],
+
+                // columns widget: change the default column class names
+                // primary is the 1st column sorted, secondary is the 2nd, etc
+                columns: [
+                    "primary",
+                    "secondary",
+                    "tertiary"
+                ],
+
+                // columns widget: If true, the class names from the columns
+                // option will also be added to the table tfoot.
+                columns_tfoot: true,
+
+                // columns widget: If true, the class names from the columns
+                // option will also be added to the table thead.
+                columns_thead: true,
+
+                // filter widget: If there are child rows in the table (rows with
+                // class name from "cssChildRow" option) and this option is true
+                // and a match is found anywhere in the child row, then it will make
+                // that row visible; default is false
+                filter_childRows: false,
+
+                // filter widget: If true, a filter will be added to the top of
+                // each table column.
+                filter_columnFilters: true,
+
+                // filter widget: css class name added to the filter cell
+                // (string or array)
+                filter_cellFilter: '',
+
+                // filter widget: css class name added to the filter row & each
+                // input in the row (tablesorter-filter is ALWAYS added)
+                filter_cssFilter: '',
+
+                // filter widget: add a default column filter type
+                // "~{query}" to make fuzzy searches default;
+                // "{q1} AND {q2}" to make all searches use a logical AND.
+                filter_defaultFilter: {},
+
+                // filter widget: filters to exclude, per column
+                filter_excludeFilter: {},
+
+                // filter widget: jQuery selector string (or jQuery object)
+                // of external filters
+                filter_external: '',
+
+                // filter widget: class added to filtered rows;
+                // needed by pager plugin
+                filter_filteredRow: 'filtered',
+
+                // filter widget: add custom filter elements to the filter row
+                filter_formatter: null,
+
+                // filter widget: Customize the filter widget by adding a select
+                // dropdown with content, custom options or custom filter functions
+                // see http://goo.gl/HQQLW for more details
+                filter_functions: null,
+
+                // filter widget: hide filter row when table is empty
+                filter_hideEmpty: true,
+
+                // filter widget: Set this option to true to hide the filter row
+                // initially. The rows is revealed by hovering over the filter
+                // row or giving any filter input/select focus.
+                filter_hideFilters: false,
+
+                // filter widget: Set this option to false to keep the searches
+                // case sensitive
+                filter_ignoreCase: true,
+
+                // filter widget: if true, search column content while the user
+                // types (with a delay)
+                filter_liveSearch: true,
+
+                // filter widget: a header with a select dropdown & this class name
+                // will only show available (visible) options within the drop down
+                filter_onlyAvail: 'filter-onlyAvail',
+
+                // filter widget: default placeholder text
+                // (overridden by any header "data-placeholder" setting)
+                filter_placeholder: {search: '', select: ''},
+
+                // filter widget: jQuery selector string of an element used to
+                // reset the filters.
+                filter_reset: null,
+
+                // filter widget: Use the $.tablesorter.storage utility to save
+                // the most recent filters
+                filter_saveFilters: false,
+
+                // filter widget: Delay in milliseconds before the filter widget
+                // starts searching; This option prevents searching for every character
+                // while typing and should make searching large tables faster.
+                filter_searchDelay: 300,
+
+                // filter widget: allow searching through already filtered rows in
+                // special circumstances; will speed up searching in large tables if true
+                filter_searchFiltered: true,
+
+                // filter widget: include a function to return an array of values to be
+                // added to the column filter select
+                filter_selectSource: null,
+
+                // filter widget: Set this option to true if filtering is performed on
+                // the server-side.
+                filter_serversideFiltering: false,
+
+                // filter widget: Set this option to true to use the filter to find
+                // text from the start of the column. So typing in "a" will find
+                // "albert" but not "frank", both have a's; default is false
+                filter_startsWith: false,
+
+                // filter widget: If true, ALL filter searches will only use parsed
+                // data. To only use parsed data in specific columns, set this option
+                // to false and add class name "filter-parsed" to the header
+                filter_useParsedData: false,
+
+                // filter widget: data attribute in the header cell that contains
+                // the default filter value
+                filter_defaultAttrib: 'data-value',
+
+                // filter widget: filter_selectSource array text left of the separator
+                // is added to the option value, right into the option text
+                filter_selectSourceSeparator: '|',
+
+                // Resizable widget: If this option is set to false, resized column
+                // widths will not be saved. Previous saved values will be restored
+                // on page reload
+                resizable: true,
+
+                // Resizable widget: If this option is set to true, a resizing anchor
+                // will be included in the last column of the table
+                resizable_addLastColumn: false,
+
+                // Resizable widget: Set this option to the starting & reset header widths
+                resizable_widths: [],
+
+                // Resizable widget: Set this option to throttle the resizable events
+                // set to true (5ms) or any number 0-10 range
+                resizable_throttle: false,
+
+                // saveSort widget: If this option is set to false, new sorts will
+                // not be saved. Any previous saved sort will be restored on page
+                // reload.
+                saveSort: true,
+
+                // stickyHeaders widget: extra class name added to the sticky header row
+                stickyHeaders: '',
+
+                // jQuery selector or object to attach sticky header to
+                stickyHeaders_attachTo: null,
+
+                // jQuery selector or object to monitor horizontal scroll position
+                // (defaults: xScroll > attachTo > window)
+                stickyHeaders_xScroll: null,
+
+                // jQuery selector or object to monitor vertical scroll position
+                // (defaults: yScroll > attachTo > window)
+                stickyHeaders_yScroll: null,
+
+                // number or jquery selector targeting the position:fixed element
+                stickyHeaders_offset: 0,
+
+                // scroll table top into view after filtering
+                stickyHeaders_filteredToTop: true,
+
+                // added to table ID, if it exists
+                stickyHeaders_cloneId: '-sticky',
+
+                // trigger "resize" event on headers
+                stickyHeaders_addResizeEvent: true,
+
+                // if false and a caption exist, it won't be included in the
+                // sticky header
+                stickyHeaders_includeCaption: true,
+
+                // The zIndex of the stickyHeaders, allows the user to adjust this
+                // to their needs
+                stickyHeaders_zIndex: 2
+
+            },
+
+            // *** CALLBACKS ***
+            // function called after tablesorter has completed initialization
+            initialized: null, // function (table) {}
+
+            // *** extra css class names
+            tableClass: '',
+            cssAsc: '',
+            cssDesc: '',
+            cssNone: '',
+            cssHeader: '',
+            cssHeaderRow: '',
+            // processing icon applied to header during sort/filter
+            cssProcessing: '',
+
+            // class name indiciating that a row is to be attached to the its parent
+            cssChildRow: 'tablesorter-childRow',
+            // if this class does not exist, the {icon} will not be added from
+            // the headerTemplate
+            cssIcon: 'tablesorter-icon',
+            // class name added to the icon when there is no column sort
+            cssIconNone: '',
+            // class name added to the icon when the column has an ascending sort
+            cssIconAsc: '',
+            // class name added to the icon when the column has a descending sort
+            cssIconDesc: '',
+            // don't sort tbody with this class name
+            // (only one class name allowed here!)
+            cssInfoBlock: 'tablesorter-infoOnly',
+            // class name added to table header which allows clicks to bubble up
+            cssAllowClicks: 'tablesorter-allowClicks',
+            // header row to ignore; cells within this row will not be added
+            // to table.config.$headers
+            cssIgnoreRow: 'tablesorter-ignoreRow',
+
+            // *** SELECTORS ***
+            // jQuery selectors used to find the header cells.
+            selectorHeaders: '> thead th, > thead td',
+
+            // jQuery selector of content within selectorHeaders
+            // that is clickable to trigger a sort.
+            selectorSort: "th, td",
+
+            // rows with this class name will be removed automatically
+            // before updating the table cache - used by "update",
+            // "addRows" and "appendCache"
+            selectorRemove: ".remove-me",
+
+            // *** DEBUGING ***
+            // send messages to console
+            debug: false
+
+        });
+    });
+
+    // Extend the themes to change any of the default class names
+    // this example modifies the jQuery UI theme class names
+    $.extend($.tablesorter.themes.jui, {
+        /* change default jQuery uitheme icons - find the full list of icons
+        here: http://jqueryui.com/themeroller/
+        (hover over them for their name)
+        */
+        // table classes
+        table: 'ui-widget ui-widget-content ui-corner-all',
+        caption: 'ui-widget-content',
+        // *** header class names ***
+        // header classes
+        header: 'ui-widget-header ui-corner-all ui-state-default',
+        sortNone: '',
+        sortAsc: '',
+        sortDesc: '',
+        // applied when column is sorted
+        active: 'ui-state-active',
+        // hover class
+        hover: 'ui-state-hover',
+        // *** icon class names ***
+        // icon class added to the <i> in the header
+        icons: 'ui-icon',
+        // class name added to icon when column is not sorted
+        iconSortNone: 'ui-icon-carat-2-n-s',
+        // class name added to icon when column has ascending sort
+        iconSortAsc: 'ui-icon-carat-1-n',
+        // class name added to icon when column has descending sort
+        iconSortDesc: 'ui-icon-carat-1-s',
+        filterRow: '',
+        footerRow: '',
+        footerCells: '',
+        // even row zebra striping
+        even: 'ui-widget-content',
+        // odd row zebra striping
+        odd: 'ui-state-default'
+    });
+
+</script>
+<script src="/static/js/all.js"></script>
+<!-- Bootstrap core JavaScript-->
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="/static/js/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="/static/js/sb-admin-2.min.js"></script>
+
+<!-- Page level plugins -->
+<script src="/static/js/Chart.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="/static/js/chart-area-demo.js"></script>
+<script src="/static/js/chart-pie-demo.js"></script>
+<script> $(document).ready(function () {
+    $("#myInput").on("keyup", function () {
+        var value = $(this).val().toLowerCase();
+        $("#tabla_familia tr").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+     $(".loader").hide();
+});
+</script>
+<script>
+    $(document).ready(function () {
+        $('#tabla_familia').DataTable();
+    });
+</script>
+<script language=javascript>
+    function ventanaSecundaria(URL) {
+        window.open(URL, "ventana1", "width=120,height=300,scrollbars=NO")
+    }
+
+
+</script>
+</div>
+</div>
+<link href="/static/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+          rel="stylesheet">
+    <link href="/static/css/all.css" rel="stylesheet">
+    <!-- Custom styles for this template-->
+    <link href="/static/css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/static/js/jquery.tablesorter.min.js"></script>
+    <script src="/static/js/jquery.tablesorter.widgets.min.js"></script>
+    <link href="/static/assets/css/argon-dashboard.css?v=1.1.0" rel="stylesheet"/>
+    <link href="/static/assets/js/plugins/nucleo/css/nucleo.css" rel="stylesheet"/>
+    <link href="/static/assets/js/plugins/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet"/>
+</body>
+
+</html>

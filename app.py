@@ -1,44 +1,67 @@
+#!/usr/bin/env python
+# -*- coding: UTF8 -*-
 import hashlib
+import operator
 import sys
-
-import xmljson as xmljson
+import requests
 import xmltodict
+from oauthlib.oauth2 import WebApplicationClient
+from sqlalchemy.testing.pickleable import User
 from pivot import pivot
 from reportlab.lib.styles import getSampleStyleSheet
 from bs4 import BeautifulSoup
-from flask import Flask, render_template, request, redirect, flash, session, url_for, Response
+from flask import Flask, render_template, request, redirect, flash, session, url_for, Blueprint, escape, abort
 from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from psycopg2 import connect
 import psycopg2.extensions as _ext
-from sqlalchemy.sql.functions import current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 import zipfile
 import xlrd
 import tempfile
-import openpyxl
-import string
 import urllib3
-import pdfkit
-from datetime import datetime, timedelta
-from xbrl import XBRLParser, GAAP, GAAPSerializer
+from datetime import datetime
+import json
+from flask_login import LoginManager, UserMixin, login_user, login_required
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 
-dbdir = "sqlite:///" + "xeeffy.db"
+# dbdir = "sqlite:///" + "xeeffy.db"
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = dbdir
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db_user = os.environ.get('DBAAS_USER_NAME', 'jcarrasco')
-db_password = os.environ.get('DBAAS_USER_PASSWORD', '1234')
-db_connect = os.environ.get('DBAAS_DEFAULT_CONNECT_DESCRIPTOR', "190.114.255.158")
-service_port = port = os.environ.get('PORT', '5432')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://christian:1020@192.114.254.146/xeeffy'
+app.secret_key = os.environ.get("FN_FLASK_SECRET_KEY", default=False)
+
+# app.config["SQLALCHEMY_DATABASE_URI"] = dbdir
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# db_user = os.environ.get('DBAAS_USER_NAME', 'christian')
+# db_password = os.environ.get('DBAAS_USER_PASSWORD', '1020')
+# db_connect = os.environ.get('DBAAS_DEFAULT_CONNECT_DESCRIPTOR', "190.114.254.146")
+# service_port = port = os.environ.get('PORT', '5432')
+POSTGRES_URL = "190.114.254.146:5432"
+POSTGRES_USER = "christian"
+POSTGRES_PW = "1020"
+POSTGRES_DB = "xeeffy"
+
+DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=POSTGRES_USER, pw=POSTGRES_PW, url=POSTGRES_URL,
+                                                               db=POSTGRES_DB)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # silence the deprecation warning
+
+db = SQLAlchemy(app)
 cnx = connect(
     database='xeeffy',
-    host='190.114.255.158',
+    host='190.114.254.146',
     port='5432',
-    user='jcarrasco',
-    password='1234')
+    user='christian',
+    password='1020')
 
 status = cnx.get_transaction_status()
 if status == _ext.TRANSACTION_STATUS_UNKNOWN:
@@ -54,16 +77,92 @@ class PoolError(psycopg2.Error):
     pass
 
 
-class Usuario(db.Model):
+# Configuration
+GOOGLE_CLIENT_ID = os.environ.get("244753524041-5i7r3hop12h951t7rg1ob5mcd5cp6spk.apps.googleusercontent.com", None)
+GOOGLE_CLIENT_SECRET = os.environ.get("5hmjxRqqNYiMfM8gCFcYSTcP", None)
+GOOGLE_DISCOVERY_URL = (
+    "https://accounts.google.com/.well-known/openid-configuration"
+)
+client = WebApplicationClient(GOOGLE_CLIENT_ID)
+
+
+def get_google_provider_cfg():
+    return requests.get(GOOGLE_DISCOVERY_URL).json()
+
+
+@app.route("/login/google")
+def loging():
+    # Find out what URL to hit for Google login
+    google_provider_cfg = get_google_provider_cfg()
+    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+    request_uri = client.prepare_request_uri(
+        authorization_endpoint,
+        redirect_uri=request.base_url + "/callback",
+        scope=["openid", "email", "profile"],
+    )
+    return redirect(request_uri)
+
+
+@app.route("/login/google/callback")
+def callback():
+    # Get authorization code Google sent back to you
+    code = request.args.get("code")
+    google_provider_cfg = get_google_provider_cfg()
+    token_endpoint = google_provider_cfg["token_endpoint"]
+    # Prepare and send a request to get tokens! Yay tokens!
+    token_url, headers, body = client.prepare_token_request(
+        token_endpoint,
+        authorization_response=request.url,
+        redirect_url=request.base_url,
+        code=code
+    )
+    token_response = requests.post(
+        token_url,
+        headers=headers,
+        data=body,
+        auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
+    )
+
+    # Parse the tokens!
+    client.parse_request_body_response(json.dumps(token_response.json()))
+    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
+    uri, headers, body = client.add_token(userinfo_endpoint)
+    userinfo_response = requests.get(uri, headers=headers, data=body)
+    if userinfo_response.json().get("email_verified"):
+        unique_id = userinfo_response.json()["sub"]
+        users_email = userinfo_response.json()["email"]
+        picture = userinfo_response.json()["picture"]
+        users_name = userinfo_response.json()["given_name"]
+    else:
+        return "User email not available or not verified by Google.", 400
+    user = User(
+        id_=unique_id, name=users_name, email=users_email, profile_pic=picture
+    )
+
+    # Doesn't exist? Add it to the database.
+    if not User.get(unique_id):
+        User.create(unique_id, users_name, users_email, picture)
+
+    # Begin user session by logging the user in
+    login_user(user)
+
+    # Send user back to homepage
+    return redirect(url_for("index"))
+
+
+class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     usuario = db.Column(db.String(50), unique=True)
     contrasena = db.Column(db.String(50))
+    email = db.Column(db.String(100), unique=True)
+    estado = db.column(db.Integer)
 
 
+@app.route('/', methods=["GET", "POST"])
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        if cnx.status == 1:
+        if cnx.status:
             username = request.form["username"]
             password = request.form["password"]
             user = Usuario.query.filter_by(usuario=username).first()
@@ -71,10 +170,13 @@ def login():
                 success_message = 'Bienvenido {}'.format(username)
                 flash(success_message)
                 session['username'] = username
-                return redirect("/index")
+                return redirect("/docEmpresa")
             else:
                 error_message = 'usuario o contraseña no valido'
                 flash(error_message)
+            if not user or not check_password_hash(user.password, password):
+                flash('Please check your login details and try again.')
+                return redirect(url_for('login'))
         else:
             flash("error al conectar bd")
             return redirect("/login")
@@ -92,10 +194,23 @@ def logout():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        hashed_pw = generate_password_hash(request.form["password"], method="sha256")
-        new_user = Usuario(usuario=request.form["username"], contrasena=hashed_pw)
-        db.session.add(new_user)
-        db.session.commit()
+        password1 = request.form["password1"]
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if password == password1:
+            hashed_pw = generate_password_hash(request.form["password"], method="sha256")
+            new_user = Usuario(usuario=request.form["username"], contrasena=hashed_pw, email=email)
+            user = Usuario.query.filter_by(email=email).first()
+            if user:  # if a user is found, we want to redirect back to signup page so user can try again
+                flash('Email address already exists')
+                return redirect(url_for('signup'))
+            db.session.add(new_user)
+            db.session.commit()
+
+        else:
+            flash("contraseñas no coinsiden")
+            return redirect(url_for('signup'))
         return redirect("/login")
     return render_template("signup.html")
 
@@ -103,15 +218,15 @@ def signup():
 app.secret_key = "9;~X!cp4KhL9u}4#"
 
 
-@app.route('/', methods=["GET", "POST"])
-@app.route('/index', methods=["GET", "POST"])
-def index():
-    return render_template("/index.html")
-
-
 @app.route('/contacts')
 def contacts():
     return render_template("/contacts.html")
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    user = session.get("username")
+    return render_template("/404.html", user=user)
 
 
 @app.route('/analisis')
@@ -131,6 +246,101 @@ def entidades():
         cur.execute("select * from entidad")
         data = cur.fetchall()
         return render_template("/entidades.html", dato=data)
+    return redirect("login")
+
+
+@app.route('/bdocumentos', methods=["GET", "POST"])
+def bdocumentos():
+    if session["username"] != 'unknown':
+        if request.method == "POST":
+            # f = request.form
+            # for key in f.keys():
+            #     for value in f.getlist(key):
+            #         print (key, ":", value)
+            # value.upper()
+            import urllib.request
+            import urllib
+            empresa = request.form["empresa"]
+            empresa = empresa.upper()
+            cursor = cnx.cursor()
+            cursor.execute(
+                "select cod_entidad, desc_entidad from entidad where desc_entidad ilike '%s';" % ('%' + empresa + '%'))
+            d = cursor.fetchall()
+            for i in d:
+                cod_entidad = i[0]
+                desc_entidad = i[1]
+            return redirect("docEmpresa")
+        return render_template("/bdocumentos.html")
+    return redirect("login")
+
+
+@app.route('/docEmpresa', methods=["GET", "POST"])
+def docEmpresa():
+    if session["username"] != 'unknown':
+        m = 1
+        cursor = cnx.cursor()
+        cursor.execute("""select distinct * from entidad ORDER BY desc_entidad ASC""")
+        enti = cursor.fetchall()
+        if request.method == "POST":
+            m = 0
+            cursor = cnx.cursor()
+            import urllib.request
+            import urllib
+            empresa = request.form["empresa"]
+            empresa = empresa.upper()
+            empresa1 = request.form["empresa1"]
+            empresa1 = empresa1.upper()
+            if empresa != '':
+                cursor.execute("""select distinct * from entidad""")
+                enti2 = cursor.fetchall()
+                cursor.execute("""SELECT distinct
+                public.entidad.cod_entidad,
+                public.entidad.desc_entidad,
+                public.documento.desc_documento,
+                public.documento.anio,
+                public.documento.mes,
+                public.documento.cod_documento,
+                public.documento.hash
+                FROM
+                public.documento
+                INNER JOIN  public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad
+                WHERE  documento.anio = '2017' and documento.mes ='12' and desc_entidad ilike '%s' order by desc_entidad DESC""" % (
+                        '%' + empresa + '%'))
+                data = cursor.fetchall()
+                if data:
+                    success_message = 'Empresa Encontrada'
+                    flash(success_message)
+                    return render_template("/docEmpresa.html", dato=data, m=m, enti=enti2)
+                else:
+                    success_message = 'Empresa no existe'
+                    flash(success_message)
+                    return redirect(url_for('docEmpresa'))
+            if empresa1 != '' or empresa1 != '0':
+                empresa1 = request.form["empresa1"]
+                cursor.execute("""select distinct * from entidad""")
+                enti1 = cursor.fetchall()
+                cursor.execute("""SELECT DISTINCT
+                                public.entidad.cod_entidad,
+                                public.entidad.desc_entidad
+                                FROM
+                                public.documento
+                                INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad
+                                WHERE desc_entidad ilike '%s'
+                                ORDER BY desc_entidad DESC""" % ('%' + empresa1.upper() + '%'))
+                data1 = cursor.fetchall()
+                if data1 == []:
+                    success_message = 'No tiene datos'
+                    flash(success_message)
+                    return redirect("/docEmpresa")
+                if data1:
+                    success_message = 'Empresa Encontrada'
+                    flash(success_message)
+                    return render_template("/docEmpresa.html", dato=data1, m=m, enti=enti1)
+                else:
+                    success_message = 'Empresa no existe'
+                    flash(success_message)
+                    return redirect(url_for('docEmpresa'))
+        return render_template("/docEmpresa.html", m=m, enti=enti)
     return redirect("login")
 
 
@@ -184,7 +394,6 @@ def reportes(cod_documento, cod_role):
             cuenta = d[5]
             dineros = d[8]
             fechas = d[7]
-
         return render_template("/reportes.html", data=data, desc_role=desc_role, entidad=entidad, cuenta=cuenta,
                                dineros=dineros, fechas=fechas)
     return redirect("login")
@@ -206,7 +415,29 @@ def documentos():
         public.documento
         INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad""")
         data = cur.fetchall()
+
         return render_template("/documentos.html", dato=data)
+    return redirect("login")
+
+
+@app.route('/documentosAjax', methods=["GET", "POST"])
+def ajax():
+    import psycopg2.extras
+    if session["username"] != 'unknown':
+        cur = cnx.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT
+        public.entidad.cod_entidad,
+        public.entidad.desc_entidad,
+        public.documento.desc_documento,
+         coalesce (public.documento.anio,0) anio,
+        coalesce (public.documento.mes,0) mes,
+        public.documento.cod_documento,
+        coalesce (public.documento.hash,'') hash
+        FROM
+        public.documento
+        INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad""")
+        data = cur.fetchall()
+        return json.dumps(data)
     return redirect("login")
 
 
@@ -237,57 +468,6 @@ public.detalle_documento.cod_documento ='%s'""" % cod_documento)
             return render_template("/detalle_documento.html", dato1=data1, dato=data, cod_documento=cod_documento)
     return redirect("login")
 
-
-# @app.route('/ndocumento', methods=["GET", "POST"])
-# def ndocumento():
-#     if session["username"] != 'unknown':
-#         if request.method == "POST":
-#             entidad = request.args.get("entidad")
-#             desc_documento = request.args.get("desc_documento")
-#             desc_detalle_documento = request.args.get("desc_detalle_documento")
-#             ano = request.args.get("ano")
-#             mes = request.args.get("mes")
-#             hash = request.args.get("hash")
-#             cuenta = request.args.get("cuenta")
-#             unidad = request.args.get("unidad")
-#             decimal = request.args.get("decimal")
-#             valor = request.args.get("valor")
-#             contexto = request.args.get("contexto")
-#             cur = cnx.cursor()
-#             cur1 = cnx.cursor()
-#             cur2 = cnx.cursor()
-#             cur3 = cnx.cursor()
-#             cur4 = cnx.cursor()
-#             cur5 = cnx.cursor()
-#             cur.execute("""INSERT INTO documento(desc_documento,anio,mes,hash)
-#                             VALUES('%s','%s','%s','%s')""" % (desc_documento, ano, mes, hash))
-#             dato = cur.fetchall()
-#             cur1 = cnx.execute("""INSERT INTO entidad(desc_entidad)
-#                 VALUES ('%s')""" % (entidad))
-#             dato1 = cur1.fetchall()
-#             cur2.execute(
-#                 """INSERT INTO detalle_documento(desc_detalle_documento,decimales,valor) VALUES ('%s','%s','%s')""" % (
-#                 desc_detalle_documento, decimal, valor))
-#             dato2 = cur2.fetchall()
-#             cur3.execute("""INSERT INTO unidad(desc_unidad) VALUES ('%s')""" % unidad)
-#             dato3 = cur3.fetchall()
-#             cur4.execute("""INSERT INTO contexto(desc_contexto) VALUES ('%s')""" % contexto)
-#             dato4 = cur4.fetchall()
-#             cur5.execute("""INSERT INTO cuenta(desc_cuenta) VALUES ('%s','%s')""" % cuenta)
-#             dato5 = cur5.fetchall()
-#             dato.commit()
-#             dato1.commit()
-#             dato2.commit()
-#             dato3.commit()
-#             dato4.commit()
-#             dato5.commit()
-#             return render_template("/ndocumento.html",dato1=dato1, dato2=dato2, dato3=dato3, dato4=dato4,
-#                                    dato5=dato5)
-#         cur = cnx.cursor()
-#         cur.execute("SELECT desc_documento from documento")
-#         dato = cur.fetchall()
-#         return render_template("/ndocumento.html",dato=dato)
-#     return redirect("/login")
 
 @app.route('/pdf/<cod_documento>/<cod_role>', methods=["GET", "POST"])
 def pdf(cod_documento, cod_role):
@@ -344,8 +524,6 @@ def pdf(cod_documento, cod_role):
         desc_role = d[0]
         entidad = d[13]
         cuenta = d[5]
-        dineros = d[8]
-        fechas = d[7]
     hoy = datetime.now()
     hoy = hoy.strftime("%Y-%m-%d")
     report = PdfCustomDetail(filename="%s.pdf" % (cod_rol), title=["%s" % (desc_role), entidad.__str__(), cuenta],
@@ -376,26 +554,6 @@ def pdf(cod_documento, cod_role):
     for d in datas:
         data_final.append(d[1:])
     return render_template("/pdf.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role, hoy=hoy)
-    # report.drawData(data_final, columnas, colswidht=colsWidth, fontSize=7, ColsAlign=colAlign, ColsType=colType)
-    # report.go(tmp=True)
-
-    # return render_template("/pdf.html", desc_role=desc_role, entidad=entidad,
-    #                        cuenta=cuenta,
-    #                        dineros=dineros, fechas=fechas, hoy=hoy, data=data)
-    # fileNameOutput = 'informe.pdf'
-    # # css = ['/static/css/pdf.css']
-    # pdfkit.from_string(cont, fileNameOutput)
-    # pdfDownload = open(fileNameOutput, 'rb').read()
-    # os.remove(fileNameOutput)
-    # return Response(
-    #     pdfDownload,
-    #     mimetype="application/pdf",
-    #     headers={
-    #         "Content-disposition": "attachment; filename=" + fileNameOutput,
-    #         "Content-type": "application/force-download"
-    #     }
-    # )
-    # return render_template("/documentos.html")
 
 
 def __build_dict(description, row):
@@ -422,12 +580,9 @@ class PdfCustomDetail:
         self.logo = logo
         self.filename = filename.replace(" ", "_")
         self.distintoEncabezado = distintoEncabezado
-
         self.styleSheet = getSampleStyleSheet()
-
         self.Title = title
         self.Author = "XSolution ERP"
-
         self.URL = "http://www.xsolution.cl"
         if companyInfo == []:
             self.CompanyInfo = [["Empresa.", 0],
@@ -608,7 +763,7 @@ class jsobXBrl():
             return ccta
         if not self.tipoCuenta.get(tc):
             cursor = cnx.cursor()
-            cursor.execute("insert into tipo_cuenta(desc_tipo_cuenta) values ('%s')"%(tc))
+            cursor.execute("insert into tipo_cuenta(desc_tipo_cuenta) values ('%s')" % (tc))
             # tcta = cms_tipo_cuenta()
             # tcta.set_desc_tipo_cuenta(tc)
             cnx.commit()
@@ -619,7 +774,7 @@ class jsobXBrl():
         else:
             ctc = self.tipoCuenta.get(tc)
         cursor = cnx.cursor()
-        cursor.execute("insert into cuenta(cod_tipo_cuenta,desc_cuenta) values ('%s','%s')"%(ctc,cta))
+        cursor.execute("insert into cuenta(cod_tipo_cuenta,desc_cuenta) values ('%s','%s')" % (ctc, cta))
         cnx.commit()
         cursor.execute("SELECT currval('cuenta_cod_cuenta_seq')")
         # objcta = cms_cuenta()
@@ -632,8 +787,8 @@ class jsobXBrl():
         return ccta
 
     def loadTipoCuenta(self):
-        #from orm.common_services.public.cms_tipo_cuenta import cms_tipo_cuenta
-        #tc = cms_tipo_cuenta()
+        # from orm.common_services.public.cms_tipo_cuenta import cms_tipo_cuenta
+        # tc = cms_tipo_cuenta()
         cursor = cnx.cursor()
         cursor.execute("select cod_tipo_cuenta, desc_tipo_cuenta from tipo_cuenta")
         for t in cursor.fetchall():
@@ -641,8 +796,8 @@ class jsobXBrl():
             self.tipoCuenta[t[1]] = t[0]
 
     def loadCuentas(self):
-        #from orm.common_services.public.cms_cuenta import cms_cuenta
-        #cs = cms_cuenta()
+        # from orm.common_services.public.cms_cuenta import cms_cuenta
+        # cs = cms_cuenta()
         cursor = cnx.cursor()
         cursor.execute("""SELECT
         public.tipo_cuenta.desc_tipo_cuenta,
@@ -652,8 +807,8 @@ class jsobXBrl():
         FROM
         public.cuenta
         INNER JOIN public.tipo_cuenta ON public.cuenta.cod_tipo_cuenta = public.tipo_cuenta.cod_tipo_cuenta""")
-        #for c in cs.custom_query(
-                # "select desc_tipo_cuenta||':'||desc_cuenta, cod_cuenta from cuenta join tipo_cuenta using (cod_tipo_cuenta)"):
+        # for c in cs.custom_query(
+        # "select desc_tipo_cuenta||':'||desc_cuenta, cod_cuenta from cuenta join tipo_cuenta using (cod_tipo_cuenta)"):
         for c in cursor.fetchall():
             self.cuentas[c[0]] = c[1]
 
@@ -690,7 +845,7 @@ class jsobXBrl():
                     valor = i.get("#text")
                     cursor.execute(
                         """insert into detalle_documento (cod_documento, cod_cuenta, cod_contexto ,decimales, cod_unidad,desc_detalle_documento)values('%s','%s','%s','%s','%s','%s')""" % (
-                        self.cod_documento, cta, c, d, u, valor))
+                            self.cod_documento, cta, c, d, u, valor))
                     # dd = cms_detalle_documento()
                     # dd.set_cod_documento(self.cod_documento)
                     # dd.set_cod_cuenta(cta)
@@ -708,7 +863,7 @@ class jsobXBrl():
         # print len(self.data)
 
     def loadUnidades(self):
-        #from orm.common_services.public.cms_unidad import cms_unidad
+        # from orm.common_services.public.cms_unidad import cms_unidad
         cursor = cnx.cursor()
         cursor.execute("select cod_unidad,desc_unidad from unidad")
         for u in cursor.fetchall():
@@ -749,16 +904,16 @@ class jsobXBrl():
         return cod
 
     def loadDimension(self):
-        #from orm.common_services.public.cms_dimension import cms_dimension
+        # from orm.common_services.public.cms_dimension import cms_dimension
         # obj = cms_dimension()
         cursor = cnx.cursor()
         cursor.execute("select cod_dimension , desc_dimension from dimension")
         for obj in cursor.fetchall():
-            #self.dimension[obj.get_desc_dimension()] = obj.get_cod_dimension()
+            # self.dimension[obj.get_desc_dimension()] = obj.get_cod_dimension()
             self.dimension[obj[1]] = obj[0]
 
     def loadScenario(self):
-        #from orm.common_services.public.cms_escenario import cms_escenario
+        # from orm.common_services.public.cms_escenario import cms_escenario
         cursor = cnx.cursor()
         cursor.execute("""SELECT
         public.escenario.desc_escenario,
@@ -769,11 +924,11 @@ class jsobXBrl():
         public.escenario
         INNER JOIN public.tipo_escenario ON public.escenario.cod_tipo_escenario = public.tipo_escenario.cod_tipo_escenario
         INNER JOIN public.dimension ON public.escenario.cod_dimension = public.dimension.cod_dimension""")
-        #es = cms_escenario()
+        # es = cms_escenario()
         for es in cursor.fetchall():
             # self.scenario[(es.get_desc_escenario(), es.get_tipo_escenario().__str__(),
             #                es.get_dimension().__str__())] = es.get_cod_escenario()
-            self.scenario[es[0],es[1],es[2]] = es[3]
+            self.scenario[es[0], es[1], es[2]] = es[3]
 
     def addScenario(self, data):
         cods = []
@@ -789,7 +944,7 @@ class jsobXBrl():
                         cursor = cnx.cursor()
                         ts = self.addTipoScenario(key)
                         d = self.addDimension(escenario)
-                        #from orm.common_services.public.cms_escenario import cms_escenario
+                        # from orm.common_services.public.cms_escenario import cms_escenario
                         cursor.execute(
                             "insert into escenario(desc_escenario,cod_dimension,cod_tipo_escenario)values('%s','%s','%s')" % (
                                 escenario.get('#text'), d, ts))
@@ -818,7 +973,7 @@ class jsobXBrl():
         return cod
 
     def loadTipoScenario(self):
-        #from orm.common_services.public.cms_tipo_escenario import cms_tipo_escenario as clas
+        # from orm.common_services.public.cms_tipo_escenario import cms_tipo_escenario as clas
         # obj = clas()
         cursor = cnx.cursor()
         cursor.execute("select cod_tipo_escenario,desc_tipo_escenario from tipo_escenario")
@@ -852,11 +1007,11 @@ class jsobXBrl():
                 block = afile.read(blocksize)
 
     def loadEntity(self):
-        #from orm.common_services.public.cms_entidad import cms_entidad
+        # from orm.common_services.public.cms_entidad import cms_entidad
         cursor = cnx.cursor()
         cursor.execute("select cod_entidad from entidad")
         for e in cursor.fetchall():
-            #self.entity[e.get_cod_entidad()] = e.get_cod_entidad()
+            # self.entity[e.get_cod_entidad()] = e.get_cod_entidad()
             self.entity[e[0]] = e[0]
 
     def addEntity(self, data):
@@ -864,15 +1019,17 @@ class jsobXBrl():
         cod1 = cod
         if not cod:
             cursor = cnx.cursor()
-            #from orm.common_services.public.cms_entidad import cms_entidad
-            cursor.execute("insert into entidad (cod_entidad, desc_entidad) values ('%s','%s')" % (CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')),data.get('identifier', data.get('xbrli:identifier')).get('#text')))
+            # from orm.common_services.public.cms_entidad import cms_entidad
+            cursor.execute("insert into entidad (cod_entidad, desc_entidad) values ('%s','%s')" % (
+                CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')),
+                data.get('identifier', data.get('xbrli:identifier')).get('#text')))
             cnx.commit()
             # enty = cms_entidad()
             # enty.set_cod_entidad((CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text'))))
             # enty.set_desc_entidad(data.get('identifier', data.get('xbrli:identifier')).get('#text'))
             # enty.save()
             cursor.execute("select cod_entidad from entidad where cod_entidad ='%s' and desc_entidad ='%s'" % (
-            (CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')))),
+                (CRut(data.get('identifier', data.get('xbrli:identifier')).get('#text')))),
                            data.get('identifier', data.get('xbrli:identifier')).get('#text'))
             cod = cursor.fetchall()
             # cod = enty.get_cod_entidad()
@@ -890,7 +1047,7 @@ class jsobXBrl():
         self.addPeriod(data.get('period', data.get('xbrli:period')))
         p = self.getPeriod(data.get('period', data.get('xbrli:period')))
         scenarios = self.addScenario(data.get('scenario', data.get('xbrli:scenario')))
-        #scenarios = self.getScenario(data.get('scenario',data.get('xbrli:scenario')))
+        # scenarios = self.getScenario(data.get('scenario',data.get('xbrli:scenario')))
         # from orm.common_services.public.cms_contexto import cms_contexto
         # c = cms_contexto()
         # c.set_cod_entidad(e)
@@ -899,15 +1056,17 @@ class jsobXBrl():
         # c.set_desc_contexto(data['@id'])
         # c.save()
         cursor.execute(
-            "insert into contexto(cod_entidad, cod_periodo, desc_contexto) values ('%s','%s','%s')" % (e, p, data['@id']))
+            "insert into contexto(cod_entidad, cod_periodo, desc_contexto) values ('%s','%s','%s')" % (
+                e, p, data['@id']))
         cnx.commit()
         cursor.execute("SELECT currval('contexto_cod_contexto_seq')")
         codigo_contexto = cursor.fetchone()[0]
         self.contexts[data['@id']] = {"entity": e, "period": p, "id": codigo_contexto}
-        #from orm.common_services.public.cms_context_escenarios import cms_context_escenarios
+        # from orm.common_services.public.cms_context_escenarios import cms_context_escenarios
         for s in scenarios:
-
-            cursor.execute("insert into context_escenarios(cod_contexto,cod_escenario,desc_context_escenarios) values('%s','%s','.')"%(codigo_contexto,s))
+            cursor.execute(
+                "insert into context_escenarios(cod_contexto,cod_escenario,desc_context_escenarios) values('%s','%s','.')" % (
+                    codigo_contexto, s))
             # ce = cms_context_escenarios()
             # ce.set_cod_contexto(c.get_cod_contexto())
             # ce.set_cod_escenario(s)
@@ -927,18 +1086,18 @@ class jsobXBrl():
         # cursor.execute("select cod_contexto from contexto where cod_entidad='%s'and cod_periodo='%s' and desc_contexto = '%s'"%(e, p, data['@id']))
         # a = cursor.fetchall()
         # self.contexts[data['@id']] = {"entity": e, "period": p, "id": a}
-        #self.contexts[data['@id']] = {"entity": e, "period": p, "id": c.get_cod_contexto()}
+        # self.contexts[data['@id']] = {"entity": e, "period": p, "id": c.get_cod_contexto()}
         # from orm.common_services.public.cms_context_escenarios import cms_context_escenarios
         # for s in scenarios:
         #     cursor.execute = (
         #             "insert into context_excenarios(cod_contexto,cod_escenario,desc_context_escenario) values ('%s','%s','%s')" % (a, s, "."))
         #     f = cursor.fetchall()
         #     cnx.commit()
-            # ce = cms_context_escenarios()
-            # ce.set_cod_contexto(c.get_cod_contexto())
-            # ce.set_cod_escenario(s)
-            # ce.set_desc_context_escenarios(".")
-            # ce.save()
+        # ce = cms_context_escenarios()
+        # ce.set_cod_contexto(c.get_cod_contexto())
+        # ce.set_cod_escenario(s)
+        # ce.set_desc_context_escenarios(".")
+        # ce.save()
 
     def getPeriod(self, data):
         return self.period.get((data.get('startDate', data.get('xbrli:startDate')),
@@ -946,18 +1105,18 @@ class jsobXBrl():
                                 data.get("instant", data.get("xbrli:instant"))))
 
     def addPeriod(self, data):
-        cursor =cnx.cursor()
+        cursor = cnx.cursor()
         if not self.period.get((data.get('startDate', data.get('xbrli:startDate')),
                                 data.get('endDate', data.get('xbrli:endDate')),
                                 data.get("instant", data.get("xbrli:instant")))):
-            #from orm.common_services.public.cms_periodo import cms_periodo
+            # from orm.common_services.public.cms_periodo import cms_periodo
             sql = "insert into periodo(desc_periodo,"
             valores = "('.',"
             for d in data:
                 if data[d]:
-                    sql += d.replace('xbrli:','')+ ","
-                    valores += "'"+data[d] + "',"
-            sql=sql[:-1]+ ") values "+ valores [:-1] + ")"
+                    sql += d.replace('xbrli:', '') + ","
+                    valores += "'" + data[d] + "',"
+            sql = sql[:-1] + ") values " + valores[:-1] + ")"
             cursor.execute(sql)
             # if data.get("xbrli:instant"):
             #     cursor.execute("insert into periodo (startdate,enddate,instant,desc_periodo)values ('%s','%s','%s','.')"%(data.get('startDate', data.get('xbrli:startDate')),data.get('endDate', data.get('xbrli:endDate')),data.get('instant', data.get('xbrli:instant'))or 'Null'))
@@ -982,9 +1141,8 @@ class jsobXBrl():
             #     data.get('startDate', data.get('xbrli:startDate')), data.get('endDate', data.get('xbrli:endDate')),
             #     data.get("instant", data.get("xbrli:instant")))] = p.get_cod_periodo()
 
-
     def loadPeriod(self):
-        #from orm.common_services.public.cms_periodo import cms_periodo
+        # from orm.common_services.public.cms_periodo import cms_periodo
         cursor = cnx.cursor()
         cursor.execute("select cod_periodo, startdate, enddate,instant from periodo")
         # per = cms_periodo()
@@ -994,9 +1152,8 @@ class jsobXBrl():
             # i = p.get_instant().__str__() if p.get_instant() else None
             self.period[(p[1], p[2], p[3])] = p[0]
 
-
     def loadXBrlFromMenory(self, dataXML):
-        xbrl_parser = XBRLParser()
+
         soup = BeautifulSoup(dataXML, 'lxml')
         btree = BeautifulSoup(dataXML, 'lxml')
         Terms = btree.select('xbrli > xbrli')
@@ -1033,8 +1190,8 @@ class jsobXBrl():
         print("No Encontro XBRL")
 
     def loadContext(self):
-        #from orm.common_services.public.cms_contexto import cms_contexto
-        #c = cms_contexto()
+        # from orm.common_services.public.cms_contexto import cms_contexto
+        # c = cms_contexto()
         cursor = cnx.cursor()
         cursor.execute("select cod_contexto,cod_entidad,cod_periodo,desc_contexto from cotexto")
         for c in cursor.fetchall():
@@ -1043,57 +1200,771 @@ class jsobXBrl():
             self.contexts[c[3]] = {"entity": c[1], "period": c[2], "id": c[0]}
 
 
-
-@app.route('/eresultado/<cod_documento>/<cod_role>', methods=["GET", "POST"])
-def eresultado(cod_documento, cod_role):
+def get_eresultado(cod_entidad, anio, mes):
     cursor = cnx.cursor()
-    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
-                            from detalle_documento 
-                            join cuenta using (cod_cuenta) 
-                            left join role_cuenta using (cod_cuenta)
-                            left join role using(cod_role)
-                            left join unidad using (cod_unidad)
-                            join tipo_cuenta using (cod_tipo_cuenta)
-                            join contexto using (cod_contexto) 
-                            join entidad using (cod_entidad)
-                            join periodo using (cod_periodo) 
-                            left join context_escenarios using (cod_contexto) 
-                            left join escenario using (cod_escenario) 
-                            left join dimension using (cod_dimension) 
-                            --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
-                            where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                            order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)))  if  (a.get(540,0))  else 0"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Ganancias Bruta'] = "(float(a.get(805,1)))  if  a.get(805,0)  else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,1)))  if  a.get(682,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Otros gastos, por función'] = "(float(a.get(1325,1)))  if  a.get(1325,0)  else 0"
+    RATIOS[
+        'Otras ganancias (pérdidas)'] = "(float(a.get(815,1)))  if  a.get(815,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) de actividades operacionales'] = "(float(a.get(817,1)))  if  a.get(817,0)  else 0"
+    RATIOS[
+        'Ingresos financieros'] = "(float(a.get(558,1)))  if  a.get(558,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Participación en las ganancias (pérdidas) de asociadas y negocios'] = "(float(a.get(824,1)))  if  a.get(824,0)  else 0"
+    RATIOS[
+        'Diferencias de cambio'] = "(float(a.get(849,1)))  if  a.get(849,0)  else 0"
+    RATIOS[
+        'Resultados por unidades de reajuste'] = "(float(a.get(516,1)))  if  a.get(516,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) que surgen de diferencias entre importes en libros'] = "(float(a.get(1327,1)))  if  a.get(1327,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), antes de impuestos'] = "(float(a.get(788,1)))  if  a.get(788,0)  else 0"
+    RATIOS[
+        'Gasto por impuestos a las ganancias'] = "(float(a.get(476,1)))  if  a.get(476,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida) procedente de operaciones continuadas'] = "(float(a.get(774,1)))  if  a.get(774,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a los propietarios de la controladora'] = "(float(a.get(704,1)))  if  a.get(704,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a participaciones no controladoras'] = "(float(a.get(868,1)))  if  a.get(868,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_eerr  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_eerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_proyeccionbalance(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Efectivo y equivalentes al efectivo'] = "(float(a.get(739,1)))  if  (a.get(739,0))  else 0"
+    RATIOS[
+        'Otros activos financieros corrientes'] = "(float(a.get(607,1)))  if  a.get(607,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros corrientes'] = "(float(a.get(835,1)))  if  a.get(835,0)  else 0"
+    RATIOS[
+        'Deudores comerciales y otras cuentas por cobrar corrientes'] = "(float(a.get(775,1)))  if  a.get(775,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, corrientes'] = "(float(a.get(787,1)))  if  a.get(787,0)  else 0"
+    RATIOS[
+        'Inventarios corrientes'] = "(float(a.get(695,1)))  if  a.get(695,0)  else 0"
+    RATIOS[
+        'Activos biológicos corrientes'] = "(float(a.get(1290,1)))  if  a.get(1290,0)  else 0"
+    RATIOS[
+        'Activos por impuestos corrientes, corrientes'] = "(float(a.get(481,1)))  if  a.get(481,0)  else 0"
+    RATIOS[
+        'Total de activos corrientes distintos de los activo o grupos de activos'] = "(float(a.get(797,1)))  if  a.get(797,0)  else 0"
+    RATIOS[
+        'Activos no corrientes o grupos de activos para su disposición clasificados'] = "(float(a.get(1291,1)))  if  a.get(1291,0)  else 0"
+    RATIOS[
+        'Activos corrientes totales'] = "(float(a.get(608,1)))  if  a.get(608,0)  else 0"
+    RATIOS[
+        'Otros activos financieros no corrientes'] = "(float(a.get(520,1)))  if  a.get(520,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros no corrientes'] = "(float(a.get(462,1)))  if  a.get(462,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar no corrientes'] = "(float(a.get(753,1)))  if  a.get(753,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, no corrientes'] = "(float(a.get(680,1)))  if  a.get(680,0)  else 0"
+    RATIOS[
+        'Inversiones contabilizadas utilizando el método de la participación'] = "(float(a.get(713,1)))  if  a.get(713,0)  else 0"
+    RATIOS[
+        'Activos intangibles distintos de la plusvalía'] = "(float(a.get(748,1)))  if  a.get(748,0)  else 0"
+    RATIOS[
+        'Plusvalía'] = "(float(a.get(866,1)))  if  a.get(866,0)  else 0"
+    RATIOS[
+        'Propiedades, planta y equipo'] = "(float(a.get(456,1)))  if  a.get(456,0)  else 0"
+    RATIOS[
+        'Activos biológicos no corrientes'] = "(float(a.get(1294,1)))  if  a.get(1294,0)  else 0"
+    RATIOS[
+        'Propiedad de inversión'] = "(float(a.get(581,1)))  if  a.get(581,0)  else 0"
+    RATIOS[
+        'Activos por impuestos diferidos'] = "(float(a.get(622,1)))  if  a.get(622,0)  else 0"
+    RATIOS[
+        'Total de activos no corrientes'] = "(float(a.get(825,1)))  if  a.get(825,0)  else 0"
+    RATIOS[
+        'Total de activos'] = "(float(a.get(808,1)))  if  a.get(808,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros corrientes'] = "(float(a.get(582,1)))  if  a.get(582,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar comerciales y otras cuentas por pagar'] = "(float(a.get(783,1)))  if  a.get(783,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, corrientes'] = "(float(a.get(461,1)))  if  a.get(461,0)  else 0"
+    RATIOS[
+        'Otras provisiones a corto plazo'] = "(float(a.get(659,1)))  if  a.get(659,0)  else 0"
+    RATIOS[
+        'Pasivos por impuestos corrientes, corrientes'] = "(float(a.get(477,1)))  if  a.get(477,0)  else 0"
+    RATIOS[
+        'Provisiones corrientes por beneficios a los empleados'] = "(float(a.get(756,1)))  if  a.get(756,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros corrientes'] = "(float(a.get(621,1)))  if  a.get(621,0)  else 0"
+    RATIOS[
+        'Total de pasivos corrientes distintos de los pasivos incluidos'] = "(float(a.get(745,1)))  if  a.get(745,0)  else 0"
+    RATIOS[
+        'Pasivos corrientes totales'] = "(float(a.get(668,1)))  if  a.get(668,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros no corrientes'] = "(float(a.get(791,1)))  if  a.get(791,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar no corrientes'] = "(float(a.get(822,1)))  if  a.get(822,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, no corrientes'] = "(float(a.get(486,1)))  if  a.get(486,0)  else 0"
+    RATIOS[
+        'Otras provisiones a largo plazo'] = "(float(a.get(524,1)))  if  a.get(524,0)  else 0"
+    RATIOS[
+        'Pasivo por impuestos diferidos'] = "(float(a.get(640,1)))  if  a.get(640,0)  else 0"
+    RATIOS[
+        'Provisiones no corrientes por beneficios a los empleados'] = "(float(a.get(629,1)))  if  a.get(629,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros no corrientes'] = "(float(a.get(633,1)))  if  a.get(633,0)  else 0"
+    RATIOS[
+        'Total de pasivos no corrientes'] = "(float(a.get(809,1)))  if  a.get(809,0)  else 0"
+    RATIOS[
+        'Total de pasivos'] = "(float(a.get(519,1)))  if  a.get(519,0)  else 0"
+    RATIOS[
+        'Capital emitido'] = "(float(a.get(859,1)))  if  a.get(859,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) acumuladas'] = "(float(a.get(670,1)))  if  a.get(670,0)  else 0"
+    RATIOS[
+        'Prima de emisión'] = "(float(a.get(939,1)))  if  a.get(939,0)  else 0"
+    RATIOS[
+        'Acciones propias en cartera'] = "(float(a.get(1303,1)))  if  a.get(1303,0)  else 0"
+    RATIOS[
+        'Otras participaciones en el patrimonio'] = "(float(a.get(1304,1)))  if  a.get(1304,0)  else 0"
+    RATIOS[
+        'Otras reservas'] = "(float(a.get(789,1)))  if  a.get(789,0)  else 0"
+    RATIOS[
+        'Patrimonio atribuible a los propietarios de la controladora'] = "(float(a.get(879,1)))  if  a.get(879,0)  else 0"
+    RATIOS[
+        'Participaciones no controladoras'] = "(float(a.get(620,1)))  if  a.get(620,0)  else 0"
+    RATIOS[
+        'Patrimonio total'] = "(float(a.get(681,1)))  if  a.get(681,0)  else 0"
+    RATIOS[
+        'Total de patrimonio y pasivos'] = "(float(a.get(754,1)))  if  a.get(754,0)  else 0"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_proyeccionesbalance  where cod_entidad = '%s' and anio >= '2015' and mes='12'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccionesbalance  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s') order by anio"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["BALANCE"]
+    b = dict()
+    fecha = list(range(anios[0], anios[1] + 1))
+    fecha.sort()
+    for anio in fecha:
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.append(resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.append((eval(RATIOS[r])))
+                RESULTADO[r] = raux
+        b = a
+    #GET RATIOS
+    dataratios = get_ratiosdd(cod_entidad, anio, mes)[0]
+    calculoratio2018 = list(dataratios)[15][1]*0.8
+    calculoratio2017 = list(dataratios)[15][2]*0.2
+    calculodiascaja = calculoratio2018+calculoratio2017
+    calculodiascobro2018 = list(dataratios)[2][1]*0.8
+    calculodiascobro2017 = list(dataratios)[2][2] * 0.2
+    calculodiascobro= calculodiascobro2018 + calculodiascobro2017
+    calculodiasdeinventario2018 = list(dataratios)[4][1] * 0.8
+    calculodiasdeinventario2017 = list(dataratios)[4][2] * 0.2
+    calculodiasdeinventario = calculodiasdeinventario2018+calculodiasdeinventario2017
+    calculodiasdepago2018 = list(dataratios)[3][1] * 0.8
+    calculodiasdepago2017 = list(dataratios)[3][2] * 0.2
+    calculardiasdepago = calculodiasdepago2018+calculodiasdepago2017
+    dataproyeccion = get_proyeccionEERR(cod_entidad, anio, mes)[0]
+    #GET BALANCE
+    Ingresos_ordinarias = list(dataproyeccion)[0][6]
+    ganancia_perdida = list(dataproyeccion)[18][6]
+    costos_ventas = list(dataproyeccion)[1][6]
+    RESULTADO['Efectivo y equivalentes al efectivo'].append((calculodiascaja*(Ingresos_ordinarias-ganancia_perdida)/365))
+    RESULTADO['Otros activos financieros corrientes'].append(RESULTADO['Otros activos financieros corrientes'][-1]*0.8+RESULTADO['Otros activos financieros corrientes'][-2]*0.2)
+    RESULTADO['Otros activos no financieros corrientes'].append(RESULTADO['Otros activos no financieros corrientes'][-1]*0.8+RESULTADO['Otros activos no financieros corrientes'][-2]*0.2)
+    RESULTADO['Deudores comerciales y otras cuentas por cobrar corrientes'].append(calculodiascobro*(Ingresos_ordinarias*1.19)/365)
+    RESULTADO['Cuentas por cobrar a entidades relacionadas, corrientes'].append(RESULTADO['Cuentas por cobrar a entidades relacionadas, corrientes'][-1] * 0.8 +RESULTADO['Cuentas por cobrar a entidades relacionadas, corrientes'][-2] * 0.2)
+    RESULTADO['Inventarios corrientes'].append((calculodiasdeinventario*costos_ventas)/365)
+    RESULTADO['Activos biológicos corrientes'].append(0)
+
+    RESULTADO['Activos por impuestos corrientes, corrientes'].append(RESULTADO['Activos por impuestos corrientes, corrientes'][-1] * 0.8 +RESULTADO['Activos por impuestos corrientes, corrientes'][-2] * 0.2)
+    RESULTADO['Total de activos corrientes distintos de los activo o grupos de activos'].append(
+    RESULTADO['Efectivo y equivalentes al efectivo'][-1]+RESULTADO['Otros activos financieros corrientes'][-1]+RESULTADO['Otros activos no financieros corrientes'][-1]
+    +RESULTADO['Deudores comerciales y otras cuentas por cobrar corrientes'][-1]+ RESULTADO['Cuentas por cobrar a entidades relacionadas, corrientes'][-1]+RESULTADO['Inventarios corrientes'][-1]+
+    RESULTADO['Activos biológicos corrientes'][-1]+RESULTADO['Activos por impuestos corrientes, corrientes'][-1])
+    RESULTADO['Activos corrientes totales'].append(RESULTADO['Activos por impuestos corrientes, corrientes'][-1]+RESULTADO['Total de activos corrientes distintos de los activo o grupos de activos'][-1])
+    RESULTADO['Activos no corrientes o grupos de activos para su disposición clasificados'].append(RESULTADO['Activos no corrientes o grupos de activos para su disposición clasificados'][-1] * 0.8 + RESULTADO['Activos no corrientes o grupos de activos para su disposición clasificados'][-2] * 0.2)
+    RESULTADO['Otros activos financieros no corrientes'].append(RESULTADO['Otros activos financieros no corrientes'][-1] * 0.8 + RESULTADO['Otros activos financieros no corrientes'][-2] * 0.2)
+
+    RESULTADO['Otros activos no financieros no corrientes'].append(RESULTADO['Otros activos no financieros no corrientes'][-1] * 0.8 + RESULTADO['Otros activos no financieros no corrientes'][-2] * 0.2)
+    RESULTADO['Cuentas por cobrar no corrientes'].append(RESULTADO['Cuentas por cobrar no corrientes'][-1] * 0.8 + RESULTADO['Cuentas por cobrar no corrientes'][-2] * 0.2)
+
+    RESULTADO['Cuentas por cobrar a entidades relacionadas, no corrientes'].append(0)
+    RESULTADO['Inversiones contabilizadas utilizando el método de la participación'].append(0)
+
+    RESULTADO['Activos intangibles distintos de la plusvalía'].append(RESULTADO['Activos intangibles distintos de la plusvalía'][-1] * 0.8 + RESULTADO['Activos intangibles distintos de la plusvalía'][-2] * 0.2)
+    RESULTADO['Plusvalía'].append(0)
+
+    RESULTADO['Propiedades, planta y equipo'].append(RESULTADO['Propiedades, planta y equipo'][-1] * 0.8 +RESULTADO['Propiedades, planta y equipo'][-2] * 0.2)
+    RESULTADO['Activos biológicos no corrientes'].append(0)
+
+    RESULTADO['Propiedad de inversión'].append(0)
+    RESULTADO['Activos por impuestos diferidos'].append(RESULTADO['Activos por impuestos diferidos'][-1] * 0.8 + RESULTADO['Activos por impuestos diferidos'][-2] * 0.2)
+
+    RESULTADO['Total de activos no corrientes'].append(RESULTADO['Otros activos financieros no corrientes'][-1]+RESULTADO['Otros activos no financieros no corrientes'][-1]+
+                                                       RESULTADO['Cuentas por cobrar no corrientes'][-1]+RESULTADO['Cuentas por cobrar a entidades relacionadas, no corrientes'][-1]+
+                                                       RESULTADO['Inversiones contabilizadas utilizando el método de la participación'][-1]+RESULTADO['Activos intangibles distintos de la plusvalía'][-1]+
+                                                       RESULTADO['Plusvalía'][-1]+ RESULTADO['Propiedades, planta y equipo'][-1]+ RESULTADO['Activos biológicos no corrientes'][-1]+
+                                                       RESULTADO['Propiedad de inversión'][-1]+RESULTADO['Activos por impuestos diferidos'][-1])
+
+    RESULTADO['Total de activos'].append(RESULTADO['Total de activos no corrientes'][-1]+RESULTADO['Activos corrientes totales'][-1])
+
+
+    RESULTADO['Cuentas por pagar comerciales y otras cuentas por pagar'].append(calculardiasdepago*(costos_ventas+ RESULTADO['Inventarios corrientes'][-2]-RESULTADO['Inventarios corrientes'][-1])/365)
+    RESULTADO['Cuentas por pagar a entidades relacionadas, corrientes'].append(0)
+
+    RESULTADO['Otras provisiones a corto plazo'].append(RESULTADO['Otras provisiones a corto plazo'][-1] * 0.8 + RESULTADO['Otras provisiones a corto plazo'][-2] * 0.2)
+    RESULTADO['Pasivos por impuestos corrientes, corrientes'].append(RESULTADO['Pasivos por impuestos corrientes, corrientes'][-1] * 0.8 + RESULTADO['Pasivos por impuestos corrientes, corrientes'][-2] * 0.2)
+
+    RESULTADO['Provisiones corrientes por beneficios a los empleados'].append(RESULTADO['Provisiones corrientes por beneficios a los empleados'][-1] * 0.8 + RESULTADO['Provisiones corrientes por beneficios a los empleados'][-2] * 0.2)
+    RESULTADO['Otros pasivos no financieros corrientes'].append(RESULTADO['Otros pasivos no financieros corrientes'][-1] * 0.8 +RESULTADO['Otros pasivos no financieros corrientes'][-2] * 0.2)
+    RESULTADO['Otros pasivos financieros no corrientes'].append(RESULTADO['Otros pasivos financieros no corrientes'][-1]*0.9)
+    RESULTADO['Cuentas por pagar no corrientes'].append(0)
+    RESULTADO['Cuentas por pagar a entidades relacionadas, no corrientes'].append(0)
+    RESULTADO['Otras provisiones a largo plazo'].append(0)
+
+    RESULTADO['Pasivo por impuestos diferidos'].append(RESULTADO['Pasivo por impuestos diferidos'][-1] * 0.8 + RESULTADO['Pasivo por impuestos diferidos'][-2] * 0.2)
+    RESULTADO['Provisiones no corrientes por beneficios a los empleados'].append(0)
+    RESULTADO['Otros pasivos no financieros no corrientes'].append(0)
+    RESULTADO['Total de pasivos no corrientes'].append(RESULTADO['Otros pasivos financieros no corrientes'][-1] + RESULTADO['Pasivo por impuestos diferidos'][-1])
+    RESULTADO['Capital emitido'].append(RESULTADO['Capital emitido'][-1])
+    RESULTADO['Ganancias (pérdidas) acumuladas'].append(RESULTADO['Ganancias (pérdidas) acumuladas'][-1]+ganancia_perdida)
+    RESULTADO['Prima de emisión'].append(0)
+    RESULTADO['Acciones propias en cartera'].append(0)
+    RESULTADO['Otras participaciones en el patrimonio'].append(0)
+
+    RESULTADO['Otras reservas'].append(RESULTADO['Otras reservas'][-1])
+    RESULTADO['Patrimonio atribuible a los propietarios de la controladora'].append(RESULTADO['Capital emitido'][-1]+RESULTADO['Ganancias (pérdidas) acumuladas'][-1]+RESULTADO['Otras reservas'][-1])
+
+    RESULTADO['Participaciones no controladoras'].append(RESULTADO['Participaciones no controladoras'][-1])
+    RESULTADO['Patrimonio total'].append(RESULTADO['Participaciones no controladoras'][-1]+RESULTADO['Patrimonio atribuible a los propietarios de la controladora'][-1])
+
+    RESULTADO['Otros pasivos financieros corrientes'].append(0)
+
+    RESULTADO['Total de pasivos corrientes distintos de los pasivos incluidos'].append(
+        # RESULTADO['Otros pasivos financieros corrientes'][-1] +
+        RESULTADO['Cuentas por pagar comerciales y otras cuentas por pagar'][-1] +
+        RESULTADO['Cuentas por pagar a entidades relacionadas, corrientes'][-1] +
+        RESULTADO['Otras provisiones a corto plazo'][-1] +
+        RESULTADO['Pasivos por impuestos corrientes, corrientes'][-1] +
+        RESULTADO['Provisiones corrientes por beneficios a los empleados'][-1] +
+        RESULTADO['Otros pasivos no financieros corrientes'][-1]
+        )
+    RESULTADO['Pasivos corrientes totales'].append(
+        RESULTADO['Total de pasivos corrientes distintos de los pasivos incluidos'][-1])
+    RESULTADO['Total de pasivos'].append(
+        RESULTADO['Total de pasivos no corrientes'][-1] + RESULTADO['Pasivos corrientes totales'][-1])
+    RESULTADO['Total de patrimonio y pasivos'].append(
+        RESULTADO['Total de pasivos'][-1] + RESULTADO['Patrimonio total'][-1])
+    RESULTADO['Otros pasivos financieros corrientes'].append(RESULTADO['Total de activos'][-1]-RESULTADO['Total de patrimonio y pasivos'][-1])
+    COLUMNAS.append("Proyección")
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/ProyeccionBalance/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ProyeccionBalance(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        empresa = request.args.get("empresa")
+        data1, columnas1 = get_proyeccionbalance(cod_entidad, anio, mes)
+        return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad, empresa=empresa)
+    data, columnas = get_proyeccionbalance(cod_entidad, anio, mes)
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa, cod_entidad=cod_entidad)
+
+
+
+
+def get_proyeccionEERR(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)))"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Ganancias Bruta'] = "(float(a.get(805,1)))  if  a.get(805,0)  else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,1)))  if  a.get(682,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Otros gastos, por función'] = "(float(a.get(1325,1)))  if  a.get(1325,0)  else 0"
+    RATIOS[
+        'Otras ganancias (pérdidas)'] = "(float(a.get(815,1)))  if  a.get(815,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) de actividades operacionales'] = "(float(a.get(817,1)))  if  a.get(817,0)  else 0"
+    RATIOS[
+        'Ingresos financieros'] = "(float(a.get(558,1)))  if  a.get(558,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Participación en las ganancias (pérdidas) de asociadas y negocios'] = "(float(a.get(824,1)))  if  a.get(824,0)  else 0"
+    RATIOS[
+        'Diferencias de cambio'] = "(float(a.get(849,1)))  if  a.get(849,0)  else 0"
+    RATIOS[
+        'Resultados por unidades de reajuste'] = "(float(a.get(516,1)))  if  a.get(516,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) que surgen de diferencias entre importes en libros'] = "(float(a.get(1327,1)))  if  a.get(1327,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), antes de impuestos'] = "(float(a.get(788,1)))  if  a.get(788,0)  else 0"
+    RATIOS[
+        'Gasto por impuestos a las ganancias'] = "(float(a.get(476,1)))  if  a.get(476,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida) procedente de operaciones continuadas'] = "(float(a.get(774,1)))  if  a.get(774,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a los propietarios de la controladora'] = "(float(a.get(704,1)))  if  a.get(704,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a participaciones no controladoras'] = "(float(a.get(868,1)))  if  a.get(868,0)  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio >= '2015' and mes='12'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s') order by anio"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["PROYECCION ESTADO RESULTADO"]
+    b = dict()
+    fecha = list(range(anios[0], anios[1] + 1))
+    fecha.sort()
+    for anio in fecha:
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.append(resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.append((eval(RATIOS[r])))
+                RESULTADO[r] = raux
+        b = a
+    p = list(RESULTADO.values())
+    per = int(anio) + 1
+    anterior = None
+    factor = [0.05, 0.15, 0.8]
+    asignado = 0
+    for i in range(1, len(p[0])):
+        if anterior:
+            # ACTUAL
+            process = (p[0][i] - anterior) / anterior
+            print(process, factor[i - 2])
+            asignado += process * factor[i - 2]
+        anterior = p[0][i]
+
+    RESULTADO['Ingresos de Actividades ordinarias'].append(0)
+    CMon(RESULTADO['Ingresos de Actividades ordinarias'].append(RESULTADO['Ingresos de Actividades ordinarias'][-2] * asignado + RESULTADO['Ingresos de Actividades ordinarias'][-2]))
+    RESULTADO['Costos de Ventas'].append(RESULTADO['Costos de Ventas'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Costos de Ventas'].append(RESULTADO['Ingresos de Actividades ordinarias'][-1]*RESULTADO['Costos de Ventas'][-1])
+    RESULTADO['Ganancias Bruta'].append(RESULTADO['Ganancias Bruta'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancias Bruta'].append(RESULTADO['Ingresos de Actividades ordinarias'][-1] - RESULTADO['Costos de Ventas'][-1])
+    RESULTADO['Otros Ingresos'].append(RESULTADO['Otros Ingresos'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Otros Ingresos'].append(0)
+    RESULTADO['Costos de Distribucion'].append(0)
+    RESULTADO['Costos de Distribucion'].append(0)
+    RESULTADO['Gastos de administración'].append(RESULTADO['Gastos de administración'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Gastos de administración'].append(RESULTADO['Ingresos de Actividades ordinarias'][-1] * RESULTADO['Gastos de administración'][-1])
+    RESULTADO['Otros gastos, por función'].append(RESULTADO['Otros gastos, por función'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-1])
+    RESULTADO['Otros gastos, por función'].append(0)
+    RESULTADO['Otras ganancias (pérdidas)'].append(0)
+    RESULTADO['Otras ganancias (pérdidas)'].append(0)
+    RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(RESULTADO['Ganancias Bruta'][-1]-RESULTADO['Gastos de administración'][-1])
+    RESULTADO['Ingresos financieros'].append(0)
+    RESULTADO['Ingresos financieros'].append(0)
+    RESULTADO['Costos financieros'].append(RESULTADO['Costos financieros'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-1])
+    RESULTADO['Costos financieros'].append(RESULTADO['Ingresos de Actividades ordinarias'][-1]*RESULTADO['Costos financieros'][-1])
+    RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+    RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+    RESULTADO['Diferencias de cambio'].append(RESULTADO['Diferencias de cambio'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Diferencias de cambio'].append(RESULTADO['Ingresos de Actividades ordinarias'][-1]*RESULTADO['Diferencias de cambio'][-1])
+    RESULTADO['Resultados por unidades de reajuste'].append(RESULTADO['Resultados por unidades de reajuste'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Resultados por unidades de reajuste'].append( RESULTADO['Ingresos de Actividades ordinarias'][-1]*RESULTADO['Resultados por unidades de reajuste'][-1])
+    RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+    RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+    RESULTADO['Ganancia (pérdida), antes de impuestos'].append(RESULTADO['Ganancia (pérdida), antes de impuestos'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancia (pérdida), antes de impuestos'].append(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1]-RESULTADO['Costos financieros'][-1]+ RESULTADO['Diferencias de cambio'][-1]- RESULTADO['Resultados por unidades de reajuste'][-1])
+    RESULTADO['Gasto por impuestos a las ganancias'].append(RESULTADO['Gasto por impuestos a las ganancias'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Gasto por impuestos a las ganancias'].append( RESULTADO['Ganancia (pérdida), antes de impuestos'][-1]*0.27)
+    RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(RESULTADO['Ganancia (pérdida), antes de impuestos'][-1]+RESULTADO['Gasto por impuestos a las ganancias'][-1])
+    RESULTADO['Ganancia (pérdida)'].append(RESULTADO['Ganancia (pérdida)'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancia (pérdida)'].append(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1])
+    RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+    RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'][-1]/RESULTADO['Ingresos de Actividades ordinarias'][-3])
+    RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+    COLUMNAS.append("%")
+    COLUMNAS.append("Proyección")
+    return RESULTADO.values(), COLUMNAS
+
+
+def calculoEERR(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)))  if  (a.get(540,0))  else 0"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Ganancias Bruta'] = "(float(a.get(805,1)))  if  a.get(805,0)  else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,1)))  if  a.get(682,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Otros gastos, por función'] = "(float(a.get(1325,1)))  if  a.get(1325,0)  else 0"
+    RATIOS[
+        'Otras ganancias (pérdidas)'] = "(float(a.get(815,1)))  if  a.get(815,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) de actividades operacionales'] = "(float(a.get(817,1)))  if  a.get(817,0)  else 0"
+    RATIOS[
+        'Ingresos financieros'] = "(float(a.get(558,1)))  if  a.get(558,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Participación en las ganancias (pérdidas) de asociadas y negocios'] = "(float(a.get(824,1)))  if  a.get(824,0)  else 0"
+    RATIOS[
+        'Diferencias de cambio'] = "(float(a.get(849,1)))  if  a.get(849,0)  else 0"
+    RATIOS[
+        'Resultados por unidades de reajuste'] = "(float(a.get(516,1)))  if  a.get(516,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) que surgen de diferencias entre importes en libros'] = "(float(a.get(1327,1)))  if  a.get(1327,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), antes de impuestos'] = "(float(a.get(788,1)))  if  a.get(788,0)  else 0"
+    RATIOS[
+        'Gasto por impuestos a las ganancias'] = "(float(a.get(476,1)))  if  a.get(476,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida) procedente de operaciones continuadas'] = "(float(a.get(774,1)))  if  a.get(774,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a los propietarios de la controladora'] = "(float(a.get(704,1)))  if  a.get(704,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a participaciones no controladoras'] = "(float(a.get(868,1)))  if  a.get(868,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio >= '2015' and mes='12'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s') order by anio"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO PROYECCION"]
+    b = dict()
+    fecha = list(range(anios[0], anios[1] + 1))
+    fecha.sort()
+    for anio in fecha:
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.append(resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.append((eval(RATIOS[r])))
+                RESULTADO[r] = raux
+        b = a
+
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/ProyeccionEERR1/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ProyeccionEERR1(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        empresa = request.args.get("empresa")
+        data, columnas = get_proyeccionEERR(cod_entidad, anio, mes)
+        empresa = request.args.get("empresa")
+        p = list(data)
+        per = int(anio) + 1
+        anterior = None
+        factor = [0.05, 0.15, 0.8]
+        asignado = 0
+        for i in range(1, len(p[0])):
+            if anterior:
+                # ACTUAL
+                process = (p[0][i] - anterior) / anterior
+                print(process, factor[i - 2])
+                asignado += process * factor[i - 2]
+                if p[0][0] == 'Ingresos de Actividades ordinarias':
+                    ingresos=p[0][0]
+            anterior = p[0][i]
+        return render_template("/ProyeccionEERR.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data), columnas1=columnas, cod_entidad=cod_entidad, empresa=empresa,
+                               asignado=asignado, per=per)
+    data, columnas = get_proyeccionEERR(cod_entidad, anio, mes)
+    empresa = request.args.get("empresa")
+    p = list(data)
+    per = int(anio) + 1
+    anterior = None
+    factor = [0.05, 0.15, 0.8]
+    asignado = 0
+    for i in range(1, len(p[0])):
+        if anterior:
+            if p[0][0] == 'Ingresos de Actividades ordinarias':
+                ingresos = p[0][6]
+            # ACTUAL
+            if p[0][i]:
+                process = (p[0][i] - anterior) / anterior
+                print(process, factor[i - 2])
+                asignado += process * factor[i - 2]
+        anterior = p[0][i]
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/ProyeccionEERR1.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/ProyeccionEERR1.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa, cod_entidad=cod_entidad, asignado=asignado, per=per)
+
+
+@app.route('/eresultado/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def eresultado(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_eresultado(cod_entidad, anio, mes)
+        return render_template("/eresultado.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_eresultado(cod_entidad, anio, mes)
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/eresultado.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/eresultado.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                           cod_entidad=cod_entidad)
+
+
+@app.route('/memo/<cod_documento>/<cod_role>', methods=["GET", "POST"])
+def memo(cod_documento, cod_role):
+    cursor = cnx.cursor()
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, desc_detalle_documento valor 
+            from detalle_documento 
+            join cuenta using (cod_cuenta) 
+            left join role_cuenta using (cod_cuenta)
+            left join role using(cod_role)
+            left join unidad using (cod_unidad)
+            join tipo_cuenta using (cod_tipo_cuenta)
+            join contexto using (cod_contexto) 
+            join entidad using (cod_entidad)
+            join periodo using (cod_periodo) 
+            left join context_escenarios using (cod_contexto) 
+            left join escenario using (cod_escenario) 
+            left join dimension using (cod_dimension) 
+            --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+            where cod_dimension is null  and cod_documento = %s and cod_role =%s
+            order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
     data = dictfetchall(cursor)
     cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
-                                from detalle_documento 
-                                join cuenta using (cod_cuenta) 
-                                left join role_cuenta using (cod_cuenta)
-                                left join role using(cod_role)
-                                left join unidad using (cod_unidad)
-                                join tipo_cuenta using (cod_tipo_cuenta)
-                                join contexto using (cod_contexto) 
-                                join entidad using (cod_entidad)
-                                join periodo using (cod_periodo) 
-                                left join context_escenarios using (cod_contexto) 
-                                left join escenario using (cod_escenario) 
-                                left join dimension using (cod_dimension) 
-                                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
-                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
+                                    from detalle_documento 
+                                    join cuenta using (cod_cuenta) 
+                                    left join role_cuenta using (cod_cuenta)
+                                    left join role using(cod_role)
+                                    left join unidad using (cod_unidad)
+                                    join tipo_cuenta using (cod_tipo_cuenta)
+                                    join contexto using (cod_contexto) 
+                                    join entidad using (cod_entidad)
+                                    join periodo using (cod_periodo) 
+                                    left join context_escenarios using (cod_contexto) 
+                                    left join escenario using (cod_escenario) 
+                                    left join dimension using (cod_dimension) 
+                                    --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                                    where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                                    order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
     date = cursor.fetchall()
     cursor.execute("""select distinct desc_periodo 
-                               from detalle_documento 
-                               join cuenta using (cod_cuenta) 
-                               left join role_cuenta using (cod_cuenta)
-                               left join role using(cod_role)
-                               join contexto using (cod_contexto) 
-                               join periodo using (cod_periodo)
-                               left join context_escenarios using (cod_contexto) 
-                               left join escenario using (cod_escenario) 
-                               left join dimension using (cod_dimension)
-                               where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                               order by desc_periodo desc""" % (cod_documento, cod_role))
+                                   from detalle_documento 
+                                   join cuenta using (cod_cuenta) 
+                                   left join role_cuenta using (cod_cuenta)
+                                   left join role using(cod_role)
+                                   join contexto using (cod_contexto) 
+                                   join periodo using (cod_periodo)
+                                   left join context_escenarios using (cod_contexto) 
+                                   left join escenario using (cod_escenario) 
+                                   left join dimension using (cod_dimension)
+                                   where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                                   order by desc_periodo desc""" % (cod_documento, cod_role))
     per = dictfetchall(cursor)
+    CI = set_CI()
+
     for d in date:
         cod_rol = d[1]
         desc_role = d[0]
@@ -1130,100 +2001,1223 @@ def eresultado(cod_documento, cod_role):
     datas.sort()
     for d in datas:
         data_final.append(d[1:])
-    return render_template("/eresultado.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
+    return render_template("/memo.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
                            hoy=hoy)
 
 
-@app.route('/ratioLiquidez', methods=["GET", "POST"])
-def ratioLiquidez():
+def set_CI():
+    return getattr(sys, 'membrete', [['', 0]])
+    try:
+
+        CI = [[sys.__getattribute__('license')['company'].replace("\xd1", "Ñ"), 0],
+              ["RUT:" + sys.__getattribute__('license')['rut_empresa'], 1],
+              ["GIRO:" + sys.__getattribute__('license')['giro'], 2],
+              [sys.__getattribute__('license')['direccion'] + ", " + sys.__getattribute__('license')['comuna'], 3]]
+    except:
+        CI = [["", 0]]
+    return CI
+
+
+@app.route('/usoyfuentes/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def usoyfuentes(cod_entidad, anio, mes):
     cursor = cnx.cursor()
-    # Activos
-    sql_activos = """
-        select 
-            sum(COALESCE(detalle_documento.desc_detalle_documento::numeric, 0)) total_activos_corriente 
-        from detalle_documento 
-            join cuenta using (cod_cuenta) 
-        left join role_cuenta using (cod_cuenta)
-        left join role using(cod_role)
-        where detalle_documento.cod_cuenta = 608 and role.cod_role = 210000
-        group by detalle_documento.cod_cuenta, role.cod_role
-    """
-    cursor.execute(sql_activos)
-    activos_corriente = cursor.fetchone()[0]
+    anio = int(anio)
+    aniom = int(anio) - 1
+    RATIO = {}
+    RATIO['Efectivo y Equivalente'] = {'DIVIDENDO': 739, 'DIVISOR': 739, 'VALOR': 0}
+    RATIO['Otros Activos Financieros'] = {'DIVIDENDO': 607, 'DIVISOR': 607, 'VALOR': 0}
+    RATIO['Otros Activos No Financieros'] = {'DIVIDENDO': 835, 'DIVISOR': 835, 'VALOR': 0}
+    RATIO['Deudores Comerciales'] = {'DIVIDENDO': 775, 'DIVISOR': 775, 'VALOR': 0}
+    RATIO['Cuentas por Cobrar'] = {'DIVIDENDO': 787, 'DIVISOR': 787, 'VALOR': 0}
+    RATIO['Inventarios Corrientes'] = {'DIVIDENDO': 695, 'DIVISOR': 695, 'VALOR': 0}
+    RATIO['Activos Biologicos Corrientes'] = {'DIVIDENDO': 1290, 'DIVISOR': 1290, 'VALOR': 0}
+    RATIO['Activos por Impuestos Corrientes'] = {'DIVIDENDO': 481, 'DIVISOR': 481, 'VALOR': 0}
+    RATIO['Total Activos Corrientes'] = {'DIVIDENDO': 797, 'DIVISOR': 797, 'VALOR': 0}
+    RATIO['Activos no Corrientes'] = {'DIVIDENDO': 1291, 'DIVISOR': 1291, 'VALOR': 0}
+    RATIO['Activos Corrientes Totales'] = {'DIVIDENDO': 608, 'DIVISOR': 608, 'VALOR': 0}
+    RATIO['Activos no Corrientes Periodicos'] = {'DIVIDENDO': 1292, 'DIVISOR': 1292, 'VALOR': 0}
+    RATIO['Otros Activos Financieros no Corriente'] = {'DIVIDENDO': 520, 'DIVISOR': 520, 'VALOR': 0}
+    RATIO['Otros Activos no Financieros no Corrientes '] = {'DIVIDENDO': 462, 'DIVISOR': 462, 'VALOR': 0}
+    RATIO['Cuentas por Cobrar no Corrientes'] = {'DIVIDENDO': 753, 'DIVISOR': 753, 'VALOR': 0}
+    RATIO['Cuentas por Cobrar a Entidades'] = {'DIVIDENDO': 680, 'DIVISOR': 680, 'VALOR': 0}
+    RATIO['Inventarios no Corrientes'] = {'DIVIDENDO': 1293, 'DIVISOR': 1293, 'VALOR': 0}
+    RATIO['Inversiones Contabilizadas'] = {'DIVIDENDO': 713, 'DIVISOR': 713, 'VALOR': 0}
+    RATIO['Activos Intangibles'] = {'DIVIDENDO': 748, 'DIVISOR': 748, 'VALOR': 0}
+    RATIO['Plusvalia'] = {'DIVIDENDO': 866, 'DIVISOR': 866, 'VALOR': 0}
+    RATIO['Propiedades Plantas y Equipo'] = {'DIVIDENDO': 456, 'DIVISOR': 466, 'VALOR': 0}
+    RATIO['Activos Biologicos no Corrientes'] = {'DIVIDENDO': 1294, 'DIVISOR': 1294, 'VALOR': 0}
+    RATIO['Propiedad de Inversion'] = {'DIVIDENDO': 581, 'DIVISOR': 581, 'VALOR': 0}
+    RATIO['Activos por Impuestos Corrientes, no Corrientes'] = {'DIVIDENDO': 1295, 'DIVISOR': 1295, 'VALOR': 0}
+    RATIO['Activos por Impuestos Diferidos'] = {'DIVIDENDO': 622, 'DIVISOR': 622, 'VALOR': 0}
+    RATIO['Total Activos no Corrientes'] = {'DIVIDENDO': 825, 'DIVISOR': 825, 'VALOR': 0}
+    RATIO['Total Activos'] = {'DIVIDENDO': 808, 'DIVISOR': 808, 'VALOR': 0}
+    RATIO['Patrimonios y Pasivos'] = {'DIVIDENDO': 1296, 'DIVISOR': 1296, 'VALOR': 0}
+    RATIO['Pasivos'] = {'DIVIDENDO': 1297, 'DIVISOR': 1297, 'VALOR': 0}
+    RATIO['Pasivos Corrientes'] = {'DIVIDENDO': 1298, 'DIVISOR': 1298, 'VALOR': 0}
+    RATIO['Otros Pasivos Financieros Corrientes'] = {'DIVIDENDO': 582, 'DIVISOR': 582, 'VALOR': 0}
+    RATIO['Cuentas por Pagar Comerciales'] = {'DIVIDENDO': 783, 'DIVISOR': 783, 'VALOR': 0}
+    RATIO['Cuentas por Pagar a Entidades Relacionadas'] = {'DIVIDENDO': 461, 'DIVISOR': 461, 'VALOR': 0}
+    RATIO['Otras Provisiones a Corto Plazo'] = {'DIVIDENDO': 659, 'DIVISOR': 659, 'VALOR': 0}
+    RATIO['Pasivos por Impuestos Corrientes'] = {'DIVIDENDO': 477, 'DIVISOR': 477, 'VALOR': 0}
+    RATIO['Provisiones Corrientes por Beneficios'] = {'DIVIDENDO': 756, 'DIVISOR': 756, 'VALOR': 0}
+    RATIO['Otros Pasivos no Financieros Corrientes'] = {'DIVIDENDO': 621, 'DIVISOR': 621, 'VALOR': 0}
+    RATIO['Total de pasivos corrientes'] = {'DIVIDENDO': 745, 'DIVISOR': 745, 'VALOR': 0}
+    RATIO['Pasivos incluidos en grupos de activos'] = {'DIVIDENDO': 1299, 'DIVISOR': 1299, 'VALOR': 0}
+    RATIO['Pasivos corrientes totales'] = {'DIVIDENDO': 668, 'DIVISOR': 668, 'VALOR': 0}
+    RATIO['Pasivos no corrientes [sinopsis]'] = {'DIVIDENDO': 1300, 'DIVISOR': 1300, 'VALOR': 0}
+    RATIO['Otros pasivos financieros no corrientes'] = {'DIVIDENDO': 791, 'DIVISOR': 791, 'VALOR': 0}
+    RATIO['Cuentas por pagar no corrientes'] = {'DIVIDENDO': 822, 'DIVISOR': 822, 'VALOR': 0}
+    RATIO['Cuentas por pagar a entidades relacionadas'] = {'DIVIDENDO': 486, 'DIVISOR': 486, 'VALOR': 0}
+    RATIO['Otras provisiones a largo plazo'] = {'DIVIDENDO': 524, 'DIVISOR': 524, 'VALOR': 0}
+    RATIO['Pasivo por impuestos diferidos'] = {'DIVIDENDO': 640, 'DIVISOR': 640, 'VALOR': 0}
+    RATIO['Pasivos por impuestos corrientes, no corrientes'] = {'DIVIDENDO': 1301, 'DIVISOR': 1301, 'VALOR': 0}
+    RATIO['Provisiones no corrientes por beneficios a los empleados'] = {'DIVIDENDO': 629, 'DIVISOR': 629, 'VALOR': 0}
+    RATIO['Otros pasivos no financieros no corrientes'] = {'DIVIDENDO': 633, 'DIVISOR': 633, 'VALOR': 0}
+    RATIO['Total de pasivos no corrientes'] = {'DIVIDENDO': 809, 'DIVISOR': 809, 'VALOR': 0}
+    RATIO['Total de pasivos'] = {'DIVIDENDO': 519, 'DIVISOR': 519, 'VALOR': 0}
+    RATIO['Patrimonio sinopsis'] = {'DIVIDENDO': 1302, 'DIVISOR': 1302, 'VALOR': 0}
+    RATIO['Ganancias (pérdidas) acumuladas'] = {'DIVIDENDO': 670, 'DIVISOR': 670, 'VALOR': 0}
+    RATIO['Prima de emisión'] = {'DIVIDENDO': 939, 'DIVISOR': 939, 'VALOR': 0}
+    RATIO['Acciones propias en cartera'] = {'DIVIDENDO': 1303, 'DIVISOR': 1303, 'VALOR': 0}
+    RATIO['Otras participaciones en el patrimonio'] = {'DIVIDENDO': 1304, 'DIVISOR': 1304, 'VALOR': 0}
+    RATIO['Otras reservas'] = {'DIVIDENDO': 789, 'DIVISOR': 789, 'VALOR': 0}
+    RATIO['Patrimonio atribuible a los propietarios'] = {'DIVIDENDO': 879, 'DIVISOR': 879, 'VALOR': 0}
+    RATIO['Participaciones no controladoras'] = {'DIVIDENDO': 620, 'DIVISOR': 620, 'VALOR': 0}
+    RATIO['Patrimonio total'] = {'DIVIDENDO': 681, 'DIVISOR': 681, 'VALOR': 0}
+    RATIO['Total de patrimonio y pasivos'] = {'DIVIDENDO': 754, 'DIVISOR': 754, 'VALOR': 0}
 
-    # Pasivos
-    sql_pasivos = """
-        select 
-            sum(COALESCE(detalle_documento.desc_detalle_documento::numeric, 0)) total_pasivos_corriente 
-        from detalle_documento 
-            join cuenta using (cod_cuenta) 
-        left join role_cuenta using (cod_cuenta)
-        left join role using(cod_role)
-        where detalle_documento.cod_cuenta = 668 and role.cod_role = 210000
-        group by detalle_documento.cod_cuenta, role.cod_role
-    """
-    cursor.execute(sql_pasivos)
-    pasivos_corriente = cursor.fetchone()[0]
+    aniop = request.args.get("aniop")
+    if aniop:
+        for k in RATIO:
+            aniopm = int(aniop)-1
+            SQL = """select(select valor from usoyfuentes INNER JOIN documento USING (cod_documento) WHERE documento.cod_entidad = '%s' and usoyfuentes.anio = '%s' and cod_cuenta = '%s' and usoyfuentes.mes='%s') -
+                     (select valor from usoyfuentes INNER JOIN documento USING (cod_documento) WHERE documento.cod_entidad = '%s' and usoyfuentes.anio = '%s' and cod_cuenta = '%s' and usoyfuentes.mes='%s')""" % (
+                cod_entidad, aniop, RATIO[k]['DIVIDENDO'], mes, cod_entidad, aniopm, RATIO[k]['DIVISOR'], mes)
+            cursor.execute(SQL)
+            RATIO[k]['VALOR'] = CMon(cursor.fetchone()[0])
+            cursor.execute(
+            """SELECT DISTINCT
+            * from entidad where cod_entidad ='%s'""" % (
+                cod_entidad))
+        entidad = cursor.fetchone()[1]
+        return render_template("/usoyfuentes.html", RATIO=RATIO, entidad=entidad, mes=mes, anio=aniop, aniom=aniopm,cod_entidad=cod_entidad)
+    for k in RATIO:
+        SQL = """select(select valor from usoyfuentes INNER JOIN documento USING (cod_documento) WHERE documento.cod_entidad = '%s' and usoyfuentes.anio = '%s' and cod_cuenta = '%s' and usoyfuentes.mes='%s') -
+         (select valor from usoyfuentes INNER JOIN documento USING (cod_documento) WHERE documento.cod_entidad = '%s' and usoyfuentes.anio = '%s' and cod_cuenta = '%s' and usoyfuentes.mes='%s')""" % (
+            cod_entidad, anio, RATIO[k]['DIVIDENDO'], mes, cod_entidad, aniom, RATIO[k]['DIVISOR'], mes)
+        cursor.execute(SQL)
+        RATIO[k]['VALOR'] = CMon(cursor.fetchone()[0])
+        cursor.execute(
+        """SELECT DISTINCT
+        * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    return render_template("/usoyfuentes.html", RATIO=RATIO, entidad=entidad, mes=mes, anio=anio, aniom=aniom,cod_entidad=cod_entidad)
 
-    liquidez = activos_corriente / pasivos_corriente
 
-    print("HEREEEEEEEEEEEEEEEEEEEEE")
-    print(activos_corriente)
-    print(pasivos_corriente)
-    print(liquidez)
-
-    return render_template("/ratioLiquidez.html")
+@app.route('/paypal', methods=["GET", "POST"])
+def paypal():
+    return render_template("/paypal.html")
 
 
-@app.route('/balance/<cod_documento>/<cod_role>', methods=["GET", "POST"])
-def balance(cod_documento, cod_role):
+@app.route('/ProyeccionEERR/<cod_entidad>/<anio>', methods=["GET", "POST"])
+def ProyeccionEERR(cod_entidad, anio):
     cursor = cnx.cursor()
-    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
-                            from detalle_documento 
-                            join cuenta using (cod_cuenta) 
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    data, columnas = get_eerr(cod_entidad, anio)
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/ProyeccionEERR.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/ProyeccionEERR.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa)
+
+
+def get_eerr(cod_entidad, anio):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)) - float(b.get(540,1)))/float(a.get(540,1)  if (a.get(540,0) and b.get(540,0)) else 0"
+    RATIOS[
+        'Prueba Acida'] = "(float(a.get(608,0)) - float(a.get(695,0))) / float(a.get(668,0)) if (a.get(608,0) and a.get(668,0) and a.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Cobro'] = "(((float(a.get(775) or 0) / float(a.get(540) or 0)) * float(1.19)))* float(365) if (a.get(775,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Dias De Pago'] = "(float(a.get(783) or 0) / (-float(a.get(727) or 0) + float(a.get(695) or 0) - float(b.get(695) or 0)))*365 if (a.get(783,0) and a.get(727,0)and b.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Existencia'] = "((float(a.get(695) or 0) / float(a.get(727) or 0)) * float(365)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'ROI'] = "(float(a.get(479) or 0) / float(a.get(808) or 0)*100) if (a.get(479,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'ROE'] = "(float(a.get(479) or 0) / float(a.get(681) or 0)*100) if (a.get(479,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Leverage'] = "(float(a.get(519) or 0) / float(a.get(681) or 0)) if (a.get(519,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Corriente'] = "(float(a.get(668) or 0) / float(a.get(519) or 0)*100) if (a.get(668,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'No Corriente'] = "(float(a[809] or 0) / float(a[519] or 0)*100) if (a.get(809,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'Margen Neto'] = "(float(a.get(479) or 0) / float(a.get(540) or 0)*100) if (a.get(479,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Rotacion Activos'] = "(float(a.get(540) or 0) / float(a.get(808) or 0)) if (a.get(540,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'Apalancamiento'] = "(float(a.get(808) or 0) / float(a.get(681) or 0)) if (a.get(808,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Dupont'] = "(((float(a.get(479) or 0) / float(a.get(540) or 0)) * (float(a.get(540) or 0) / float(a.get(808) or 0))) * (float(a.get(808) or 0) / float(a.get(681) or 0))*100)  if (a.get(479,0) and a.get(540,0)and a.get(808,0)and a.get(681,0)) else 0"
+    RATIOS[
+        'BPA'] = "(float(a.get(479) or 0) / float(a.get(685) or 0)) if (a.get(479,0) and a.get(685,0)) else 0"
+    RATIOS[
+        'Dias de Caja'] = "((float(a.get(739) or 0) / (float(a.get(540) or 1) - float(a.get(479)))) * 365) if (a.get(739,0) and a.get(540,0) and a.get(479)) else 0"
+    RATIOS[
+        'Ebitda'] = "(float(a.get(479) or 0) + float(a.get(764)or 0) + float(a.get(476)or 0) + float(a.get(832)or 0) + float(a.get(865)or 0)) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(832) and a.get(865)) else 0"
+    RATIOS[
+        'Cobertura Interes'] = "((float(a.get(479) or 0) + float(a.get(764)) + float(a.get(476)) + float(a.get(832)) + float(a.get(865)))) / float(a.get(764) or 0) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(832) and a.get(865)) else 0"
+    RATIOS[
+        'Rotacion De Inventarios'] = "(float(a.get(695) or 0) / float(a.get(727) or 0)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'Tasa Interes Promedio'] = "float(a.get(764) or 0) / (((float(a.get(582) or 0) + float(a.get(791) or 0) + float(b.get(582) or 0)+ float(b.get(791) or 0)))/2) if (a.get(764,0) and a.get(582,0)and a.get(791,0)  and b.get(582,0)and b.get(791,0)) else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from documento  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_documento INNER JOIN documento USING (cod_documento) where cod_entidad = '%s' and anio in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio))
+        resumen = cursor.fetchall()
+
+        COLUMNAS.insert(1, anio)
+        a = dict()
+        for r in resumen:
+            a[r[1]] = r[3]
+        for r in RATIOS:
+            raux = RESULTADO.get(r, [r])
+            raux.insert(1, eval(RATIOS[r]))
+            RESULTADO[r] = raux
+        b = a
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_ratiosdd(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS['Liquidez'] = "(float(a.get(608,1)) / float(a.get(668,1))) if (a.get(608,0) and a.get(668,0)) else 0"
+    RATIOS[
+        'Prueba Acida'] = "(float(a.get(608,0)) - float(a.get(695,0))) / float(a.get(668,0)) if (a.get(608,0) and a.get(668,0) and a.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Cobro'] = "float(a.get(775) or 0) / (float(a.get(540) or 0) * float(1.19))* 365 if (a.get(775,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Dias De Pago'] = "((float(a.get(783) or 0)) / (float(a.get(727) or 0) + float(a.get(695) or 0) - float(b.get(695) or 0)))*365 if (a.get(783,0) and a.get(727,0)and b.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Existencia'] = "((float(a.get(695) or 0) / float(a.get(727) or 0)) * float(365)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'ROI'] = "(float(a.get(479) or 0) / float(a.get(808) or 0)*100) if (a.get(479,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'ROE'] = "(float(a.get(479) or 0) / float(a.get(681) or 0)*100) if (a.get(479,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Leverage'] = "(float(a.get(519) or 0) / float(a.get(681) or 0)) if (a.get(519,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Corriente'] = "(float(a.get(668) or 0) / float(a.get(519) or 0)*100) if (a.get(668,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'No Corriente'] = "(float(a[809] or 0) / float(a[519] or 0)*100) if (a.get(809,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'Margen Neto'] = "(float(a.get(479) or 0) / float(a.get(540) or 0)*100) if (a.get(479,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Rotacion Activos'] = "(float(a.get(540) or 0) / float(a.get(808) or 0)) if (a.get(540,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'Apalancamiento'] = "(float(a.get(808) or 0) / float(a.get(681) or 0)) if (a.get(808,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Dupont'] = "(((float(a.get(479) or 0) / float(a.get(540) or 0)) * (float(a.get(540) or 0) / float(a.get(808) or 0))) * (float(a.get(808) or 0) / float(a.get(681) or 0))*100)  if (a.get(479,0) and a.get(540,0)and a.get(808,0)and a.get(681,0)) else 0"
+    RATIOS[
+        'BPA'] = "(float(a.get(479) or 0) / float(a.get(685) or 0)) if (a.get(479,0) and a.get(685,0)) else 0"
+    RATIOS[
+        'Dias de Caja'] = "((float(a.get(739) or 0) / (float(a.get(540) or 1) - float(a.get(479)))) * 365) if (a.get(739,0) and a.get(540,0) and a.get(479)) else 0"
+    RATIOS[
+        'Ebitda'] = "(float(a.get(479) or 0) + float(a.get(764)or 0) + float(a.get(476)or 0) + float(a.get(864)or 0)) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(864)) else 0"
+    RATIOS[
+        'Cobertura Interes'] = "((float(a.get(479) or 0) + float(a.get(764)) + float(a.get(476)) + float(a.get(832)) + float(a.get(865)))) / float(a.get(764) or 0) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(832) and a.get(865)) else 0"
+    RATIOS[
+        'Rotacion De Inventarios'] = "(float(a.get(695) or 0) / float(a.get(727) or 0)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'Tasa Interes Promedio'] = "float(a.get(764) or 0) / (((float(a.get(582) or 0) + float(a.get(791) or 0) + float(b.get(582) or 0)+ float(b.get(791) or 0)))/2) if (a.get(764,0) and a.get(582,0)and a.get(791,0)  and b.get(582,0)and b.get(791,0)) else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_documento  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_documento  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+            b = a
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/ratioLiquidez/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ratioLiquidez(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    empresa = request.args.get("empresa")
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        if empresa != None:
+            cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+            en = cursor.fetchone()[1]
+            data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+            return render_template("/ratioLiquidez2.html", entidad=entidad, data=list(data1),
+                                   columnas1=columnas1,
+                                   data1=list(data1), en=en, empresa=empresa, cod_entidad=cod_entidad)
+        data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+        return render_template("/ratioLiquidez2.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad, empresa=empresa)
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+        return render_template("/ratioLiquidez2.html", entidad=entidad, data=list(data1),
+                               columnas1=columnas1,
+                               data1=list(data1), en=en, empresa=empresa, cod_entidad=cod_entidad)
+    data, columnas = get_ratiosdd(cod_entidad, anio, mes)
+    return render_template("/ratioLiquidez2.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                           cod_entidad=cod_entidad)
+
+
+@app.route('/comparatuempresa/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def comparatuempresa(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    empresa = request.args.get("empresa")
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        if empresa != None:
+            cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+            en = cursor.fetchone()[1]
+            data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+            return render_template("/comparatuempresa.html", entidad=entidad, data=list(data1),
+                                   columnas1=columnas1,
+                                   data1=list(data1), en=en, empresa=empresa, cod_entidad=cod_entidad)
+        data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+        return render_template("/comparatuempresa.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad, empresa=empresa)
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(cod_entidad, anio, mes)
+        return render_template("/comparatuempresa.html", entidad=entidad, data=list(data1),
+                               columnas1=columnas1,
+                               data1=list(data1), en=en, empresa=empresa, cod_entidad=cod_entidad)
+    data, columnas = get_ratiosdd(cod_entidad, anio, mes)
+    return render_template("/comparatuempresa.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa,
+                           cod_entidad=cod_entidad)
+
+
+@app.route('/analisisRelativo/<cod_entidad>/<anio>', methods=["GET", "POST"])
+def analisisRelativo(cod_entidad, anio):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades'] = "(float(a.get(540,0)) / float(a.get(540,0))*100) if (a.get(540,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)) / float(a.get(540,1))*100) if (a.get(727,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,0)) / float(a.get(540,0))*100) if (a.get(682,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,0)) / float(a.get(540,0))*100) if (a.get(1324,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Gastos Administracion'] = "(float(a.get(618,0)) / float(a.get(540,0))*100) if (a.get(618,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otros Gastos'] = "(float(a.get(815,0)) / float(a.get(540,0))*100) if (a.get(815,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otras Ganancias'] = "(float(a.get(1325,0)) / float(a.get(540,0))*100) if (a.get(1325,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias'] = "(float(a.get(817,0)) / float(a.get(540,0))*100) if (a.get(817,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Que Surgen'] = "(float(a.get(1326,0)) / float(a.get(540,0))*100) if (a.get(1326,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ingresos Financieros'] = "(float(a.get(558,0)) / float(a.get(540,0))*100) if (a.get(558,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos Financieros'] = "(float(a.get(764,0)) / float(a.get(540,0))*100) if (a.get(764,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Deterioro de Valor'] = "(float(a.get(9744,0)) / float(a.get(540,0))*100) if (a.get(9744,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Diferencias de Cambio'] = "(float(a.get(849,0)) / float(a.get(540,0))*100) if (a.get(849,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Resultados por Unidades'] = "(float(a.get(516,0)) / float(a.get(540,0))*100) if (a.get(516,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias de Cobertura'] = "(float(a.get(10377,0)) / float(a.get(540,0))*100) if (a.get(10377,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Antes del Impuesto'] = "(float(a.get(788,0)) / float(a.get(540,0))*100) if (a.get(788,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Gastos por Impuestos a las Ganancias'] = "(float(a.get(476,0)) / float(a.get(540,0))*100) if (a.get(476,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Procedentes Continuada'] = "(float(a.get(774,0)) / float(a.get(540,0))*100) if (a.get(774,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Porcentes Discontinuas'] = "(float(a.get(1328,0)) / float(a.get(540,0))*100) if (a.get(1328,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancia (Perdida)'] = "(float(a.get(479,0)) / float(a.get(540,0))*100) if (a.get(479,0) and a.get(540,0)) else 0"
+
+    cursor.execute(
+        """SELECT DISTINCT
+* from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    SQL_RESUMEN = """select distinct *  from resumen_documento  where cod_entidad = '%s' and anio in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    while existan_datos:
+        COLUMNAS.append(anio)
+        a = dict()
+        for r in resumen:
+            a[r[4]] = r[9]
+        for r in RATIOS:
+            RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+        anio = int(anio) - 1
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio))
+        resumen = cursor.fetchall()
+        existan_datos = resumen != []
+    return render_template("/analisisRelativo.html", entidad=entidad, data=list(RESULTADO.values()),
+                           columnas=COLUMNAS, cod_entidad=cod_entidad)
+
+
+def get_nofresumen(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'NOF'] = "(float(a.get(608,1))- float(a.get(668,1)) + float(a.get(582,1)))  if  (a.get(608,0)) and  (a.get(668,0)) and (a.get(582,0))  else 0"
+    RATIOS[
+        'FM'] = "(float(a.get(681,1))+ float(a.get(668,1)) + float(a.get(809,1)))  if  (a.get(809,0)) and  (a.get(681,0)) and (a.get(668,0))  else 0"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from nof_resumen  where cod_entidad = '%s' and anio >= '2015' and mes='12'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from nof_resumen  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["NOF"]
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_ventasxtrimestreresumen(cod_entidad, anio):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ventas por Trimestre'] = "(float(a.get(540,1)))  if  (a.get(540,0))  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from ventasxtrimestre_resumen  where cod_entidad = '%s' and anio > '2016'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from ventasxtrimestre_resumen  where cod_entidad = '%s' and anio in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["VENTAS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio))
+        resumen = cursor.fetchall()
+        a = dict()
+        coun = 0
+        for r in resumen:
+            a[r[4]] = r[9]
+            COLUMNAS.insert(1, resumen[coun][1])
+            coun += 1
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+        b = a
+
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_portadaratiosdd(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+
+    RATIOS[
+        'Dias De Cobro'] = "float(a.get(775) or 0) / (float(a.get(540) or 0) * float(1.19))* 365 if (a.get(775,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Dias De Pago'] = "((float(a.get(783) or 0)) / (float(a.get(727) or 0) + float(a.get(695) or 0) - float(b.get(695) or 0)))*365 if (a.get(783,0) and a.get(727,0)and b.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Existencia'] = "((float(a.get(695) or 0) / float(a.get(727) or 0)) * float(365)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'ROI'] = "(float(a.get(479) or 0) / float(a.get(808) or 0)*100) if (a.get(479,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'ROE'] = "(float(a.get(479) or 0) / float(a.get(681) or 0)*100) if (a.get(479,0) and a.get(681,0)) else 0"
+
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_portadaratios  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_portadaratios  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_portadaeresultado(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos'] = "(float(a.get(540,1)),(float(a.get(540,1))/float(a.get(540,1)))*100  if  (a.get(540,0))  else 0)"
+    RATIOS[
+        'Margen Bruto'] = "(float(a.get(805,1)),(float(a.get(805,1))/float(a.get(540,1)))*100  if  (a.get(805,0))  else 0)"
+    RATIOS[
+        'GAV + Distribucion'] = "(float(a.get(1324,1)),(float(a.get(1324,1))+float(a.get(618,1)))/3  if  (a.get(1324,0))  else 0)"
+    RATIOS[
+        'Financieros'] = "(float(a.get(764,1)),(float(a.get(764,1))/float(a.get(540,1)))*100  if  (a.get(764,0))  else 0)"
+    RATIOS[
+        'Resultado'] = "(float(a.get(479,1)),(float(a.get(479,1))/float(a.get(540,1)))*100  if  (a.get(479,0))  else 0)"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_portadaeerr  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_portadaeerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_portadagraficoeerr(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from documento  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        COLUMNAS.insert(1, resumen[0][1])
+        a = dict()
+        for r in resumen:
+            a[r[4]] = r[9]
+        for r in RATIOS:
+            raux = RESULTADO.get(r, [r])
+            raux.insert(1, eval(RATIOS[r]))
+            RESULTADO[r] = raux
+        b = a
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_Financiamiento(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+
+    RATIOS[
+        'Deuda'] = "(float(a.get(582,1))+float(a.get(791,1)))  if  (a.get(582,0) and a.get(791,0))  else 0"
+    RATIOS[
+        'Capital'] = "(float(a.get(681,1)))  if  a.get(681,0)  else 0"
+    RATIOS[
+        'Total'] = "(float(a.get(582,1))+float(a.get(791,1))+float(a.get(681,1)))  if  (a.get(582,0) and a.get(791,0)and a.get(681,0)) else 0"
+    RATIOS[
+        '%Deuda'] = "((float(a.get(582,1))+float(a.get(791,1)))/(float(a.get(582,1))+float(a.get(791,1))+float(a.get(681,1)))*100)  if  (a.get(582,0) and a.get(791,0)and a.get(681,0)) else 0"
+    RATIOS[
+        '%Capital'] = "((float(a.get(681,1)))/(float(a.get(582,1))+float(a.get(791,1))+float(a.get(681,1)))*100)  if  (a.get(582,0) and a.get(791,0)and a.get(681,0)) else 0"
+    RATIOS[
+        'Tasa Interes'] = "float(a.get(764) or 0) / (((float(a.get(582) or 0) + float(a.get(791) or 0) + float(b.get(582) or 0)+ float(b.get(791) or 0)))/2) if (a.get(764,0) and a.get(582,0)and a.get(791,0)  and b.get(582,0)and b.get(791,0)) else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_EstructuraFinanciamiento  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_EstructuraFinanciamiento  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["Financiamiento"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+            b = a
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/EstructuraFinanciamiento/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def EstructuraFinanciamiento(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_Financiamiento(cod_entidad, anio, mes)
+
+        return render_template("/EstructuraFinanciamiento.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_Financiamiento(cod_entidad, anio, mes)
+
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/EstructuraFinanciamiento.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/EstructuraFinanciamiento.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa, cod_entidad=cod_entidad)
+
+
+@app.route('/ResumenEmpresa/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ResumenEmpresa(cod_entidad, anio, mes):
+    if session.get("username"):
+        cursor = cnx.cursor()
+        parametros = {'cod_entidad': cod_entidad}
+        cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""",parametros)
+        rest = cursor.fetchone()
+        if not rest:
+            abort(404)
+        entidad = rest[1]
+        cursor.execute("""SELECT
+                    public.entidad.cod_entidad,
+                    public.entidad.desc_entidad,
+                    public.documento.desc_documento,
+                    public.documento.anio,
+                    public.documento.mes,
+                    public.documento.cod_documento,
+                    public.documento.hash
+                    FROM
+                    public.documento
+                    INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad
+                    WHERE documento.cod_entidad = '%s'""" % (cod_entidad))
+        entidadC = cursor.fetchall()
+        # NOF-FM
+        data, columnas = get_nofresumen(cod_entidad, anio, mes)
+        columna = columnas[1:]
+        if columna == []:
+            columna = "n/a"
+        else:
+            columna = columnas[1:]
+
+        if list(data) == []:
+            datonof = "n/a"
+            dato2nof = "n/a"
+        else:
+            datonof = list(data)[0][1:]
+            dato2nof = list(data)[1][1:]
+        # VENTASXTRIMESTRE
+        data1, columnas1 = get_ventasxtrimestreresumen(cod_entidad, anio)
+        columna1 = columnas1[1:]
+        if columna1 == []:
+            columna1 = "n/a"
+        else:
+            columna1 = columnas1[1:]
+
+        if list(data1) == []:
+            datonvxt1 = "n/a"
+        else:
+            datonvxt1 = list(data1)[0][1:]
+
+        # BALANCE
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='608'""" % (cod_entidad))
+        corriente = cursor.fetchall()
+        if corriente:
+            corriente = corriente
+        else:
+            corriente = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='825'""" % (cod_entidad))
+        Nocorriente = cursor.fetchall()
+        if Nocorriente:
+            Nocorriente = Nocorriente
+        else:
+            Nocorriente = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='808' ORDER BY anio""" % (
+                cod_entidad))
+        Total = cursor.fetchall()
+        if Total:
+            Total = Total
+        else:
+            Total = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='668'""" % (cod_entidad))
+        corrientepasivo = cursor.fetchall()
+        CLP = 'N/A'
+        USD = 'N/A'
+        if corrientepasivo:
+            if corrientepasivo[0][10] == 'CLP':
+                CLP = corrientepasivo[0][10]
+                USD = 'none'
+            else:
+                USD = corrientepasivo[0][10]
+                CLP = 'none'
+            corrientepasivo = corrientepasivo
+        else:
+            corrientepasivo = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='809'""" % (cod_entidad))
+        nocorrientepasivo = cursor.fetchall()
+        if nocorrientepasivo:
+            nocorrientepasivo = nocorrientepasivo
+        else:
+            nocorrientepasivo = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='681'""" % (cod_entidad))
+        patrimonio = cursor.fetchall()
+        if patrimonio:
+            patrimonio = patrimonio
+        else:
+            patrimonio = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalance where cod_entidad = '%s' and cod_cuenta='754' ORDER BY anio""" % (
+                cod_entidad))
+        totalpasivo = cursor.fetchall()
+        if totalpasivo:
+            totalpasivo = totalpasivo
+        else:
+            totalpasivo = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='582'""" % (
+                cod_entidad))
+        rest = cursor.fetchone()
+        if rest:
+            D1 = rest[9]
+        else:
+            D1 = 1
+        cursor.execute(
+            """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='791' """ % (
+                cod_entidad))
+        rest = cursor.fetchone()
+        if rest:
+            D2 = rest[9]
+        else:
+            D2 = 1
+        if D1 == 1 or D2 == 1:
+            Deudor = "n/a"
+        else:
+            Deudor = (D1 + D2)
+        cursor.execute(
+            """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='681'""" % (
+                cod_entidad))
+        rest = cursor.fetchone()
+        if rest:
+            Capital = rest[9]
+        else:
+            Capital = "n/a"
+        if Capital == "n/a" or Deudor == "n/a":
+            porcientodeuda = "n/a"
+            porcientoCapital = "n/a"
+            testructura = "n/a"
+        else:
+            testructura = (Deudor + Capital)
+            porcientodeuda = (Deudor / testructura) * 100
+            porcientoCapital = (Capital / testructura) * 100
+        # RATIOS
+        data3, columnas3 = get_portadaratiosdd(cod_entidad, anio, mes)
+        # EERR
+        data4, columnas4 = get_portadaeresultado(cod_entidad, anio, mes)
+        # GRAFICO EERR
+        return render_template("/ResumenEmpresa.html", entidad=entidad, data=list(data), columnas=columnas,
+                               columna1=columna1, datonvxt1=datonvxt1,
+                               columna=columna, datonof=datonof, dato2nof=dato2nof, data1=list(data1),
+                               columnas1=columnas1, corriente=corriente, Nocorriente=Nocorriente, Total=Total,
+                               corrientepasivo=corrientepasivo, nocorrientepasivo=nocorrientepasivo,
+                               totalpasivo=totalpasivo, Deudor=Deudor, Capital=Capital, testructura=testructura,
+                               porcientodeuda=porcientodeuda, porcientoCapital=porcientoCapital, data3=data3,
+                               columnas3=columnas3, data4=list(data4), columnas4=columnas4, entidadC=entidadC,
+                               patrimonio=patrimonio, USD=USD, CLP=CLP)
+    return redirect("/login")
+
+
+def get_nof(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'NOF'] = "(float(a.get(608,1))- float(a.get(668,1)) + float(a.get(582,1)))  if  (a.get(608,0)) and  (a.get(668,0)) and (a.get(582,0))  else 0"
+    RATIOS[
+        'FM'] = "(float(a.get(681,1))+ float(a.get(668,1)) + float(a.get(809,1)))  if  (a.get(809,0)) and  (a.get(681,0)) and (a.get(668,0))  else 0"
+    RATIOS[
+        'NOF-FM'] = "((float(a.get(608,1))- float(a.get(668,1)) + float(a.get(582,1)))-(float(a.get(681,1))+ float(a.get(668,1)) + float(a.get(809,1)))) if  (a.get(608,0)) and  (a.get(668,0)) and (a.get(582,0)) and (a.get(809,0)) and  (a.get(681,0))  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from nof  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from nof  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["NOF"]
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/nof/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def nof(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros ={'cod_entidad':cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    empresa = request.args.get("empresa")
+    data, columnas = get_nof(cod_entidad, anio, mes)
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        columna = columnas[1:]
+        dato = CMon(list(data)[0][1:])
+        dato2 = list(data)[1][1:]
+        data, columnas = get_nof(cod_entidad, anio, mes)
+        return render_template("/nof.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                               columna=columna, dato=dato, dato2=dato2, cod_entidad=cod_entidad)
+    # app_json = json.dumps(resultado)
+    # print(app_json)
+    columna = columnas[1:]
+    dato = CMon(list(data)[0][1:])
+    dato2 = list(data)[1][1:]
+    # desc_pr_turno = [j['dvalor'] for j in app_json]
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/nof.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/nof.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                           columna=columna, dato=dato, dato2=dato2, cod_entidad=cod_entidad)
+
+
+
+def get_ventasxtrimestre(cod_entidad, anio):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ventas por Trimestre'] = "(float(a.get(540,1)))  if  (a.get(540,0))  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_ventasxtrimestre  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_ventasxtrimestre  where cod_entidad = '%s' and anio in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["VENTAS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio))
+        resumen = cursor.fetchall()
+        a = dict()
+        coun = 0
+        for r in resumen:
+            a[r[4]] = r[9]
+            COLUMNAS.insert(1, resumen[coun][1])
+            coun += 1
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+        b = a
+
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/ventasxtrimestre/<cod_entidad>/<anio>', methods=["GET", "POST"])
+def ventasxtrimestre(cod_entidad, anio):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    data, columnas = get_ventasxtrimestre(cod_entidad, anio)
+    empresa = request.args.get("empresa")
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/ventasxtrimestre.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/ventasxtrimestre.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa, cod_entidad=cod_entidad)
+
+
+@app.route('/balance1/<cod_documento>/<cod_role>', methods=["GET", "POST"])
+def balance1(cod_documento, cod_role):
+    cursor = cnx.cursor()
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor
+                        from detalle_documento
+                        join cuenta using (cod_cuenta)
+                        left join role_cuenta using (cod_cuenta)
+                        left join role using(cod_role)
+                        left join unidad using (cod_unidad)
+                        join tipo_cuenta using (cod_tipo_cuenta)
+                        join contexto using (cod_contexto)
+                        join entidad using (cod_entidad)
+                        join periodo using (cod_periodo)
+                        left join context_escenarios using (cod_contexto)
+                        left join escenario using (cod_escenario)
+                        left join dimension using (cod_dimension)
+                        --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
+                        where cod_dimension is null  and cod_documento = %s and cod_role =%s and desc_unidad != '%s'
+                        order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role, 'shares'))
+    data = dictfetchall(cursor)
+    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor
+                            from detalle_documento
+                            join cuenta using (cod_cuenta)
                             left join role_cuenta using (cod_cuenta)
                             left join role using(cod_role)
                             left join unidad using (cod_unidad)
                             join tipo_cuenta using (cod_tipo_cuenta)
-                            join contexto using (cod_contexto) 
+                            join contexto using (cod_contexto)
                             join entidad using (cod_entidad)
-                            join periodo using (cod_periodo) 
-                            left join context_escenarios using (cod_contexto) 
-                            left join escenario using (cod_escenario) 
-                            left join dimension using (cod_dimension) 
+                            join periodo using (cod_periodo)
+                            left join context_escenarios using (cod_contexto)
+                            left join escenario using (cod_escenario)
+                            left join dimension using (cod_dimension)
                             --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
                             where cod_dimension is null  and cod_documento = %s and cod_role =%s
                             order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
-    data = dictfetchall(cursor)
-    cursor.execute("""select desc_role, cod_role_cuenta,desc_escenario, desc_dimension, desc_tipo_cuenta,coalesce(desc_role_cuenta, etiqueta, desc_cuenta) desc_cuenta, cod_periodo,desc_periodo, desc_detalle_documento, decimales, cod_unidad, desc_unidad, cod_entidad,desc_entidad, case when not decimales isnull then desc_detalle_documento::numeric / 10 ^ abs(decimales) else 0 end valor 
-                                from detalle_documento 
-                                join cuenta using (cod_cuenta) 
-                                left join role_cuenta using (cod_cuenta)
-                                left join role using(cod_role)
-                                left join unidad using (cod_unidad)
-                                join tipo_cuenta using (cod_tipo_cuenta)
-                                join contexto using (cod_contexto) 
-                                join entidad using (cod_entidad)
-                                join periodo using (cod_periodo) 
-                                left join context_escenarios using (cod_contexto) 
-                                left join escenario using (cod_escenario) 
-                                left join dimension using (cod_dimension) 
-                                --where cod_periodo = 44 and cod_tipo_cuenta in (6,7)
-                                where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                                order by cod_role_cuenta, desc_cuenta""" % (cod_documento, cod_role))
     date = cursor.fetchall()
-    cursor.execute("""select distinct desc_periodo 
-                               from detalle_documento 
-                               join cuenta using (cod_cuenta) 
-                               left join role_cuenta using (cod_cuenta)
-                               left join role using(cod_role)
-                               join contexto using (cod_contexto) 
-                               join periodo using (cod_periodo)
-                               left join context_escenarios using (cod_contexto) 
-                               left join escenario using (cod_escenario) 
-                               left join dimension using (cod_dimension)
-                               where cod_dimension is null  and cod_documento = %s and cod_role =%s
-                               order by desc_periodo desc""" % (cod_documento, cod_role))
+    cursor.execute("""select distinct desc_periodo
+                           from detalle_documento
+                           join cuenta using (cod_cuenta)
+                           left join role_cuenta using (cod_cuenta)
+                           left join role using(cod_role)
+                           join contexto using (cod_contexto)
+                           join periodo using (cod_periodo)
+                           left join context_escenarios using (cod_contexto)
+                           left join escenario using (cod_escenario)
+                           left join dimension using (cod_dimension)
+                           where cod_dimension is null  and cod_documento = %s and cod_role =%s
+                           order by desc_periodo desc""" % (cod_documento, cod_role))
     per = dictfetchall(cursor)
     for d in date:
         cod_rol = d[1]
@@ -1253,19 +3247,210 @@ def balance(cod_documento, cod_role):
         colType.append("str")
     colsWidth[0] = 540 - ancho_total
     for f in pvt_kms:
-        dl = list(f.get(('cod_role_cuenta', 'desc_cuenta'), ['']))
+        dl = (list(f.get(('cod_role_cuenta', 'desc_cuenta'), [''])))
         for p in per:
-            dl.append(f.get((p['desc_periodo'],), 0))
+            dl.append(CMon(f.get((p['desc_periodo'],), 0)))
         datas.append(dl)
     data_final = []
     datas.sort()
     for d in datas:
         data_final.append(d[1:])
-    return render_template("/balance.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
+    return render_template("/balance1.html", d=data_final, columnas=columnas, entidad=entidad, desc_role=desc_role,
                            hoy=hoy)
 
 
-# funciones de ordenado y calculos de cada uno de los servicios
+def get_balance(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Efectivo y equivalentes al efectivo'] = "(float(a.get(739,1)))  if  (a.get(739,0))  else 0"
+    RATIOS[
+        'Otros activos financieros corrientes'] = "(float(a.get(607,1)))  if  a.get(607,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros corrientes'] = "(float(a.get(835,1)))  if  a.get(835,0)  else 0"
+    RATIOS[
+        'Deudores comerciales y otras cuentas por cobrar corrientes'] = "(float(a.get(775,1)))  if  a.get(775,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, corrientes'] = "(float(a.get(787,1)))  if  a.get(787,0)  else 0"
+    RATIOS[
+        'Inventarios corrientes'] = "(float(a.get(695,1)))  if  a.get(695,0)  else 0"
+    RATIOS[
+        'Activos biológicos corrientes'] = "(float(a.get(1290,1)))  if  a.get(1290,0)  else 0"
+    RATIOS[
+        'Activos por impuestos corrientes, corrientes'] = "(float(a.get(481,1)))  if  a.get(481,0)  else 0"
+    RATIOS[
+        'Total de activos corrientes distintos de los activo o grupos de activos'] = "(float(a.get(797,1)))  if  a.get(797,0)  else 0"
+    RATIOS[
+        'Activos no corrientes o grupos de activos para su disposición clasificados'] = "(float(a.get(1291,1)))  if  a.get(1291,0)  else 0"
+    RATIOS[
+        'Activos corrientes totales'] = "(float(a.get(608,1)))  if  a.get(608,0)  else 0"
+    RATIOS[
+        'Otros activos financieros no corrientes'] = "(float(a.get(520,1)))  if  a.get(520,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros no corrientes'] = "(float(a.get(462,1)))  if  a.get(462,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar no corrientes'] = "(float(a.get(753,1)))  if  a.get(753,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, no corrientes'] = "(float(a.get(680,1)))  if  a.get(680,0)  else 0"
+    RATIOS[
+        'Inversiones contabilizadas utilizando el método de la participación'] = "(float(a.get(713,1)))  if  a.get(713,0)  else 0"
+    RATIOS[
+        'Activos intangibles distintos de la plusvalía'] = "(float(a.get(748,1)))  if  a.get(748,0)  else 0"
+    RATIOS[
+        'Plusvalía'] = "(float(a.get(866,1)))  if  a.get(866,0)  else 0"
+    RATIOS[
+        'Propiedades, planta y equipo'] = "(float(a.get(456,1)))  if  a.get(456,0)  else 0"
+    RATIOS[
+        'Activos biológicos no corrientes'] = "(float(a.get(1294,1)))  if  a.get(1294,0)  else 0"
+    RATIOS[
+        'Propiedad de inversión'] = "(float(a.get(581,1)))  if  a.get(581,0)  else 0"
+    RATIOS[
+        'Activos por impuestos diferidos'] = "(float(a.get(622,1)))  if  a.get(622,0)  else 0"
+    RATIOS[
+        'Total de activos no corrientes'] = "(float(a.get(825,1)))  if  a.get(825,0)  else 0"
+    RATIOS[
+        'Total de activos'] = "(float(a.get(808,1)))  if  a.get(808,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros corrientes'] = "(float(a.get(582,1)))  if  a.get(582,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar comerciales y otras cuentas por pagar'] = "(float(a.get(783,1)))  if  a.get(783,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, corrientes'] = "(float(a.get(461,1)))  if  a.get(461,0)  else 0"
+    RATIOS[
+        'Otras provisiones a corto plazo'] = "(float(a.get(659,1)))  if  a.get(659,0)  else 0"
+    RATIOS[
+        'Pasivos por impuestos corrientes, corrientes'] = "(float(a.get(477,1)))  if  a.get(477,0)  else 0"
+    RATIOS[
+        'Provisiones corrientes por beneficios a los empleados'] = "(float(a.get(756,1)))  if  a.get(756,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros corrientes'] = "(float(a.get(621,1)))  if  a.get(621,0)  else 0"
+    RATIOS[
+        'Total de pasivos corrientes distintos de los pasivos incluidos'] = "(float(a.get(745,1)))  if  a.get(745,0)  else 0"
+    RATIOS[
+        'Pasivos corrientes totales'] = "(float(a.get(668,1)))  if  a.get(688,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros no corrientes'] = "(float(a.get(791,1)))  if  a.get(791,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar no corrientes'] = "(float(a.get(822,1)))  if  a.get(822,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, no corrientes'] = "(float(a.get(486,1)))  if  a.get(486,0)  else 0"
+    RATIOS[
+        'Otras provisiones a largo plazo'] = "(float(a.get(524,1)))  if  a.get(524,0)  else 0"
+    RATIOS[
+        'Pasivo por impuestos diferidos'] = "(float(a.get(640,1)))  if  a.get(640,0)  else 0"
+    RATIOS[
+        'Provisiones no corrientes por beneficios a los empleados'] = "(float(a.get(629,1)))  if  a.get(629,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros no corrientes'] = "(float(a.get(633,1)))  if  a.get(633,0)  else 0"
+    RATIOS[
+        'Total de pasivos no corrientes'] = "(float(a.get(809,1)))  if  a.get(809,0)  else 0"
+    RATIOS[
+        'Total de pasivos'] = "(float(a.get(519,1)))  if  a.get(519,0)  else 0"
+    RATIOS[
+        'Capital emitido'] = "(float(a.get(859,1)))  if  a.get(859,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) acumuladas'] = "(float(a.get(670,1)))  if  a.get(670,0)  else 0"
+    RATIOS[
+        'Prima de emisión'] = "(float(a.get(939,1)))  if  a.get(939,0)  else 0"
+    RATIOS[
+        'Acciones propias en cartera'] = "(float(a.get(1303,1)))  if  a.get(1303,0)  else 0"
+    RATIOS[
+        'Otras participaciones en el patrimonio'] = "(float(a.get(1304,1)))  if  a.get(1304,0)  else 0"
+    RATIOS[
+        'Otras reservas'] = "(float(a.get(789,1)))  if  a.get(789,0)  else 0"
+    RATIOS[
+        'Patrimonio atribuible a los propietarios de la controladora'] = "(float(a.get(879,1)))  if  a.get(879,0)  else 0"
+    RATIOS[
+        'Participaciones no controladoras'] = "(float(a.get(620,1)))  if  a.get(620,0)  else 0"
+    RATIOS[
+        'Patrimonio total'] = "(float(a.get(681,1)))  if  a.get(681,0)  else 0"
+    RATIOS[
+        'Total de patrimonio y pasivos'] = "(float(a.get(754,1)))  if  a.get(754,0)  else 0"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_proyeccionesbalance  where cod_entidad = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccionesbalance  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["BALANCE"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+        b = a
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/balance/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def balance(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_balance(cod_entidad, anio, mes)
+        return render_template("/balance.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_balance(cod_entidad, anio, mes)
+    empresa = request.args.get("empresa")
+
+    if empresa != None:
+        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+        en = cursor.fetchone()[1]
+        data1, columnas1 = get_ratiosdd(empresa, anio)
+        return render_template("/balance.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
+    return render_template("/balance.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                           mes=mes, cod_entidad=cod_entidad)
+
+    # funciones de ordenado y calculos de cada uno de los servicios
+
+
 def JsonAgg(json, valores, claves, funcs=None):
     aggby = claves
     vals = valores
@@ -1316,6 +3501,29 @@ def CRut(rut):
     return rut_aux
 
 
+def CMon(s, dec=2):
+    try:
+        A = float(s)
+    except:
+        # print dir(s)
+        if isinstance(s, str):
+            return None
+            if not s.strip():
+                return ""
+        A = s
+    try:
+        str_format = '{:,.%sf}' % (dec)
+        str_return = str_format.format(A)
+        ret = [str_return.split(".")[0].replace(",", ".")]
+        if dec != 0:
+            ret.append(str_return.split(".")[1].replace(",", "."))
+        return ",".join(ret)
+    except:
+        print("error", s, sys.exc_info()[1])
+        return s
+
+
 if __name__ == "__main__":
     db.create_all()
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
     app.run(debug=True, host='0.0.0.0', port=5555)

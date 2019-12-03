@@ -14,7 +14,7 @@
         }
 
         body::-webkit-scrollbar-thumb {
-            background-color: #60b27d;
+            background-color: #000000;
             border-radius: 10px;
         }
 
@@ -107,6 +107,7 @@
     <link rel=stylesheet href="../static/css/bootstrap-grid.min.css" type="text/css" media=screen>
     <link rel=stylesheet href="../static/css/bootstrap-reboot.min.css" type="text/css" media=screen>
     <!--DESCARGAR Y CREAR ARCHIVO-->
+    <script src="https://kit.fontawesome.com/e69f4649d0.js" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="../static/js/popper.min.js"></script>
     <script src="../static/js/bootstrap.min.js"></script>
@@ -122,6 +123,7 @@
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     <script src="../static/dist/js/jquery.tablesorter.min.js"></script>
     <script src="../static/dist/js/jquery.tablesorter.widgets.min.js"></script>
+    <link href="/static/fontawesome-free-5.11.2-web/css/all.css" rel="stylesheet"/>
     <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
     {% block css %}
     {% endblock %}
@@ -131,8 +133,8 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='imgs/icon.ico') }}">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar navbar-light" style="background-color: #4947fd;">
-    <a class="navbar-brand" href="/"><i class="fa fa-cloud-download"></i>XEEFFY</a>
+<nav class="navbar navbar-expand-lg navbar navbar-dark bg-dark" style="background-color: #4947fd;">
+    <a class="navbar-brand" href="/"><i class="fas fa-chart-line"></i>XEEFFY</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -149,6 +151,7 @@
                 </div>
 
             </li>
+
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbardrop1" data-toggle="dropdown">
                     Sistema
@@ -156,16 +159,21 @@
                 <div class="dropdown-menu">
 
                     <a class="dropdown-item" href="/roles">Roles</a>
-                    <a class="dropdown-item" href="/documentos">Documentos</a>
-                    <a class="dropdown-item" href="/ratioLiquidez">R. Liquidez</a>
-{#                    <a class="dropdown-item" href="/ndocumento">Nuevo Documento</a>#}
+
+                    <a class="dropdown-item" href="/docEmpresa">DocxEmpresa</a>
+
+                    {#                    <a class="dropdown-item" href="/ndocumento">Nuevo Documento</a>#}
                 </div>
 
             </li>
             <li class="nav-item">
-                <a class="nav-link " href="/importCMF"> <i class="fa fa-file-text-o"></i>ImportCMF<span
+                <a class="nav-link " href="/importCMF"> <i class="fas fa-envelope"></i>ImportCMF<span
                         class="sr-only">(current)</span></a>
             </li>
+            {#            <li class="nav-item">#}
+            {#                <a class="nav-link " href="/importLocal"> <i class="fas fa-paper-plane"></i>ImportLocal<span#}
+            {#                        class="sr-only">(current)</span></a>#}
+            {#            </li>#}
         </ul>
         <hr>
         <ul class="nav navbar-nav navbar-right">
@@ -175,15 +183,32 @@
                 </li>
             {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href=""><span class="fa fa-android"></span> {{ (session["username"]) }} </a>
+                    <a class="nav-link" href=""><span class="fas fa-user-shield"></span> {{ (session["username"]) }}
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/logout">Cerrar Sesión <span class="fa fa-sign-out"></span></a>
+                    <a class="nav-link" href="/logout">Cerrar Sesión <span class="fas fa-user-slash"></span></a>
                 </li>
             {% endif %}
         </ul>
     </div>
 </nav>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-153417509-1');
+</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-153417509-1"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'UA-153417509-1', { 'optimize_id': 'GTM-KNQLW6R'});
+</script>
 <script>
     window.addEventListener("load", function () {
         window.cookieconsent.initialise({

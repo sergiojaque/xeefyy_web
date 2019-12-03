@@ -1,8 +1,254 @@
+{#<h1>Sign Up</h1>#}
+{#<form method="post" action="{{ url_for('signup') }}">#}
+{#	<p><input name="username" type="text"></p>#}
+{#	<p><input name="password" type="password"></p>#}
+{#	<input type="submit" value="Sign Up">#}
+{#</form>#}
 
-<h1>Sign Up</h1>
-<form method="post" action="{{ url_for('signup') }}">
-	<p><input name="username" type="text"></p>
-	<p><input name="password" type="password"></p>
-	<input type="submit" value="Sign Up">
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <script src="https://codepen.io/zavoloklom/pen/Gubja"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://codepen.io/zavoloklom/pen/yaozl"></script>
+    <link href="/static/assets/css/argon-dashboard.css?v=1.1.0" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+  <!-- Icons -->
+  <link href="/static/assets/js/plugins/nucleo/css/nucleo.css" rel="stylesheet" />
+    <style>/* -- import Bootstrap v3 ----------------------------- */
+    @import "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css";
+    /* -- import Roboto Font ------------------------------ */
+    @import "//fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic&subset=latin,cyrillic";
 
+    /* -- body styles ------------------------------------- */
+
+    body {
+        font-family: "Roboto", 'Helvetica Neue, Helvetica, Arial', sans-serif;
+        background: #0277bd;
+    / / Light Blue 800
+    }
+
+    /* -- button styles ------------------------------------- */
+    /
+    /
+    imported from https:
+
+    /
+    /
+    codepen.io /zavoloklom/ pen
+
+    /
+    Gubja
+        /*-- signin-card animation ---------------------------------------- */
+    .signin-card {
+        -webkit-animation: cardEnter 0.75s ease-in-out 0.5s;
+        animation: cardEnter 0.75s ease-in-out 0.5s;
+        -webkit-animation-fill-mode: both;
+        animation-fill-mode: both;
+        opacity: 0;
+    }
+
+    /* -- login paper styles ------------------------------ */
+    .signin-card {
+        max-width: 350px;
+        border-radius: 2px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #eceff1;
+    / / Blue Grey 50 box-shadow: 0 10 px 20 px rgba(0, 0, 0, .19),
+    0 6 px 6 px rgba(0, 0, 0, .23);
+    / / shadow depth 3
+    }
+
+    .signin-card {
+
+    .logo-image, h1, p {
+        text-align: center;
+    }
+
+    }
+
+    /* -- font styles ------------------------------------- */
+    .display1 {
+        font-size: 28px;
+        font-weight: 100;
+        line-height: 1.2;
+        color: #757575;
+        text-transform: inherit;
+        letter-spacing: inherit;
+    }
+
+    .subhead {
+        font-size: 16px;
+        font-weight: 300;
+        line-height: 1.1;
+        color: #212121;
+        text-transform: inherit;
+        letter-spacing: inherit;
+    }
+
+    /* card animation from Animate.css -------------------- */
+    @-webkit-keyframes cardEnter {
+        0%, 20%, 40%, 60%, 80%, 100% {
+            -webkit-transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        0% {
+            opacity: 0;
+            -webkit-transform: scale3d(0.3, 0.3, 0.3);
+            -ms-transform: scale3d(0.3, 0.3, 0.3);
+            transform: scale3d(0.3, 0.3, 0.3);
+        }
+        20% {
+            -webkit-transform: scale3d(1.1, 1.1, 1.1);
+            -ms-transform: scale3d(1.1, 1.1, 1.1);
+            transform: scale3d(1.1, 1.1, 1.1);
+        }
+        40% {
+            -webkit-transform: scale3d(0.9, 0.9, 0.9);
+            -ms-transform: scale3d(0.9, 0.9, 0.9);
+            transform: scale3d(0.9, 0.9, 0.9);
+        }
+        60% {
+            opacity: 1;
+            -webkit-transform: scale3d(1.03, 1.03, 1.03);
+            -ms-transform: scale3d(1.03, 1.03, 1.03);
+            transform: scale3d(1.03, 1.03, 1.03);
+        }
+        80% {
+            -webkit-transform: scale3d(0.97, 0.97, 0.97);
+            -ms-transform: scale3d(0.97, 0.97, 0.97);
+            transform: scale3d(0.97, 0.97, 0.97);
+        }
+        100% {
+            opacity: 1;
+            -webkit-transform: scale3d(1, 1, 1);
+            -ms-transform: scale3d(1, 1, 1);
+            transform: scale3d(1, 1, 1);
+        }
+    }
+
+    @keyframes cardEnter {
+        0%, 20%, 40%, 60%, 80%, 100% {
+            -webkit-transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        0% {
+            opacity: 0;
+            -webkit-transform: scale3d(0.3, 0.3, 0.3);
+            -ms-transform: scale3d(0.3, 0.3, 0.3);
+            transform: scale3d(0.3, 0.3, 0.3);
+        }
+        20% {
+            -webkit-transform: scale3d(1.1, 1.1, 1.1);
+            -ms-transform: scale3d(1.1, 1.1, 1.1);
+            transform: scale3d(1.1, 1.1, 1.1);
+        }
+        40% {
+            -webkit-transform: scale3d(0.9, 0.9, 0.9);
+            -ms-transform: scale3d(0.9, 0.9, 0.9);
+            transform: scale3d(0.9, 0.9, 0.9);
+        }
+        60% {
+            opacity: 1;
+            -webkit-transform: scale3d(1.03, 1.03, 1.03);
+            -ms-transform: scale3d(1.03, 1.03, 1.03);
+            transform: scale3d(1.03, 1.03, 1.03);
+        }
+        80% {
+            -webkit-transform: scale3d(0.97, 0.97, 0.97);
+            -ms-transform: scale3d(0.97, 0.97, 0.97);
+            transform: scale3d(0.97, 0.97, 0.97);
+        }
+        100% {
+            opacity: 1;
+            -webkit-transform: scale3d(1, 1, 1);
+            -ms-transform: scale3d(1, 1, 1);
+            transform: scale3d(1, 1, 1);
+        }
+    }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="login" class="signin-card">
+        <div class="logo-image" align="center">
+            <img src="/static/images/acercade.png" alt="Logo" title="Logo" width="138" style="align-items: center">
+        </div>
+        <h1 class="display1" align="center">XEEFFY</h1>
+        <div class="card-header bg-transparent pb-5">
+            <div class="text-muted text-center mt-2 mb-4"><small>Registrate con:</small></div>
+            <div class="text-center">
+                <a href="#" class="btn btn-neutral btn-icon mr-4">
+                    <span class="btn-inner--icon"><img src="/static/assets/img/icons/common/github.svg"></span>
+                    <span class="btn-inner--text">Github</span>
+                </a>
+                <a href="#" class="btn btn-neutral btn-icon">
+                    <span class="btn-inner--icon"><img src="/static/assets/img/icons/common/google.svg"></span>
+                    <span class="btn-inner--text">Google</span>
+                </a>
+            </div>
+        </div>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="notification is-danger">
+                    {{ messages[0] }}.
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="post" action="{{ url_for('signup') }}">
+
+            <div id="form-login-username" class="form-group">
+                <label for="username" class="float-label">Usuario</label>
+                <i class="ni ni-hat-3"></i>
+                <input id="username" class="form-control" name="username" type="text" size="18" alt="login" required/>
+                <span class="form-highlight"></span>
+                <span class="form-bar"></span>
+
+            </div>
+
+            <div id="form-login-password" class="form-group">
+                <label for="password" class="float-label">Contraseña</label>
+                <i class="ni ni-lock-circle-open"></i>
+                <input id="password" class="form-control" name="password" type="password" size="18" alt="password"
+                       required>
+                <span class="form-highlight"></span>
+                <span class="form-bar"></span>
+
+            </div>
+            <div id="form-login-password" class="form-group">
+                <label for="password" class="float-label">Repetir Contraseña</label>
+                <i class="ni ni-lock-circle-open"></i>
+                <input id="password1" class="form-control" name="password1" type="password" size="18" alt="password1"
+                       required>
+                <span class="form-highlight"></span>
+                <span class="form-bar"></span>
+
+            </div>
+            <div id="form-login-password" class="form-group">
+                <label for="email" class="float-label">Email</label>
+                <i class="ni ni-email-83"></i>
+                <input id="email" class="form-control" name="email" type="email" size="50" alt="email"
+                       required>
+                <span class="form-highlight"></span>
+                <span class="form-bar"></span>
+
+            </div>
+
+            <div>
+                <button class="btn btn-block btn-info ripple-effect" type="submit" name="Submit" alt="sign in">Registrar
+                </button>
+            </div>
+            <br>
+            <a href="/">Volver</a>
+        </form>
+    </div>
+
+</div>
+</body>
+<script src="/static/assets/js/argon-dashboard.min.js?v=1.1.0"></script>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+</html>

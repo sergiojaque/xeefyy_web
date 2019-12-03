@@ -1,0 +1,89 @@
+{% block content %}
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Report</title>
+        <link rel=stylesheet href="/static/css/pdf.css" type="text/css" media=screen>
+    </head>
+    <body>
+    <header class="clearfix">
+        <img src="/static/images/xeeffy_logo_index.png" width="20%" align="top">
+        <h1>{{ desc_role }}</h1>
+        <div id="company" class="clearfix">
+            <div>XEEFFY BALANCE</div>
+            <div>Casa Matriz • ,<br/> El Juncal 0240, Quilicura • Chile</div>
+            <div>+56988295769</div>
+            <div><a href="mailto:company@example.com">aherrera@xeeffy.cl</a></div>
+        </div>
+        <div id="project">
+            <div><span>ENTIDAD</span>{{ entidad }} </div>
+            <div><span>FECHA</span>{{ hoy }}</div>
+        </div>
+    </header>
+    <main>
+        <table width="50%" border="1" id="tabla_familia">
+            <thead>
+            <tr>
+                {% for c in columnas %}
+                    <th>{{ c }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for a in d %}
+                <tr>
+                    {% for c in a %}
+                        <td class="service">{{ c }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <button class="btn btn-success btn-sm fa fa-file-excel-o" id="btnExport" onclick="fnExcelReport();"
+                style="float:center">
+            Exportar
+        </button>
+        <iframe id="txtArea1" style="display:none"></iframe>
+        <br>
+        <div id="notices">
+            <div>NOTICE:</div>
+            <div class="notice">XEEFFY propiedad privada y con derechos reservados 2019.</div>
+        </div>
+    </main>
+    </body>
+    </html>
+    <script>
+    function fnExcelReport() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange;
+        var j = 0;
+        tab = document.getElementById('tabla_familia'); // id of table
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+            //tab_text=tab_text+"</tr>";
+        }
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
+        tab_text = tab_text.replace(/<img[^>]*>/gi, ""); // remove if u want images in your table
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+        {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
+        } else                 //other browser not tested on IE 11
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+    </script>
+{% endblock %}

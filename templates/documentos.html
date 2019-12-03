@@ -34,6 +34,10 @@ Documentos
                                     <th data-field="codigo">VER</th>
                                     <th data-field="codigo">BALANCE</th>
                                     <th data-field="codigo">ESTADOR.</th>
+                                    <th data-field="codigo">RATIOS</th>
+                                    <th data-field="codigo">ARELATIVO</th>
+                                    <th data-field="codigo">U.FUENTES</th>
+                                    <th data-field="codigo">NOF</th>
 
                                 </tr>
                                 </thead>
@@ -55,12 +59,27 @@ Documentos
                                      <td><a class="btn btn-primary"
                                                href="/balance/{{ d[5] }}/210000">
                                             <i
-                                                    class="fa fa-eye"></i></a></td>
-                                     <td><a class="btn btn-primary"
-                                               href="/eresultado/{{ d[5] }}/310000">
+                                                    class="fa fa-clone"></i></a></td>
+                                     <td><a class="btn btn-success"
+                                               href="/eresultado/{{ d[0] }}/{{ d[3] }}/{{ d[4] }}">
                                             <i
-                                                    class="fa fa-eye"></i></a></td>
-
+                                                    class="fa fa-cloud-download"></i></a></td>
+                                     <td><a class="btn btn-danger"
+                                               href="/ratioLiquidez/{{ d[0] }}/{{ d[3]  }}">
+                                            <i
+                                                    class="fa fa-industry"></i></a></td>
+                                    <td><a class="btn btn-danger"
+                                               href="/analisisRelativo/{{ d[0] }}/{{ d[3]  }}">
+                                            <i
+                                                    class="fa fa-industry"></i></a></td>
+                                    <td><a class="btn btn-danger"
+                                               href="/usoyfuentes/{{ d[0] }}/{{ d[3]  }}/{{ d[4] }}">
+                                            <i
+                                                    class="fa fa-industry"></i></a></td>
+                                    <td><a class="btn btn-success"
+                                               href="/nof/{{ d[0] }}/{{ d[3] }}/{{ d[4] }}">
+                                            <i
+                                                    class="fa fa-cloud-download"></i></a></td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -83,6 +102,7 @@ Documentos
         $(document).ready(function () {
             $('#tabla_familia').DataTable();
         });
+
     </script>
     <script>$('table').tablesorter({
 
@@ -473,34 +493,6 @@ Documentos
         });
 
 
-    </script>
-    <script>
-        function fnExcelReport() {
-            var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
-            var textRange;
-            var j = 0;
-            tab = document.getElementById('tabla_familia'); // id of table
-            for (j = 0; j < tab.rows.length; j++) {
-                tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
-                //tab_text=tab_text+"</tr>";
-            }
-            tab_text = tab_text + "</table>";
-            tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
-            tab_text = tab_text.replace(/<img[^>]*>/gi, ""); // remove if u want images in your table
-            tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
-            var ua = window.navigator.userAgent;
-            var msie = ua.indexOf("MSIE ");
-            if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
-            {
-                txtArea1.document.open("txt/html", "replace");
-                txtArea1.document.write(tab_text);
-                txtArea1.document.close();
-                txtArea1.focus();
-                sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
-            } else                 //other browser not tested on IE 11
-                sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
-            return (sa);
-        }
     </script>
     </html>
 {% endblock %}
