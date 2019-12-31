@@ -121,8 +121,7 @@
           href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css"/>
     <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js"></script>
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-    <script src="../static/dist/js/jquery.tablesorter.min.js"></script>
-    <script src="../static/dist/js/jquery.tablesorter.widgets.min.js"></script>
+
     <link href="/static/fontawesome-free-5.11.2-web/css/all.css" rel="stylesheet"/>
     <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
     {% block css %}
@@ -157,23 +156,26 @@
                     Sistema
                 </a>
                 <div class="dropdown-menu">
-
                     <a class="dropdown-item" href="/roles">Roles</a>
+                    {#                    <a class="dropdown-item" href="/ndocumento">Nuevo Documento</a>#}
+                </div>
 
-                    <a class="dropdown-item" href="/docEmpresa">DocxEmpresa</a>
-
+            </li>
+             <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbardrop2" data-toggle="dropdown">
+                    <i class="fas fa-cogs"></i>Formularios
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/formularioEmpresa"><i class="fas fa-cogs"></i> Formulario NO CMF</a>
+                    <a class="dropdown-item" href="/formularioEmpresaCMF"><i class="fas fa-cogs"></i> Formulario CMF</a>
                     {#                    <a class="dropdown-item" href="/ndocumento">Nuevo Documento</a>#}
                 </div>
 
             </li>
             <li class="nav-item">
-                <a class="nav-link " href="/importCMF"> <i class="fas fa-envelope"></i>ImportCMF<span
+                <a class="nav-link " href="/docEmpresa"> <i class="fas fa-file"></i> Documentos<span
                         class="sr-only">(current)</span></a>
             </li>
-            {#            <li class="nav-item">#}
-            {#                <a class="nav-link " href="/importLocal"> <i class="fas fa-paper-plane"></i>ImportLocal<span#}
-            {#                        class="sr-only">(current)</span></a>#}
-            {#            </li>#}
         </ul>
         <hr>
         <ul class="nav navbar-nav navbar-right">

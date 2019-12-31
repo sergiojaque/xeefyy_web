@@ -1,502 +1,727 @@
 <!DOCTYPE html>
-<html class="wide wow-animation" lang="en">
+<html lang="en">
 <head>
-    <title>xEEFFy</title>
+    <title>xeeffy</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:400,500">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <style>.ie-panel {
-        display: none;
-        background: #212121;
-        padding: 10px 0;
-        box-shadow: 3px 3px 5px 0 rgba(0, 0, 0, .3);
-        clear: both;
-        text-align: center;
-        position: relative;
-        z-index: 1;
-    }
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    html.ie-10 .ie-panel, html.lt-ie-10 .ie-panel {
-        display: block;
-    }
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900" rel="stylesheet">
+    <link rel="stylesheet" href="/static/font_index/fonts/icomoon/style.css">
+    <link rel="stylesheet" href="/static/css_index/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css_index/css/animate.css">
+    <link rel="stylesheet" href="/static/css_index/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/static/css_index/css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="/static/css_index/css/bootstrap-datepicker.css">
 
-    .disabled {
-        pointer-events: none;
-    / / This makes it not clickable opacity: 0.6;
-    / / This grays it out to look disabled
-    }</style>
+
+    <link rel="stylesheet" href="/static/font_index/fonts/flaticon/font/flaticon.css">
+
+    <link rel="stylesheet" href="/static/css_index/css/aos.css">
+    <link rel="stylesheet" href="/static/css_index/css/jquery.fancybox.min.css">
+
+
+    <link rel="stylesheet" href="/static/css_index/css/style.css">
+
 </head>
-<body>
-<div class="ie-panel"><a href="http://windows.microsoft.com/en-US/internet-explorer/"><img
-        src="/static/images/ie8-panel/warning_bar_0000_us.jpg" height="42" width="820"
-        alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today."></a>
-</div>
-<div class="preloader">
-    <div class="preloader-body">
-        <div class="cssload-container">
-            <div class="cssload-speeding-wheel"></div>
-        </div>
-        <p>Loading...</p>
-    </div>
-</div>
-<div class="page">
-    <header class="section page-header">
-        <!--RD Navbar-->
-        <div class="rd-navbar-wrap">
-            <nav class="rd-navbar rd-navbar-classic" data-layout="rd-navbar-fixed" data-sm-layout="rd-navbar-fixed"
-                 data-md-layout="rd-navbar-fixed" data-md-device-layout="rd-navbar-fixed"
-                 data-lg-layout="rd-navbar-static" data-lg-device-layout="rd-navbar-fixed"
-                 data-xl-layout="rd-navbar-static" data-xl-device-layout="rd-navbar-static"
-                 data-xxl-layout="rd-navbar-static" data-xxl-device-layout="rd-navbar-static"
-                 data-lg-stick-up-offset="170px" data-xl-stick-up-offset="170px" data-xxl-stick-up-offset="170px"
-                 data-lg-stick-up="true" data-xl-stick-up="true" data-xxl-stick-up="true">
-                <div class="rd-navbar-collapse-toggle rd-navbar-fixed-element-1"
-                     data-rd-navbar-toggle=".rd-navbar-collapse"><span></span></div>
-                <div class="rd-navbar-aside-outer">
-                    <div class="rd-navbar-aside">
-                        <!--RD Navbar Panel-->
-                        <div class="rd-navbar-panel">
-                            <!--RD Navbar Brand-->
-                            <div class="rd-navbar-brand">
-                                <!--Brand--><a class="brand" href="/login"><img class="brand-logo-dark"
-                                                                                src="/static/images/xeeffy_logo_index.jpeg"
-                                                                                alt="top" align="top" width="200"
-                                                                                height="300"/></a>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="rd-navbar-info rd-navbar-collapse">
-                            <article class="info-modern">
-                                <div class="info-modern-icon fa-phone"></div>
-                                <a class="info-modern-link" href="#">+56988295769</a>
-                            </article>
-                            {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    <div class="notification is-danger">
-                                        {{ messages[0] }}..
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rd-navbar-main-outer">
-                    <div class="rd-navbar-main">
-                        <div class="rd-navbar-nav-wrap">
-                            <ul class="rd-navbar-nav">
-                                <li class="rd-nav-item active"><a class="rd-nav-link" href="login">Iniciar
-                                    Sesion</a>
-                                </li>
-                                    <li class="rd-nav-item"><a class="rd-nav-link" href="index">Sistema</a>
-                                        <ul class="rd-menu rd-navbar-dropdown">
-                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="entidades">Entidades</a>
-                                            </li>
-                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link"
-                                                                            href="roles">Roles</a>
-                                            </li>
-                                            <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Documentos
-                                            </a>
-                                                <ul class="rd-menu rd-navbar-dropdown">
-                                                    <li class="rd-dropdown-item"><a class="rd-dropdown-link"
-                                                                                    href="/documentos">Documentos
-                                                    </a>
-                                                    </li>
-                                                    <li class="rd-dropdown-item"><a class="rd-dropdown-link"
-                                                                                    href="/docEmpresa">DocxEmpresa
-                                                    </a>
-                                                    </li>
-                                                    {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="/ndocumento">Nuevo Documento#}
-                                                    {#                                                    Management</a>#}
-                                                    {#                                                </li>#}
-                                                    {#                                                <li class="rd-dropdown-item"><a class="rd-dropdown-link" href="#">Tax#}
-                                                    {#                                                    Advisory</a>#}
-                                                    {#                                                </li>#}
-                                                </ul>
-                                            </li>
-
-                                        </ul>
-                                    </li>
+<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
 
 
-                                <li class="rd-nav-item active"><a class="rd-nav-link" href="/logout">Cerrar Sesion</a>
-                                </li>
-                                <li></li>
-                                <li class="rd-nav-item"><a class="rd-nav-link disabled"
-                                                           href="">Usuario: {{ session['username'] }}</a>
-                                </li>
-                            </ul>
+<div class="site-wrap">
 
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </header>
-    <!--Swiper-->
-    <section class="section swiper-container swiper-slider swiper-slider-1" data-loop="true" data-autoplay="false"
-             data-simulate-touch="false" data-slide-effect="fade">
-        <div class="swiper-wrapper text-center text-lg-left">
-            <div class="swiper-slide" data-slide-bg="/static/images/imagenPrincipal.png">
-                <div class="swiper-slide-caption">
-                    <div class="container">
-                        <div class="row justify-content-end">
-                            <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100"></h1>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="site-mobile-menu site-navbar-target">
+        <div class="site-mobile-menu-header">
+            <div class="site-mobile-menu-close mt-3">
+                <span class="icon-close2 js-menu-toggle"></span>
             </div>
-            <div class="swiper-slide" data-slide-bg="static/images/imagenPrincipal2.png">
-                <div class="swiper-slide-caption">
-                    <div class="container">
-                        <div class="row justify-content-end">
-                            <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Las
-                                    mejores estrategias para tu negocio</h1>
-                            </div>
-                        </div>
+        </div>
+        <div class="site-mobile-menu-body"></div>
+    </div> <!-- .site-mobile-menu -->
+
+
+    <div class="site-navbar-wrap">
+
+        <div class="site-navbar site-navbar-target js-sticky-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-6 col-md-4">
+                        <h1 class="my-0 site-logo"><a href="index.html">XEEFFY<span class="text-primary">.</span> </a>
+                        </h1>
                     </div>
-                </div>
-            </div>
-            <div class="swiper-slide" data-slide-bg="/static/images/imagenPrincipal3.png">
-                <div class="swiper-slide-caption">
-                    <div class="container">
-                        <div class="row justify-content-end">
-                            <div class="col-lg-7 col-xl-6">
-                                <h1 class="text-primary" data-caption-animate="fadeIn" data-caption-delay="100">Ingresa
-                                    al Sistema</h1>
+
+                    <div class="col-6 col-md-8">
+                        <nav class="site-navigation text-right" role="navigation">
+                            <div class="container">
+
+                                <div class="d-inline-block d-lg-block ml-md-0 mr-auto py-3"><a href="#"
+                                                                                               class="site-menu-toggle js-menu-toggle text-black">
+                                    <span class="icon-menu h3"></span> <span class="menu-text">Menu</span>
+                                </a></div>
+
+                                <ul class="site-menu main-menu js-clone-nav d-none d-lg-none">
+                                    <li><a href="/login" class="nav-link">Iniciar Sesion</a></li>
+                                    <li><a href="#" class="nav-link">Quienes somos</a></li>
+                                    <li><a href="#" class="nav-link">Conoce nuestros planes</a></li>
+                                </ul>
                             </div>
-                        </div>
+                        </nav>
                     </div>
                 </div>
             </div>
         </div>
-        <!--Swiper Pagination-->
-        <div class="swiper-pagination"></div>
-        <!--Swiper Navigation-->
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-button-next"></div>
-    </section>
-    <!--About-->
-    <section class="section section-lg section-inset-1 position-relative index-1">
-        <div class="container offset-negative-1">
-            <div class="row no-gutters">
-                <div class="col-sm-6 col-lg-3 wow fadeInUp">
-                    <article class="box-default box-default-3">
-                        <div class="box-default-icon fa-globe"></div>
-                        <h4 class="box-default-title">Global <br>xEEFFy</h4>
-                        <div class="box-default-text">Ingrersa a nuestro sistema
-                        </div>
-                        <a class="box-default-link fa-chevron-right" href="/docEmpresa"></a>
-                    </article>
+    </div> <!-- END .site-navbar-wrap -->
+
+    <div class="site-blocks-cover" id="home-section">
+        <div class="img-wrap">
+            <div class="owl-carousel slide-one-item hero-slider">
+                <div class="slide">
+                    <img src="/static/images_index/images/glint_hero_1.jpg" alt="Image">
                 </div>
-                <div class="col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay=".05s">
-                    <article class="box-default box-default-2">
-                        <div class="box-default-icon fa-lightbulb-o"></div>
-                        <h4 class="box-default-title">Iniciar Sesión <br>Ingresa al sistema</h4>
-                        <div class="box-default-text">Financiero
-                        </div>
-                        <a class="box-default-link fa-chevron-right" href="/login"></a>
-                    </article>
+                <div class="slide">
+                    <img src="/static/images_index/images/glint_hero_2.jpg" alt="Image">
                 </div>
-                <div class="col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay=".1s">
-                    <article class="box-default box-default-1">
-                        <div class="box-default-icon fa-cog"></div>
-                        <h4 class="box-default-title">Reliable <br>solutions</h4>
-                        <div class="box-default-text">Nunquam convertam exemplar. Magnum exemplar diligenter
-                            attrahendams parma est. Apolloniates undas, tanquam pius mensa. Triticums.
-                        </div>
-                        <a class="box-default-link fa-chevron-right" href="#"></a>
-                    </article>
-                </div>
-                <div class="col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay=".15s">
-                    <article class="box-default">
-                        <div class="box-default-icon fa-briefcase"></div>
-                        <h4 class="box-default-title">Professional <br>management</h4>
-                        <div class="box-default-text">Ubi est lotus usus? Clemens, grandis castors sensim talem de pius,
-                            fortis lumen. Scutums sunt historias de pius gallus. Cum compater messis, omnes rumores
-                            vitare.
-                        </div>
-                        <a class="box-default-link fa-chevron-right" href="#"></a>
-                    </article>
-                </div>
-            </div>
-            <div class="row row-30 bordered">
-                <div class="col-md-6 wow fadeInRight">
-                    <article class="box-minimal">
-                        <div class="unit unit-spacing-md flex-column flex-sm-row text-center text-sm-left">
-                            <div class="unit-left">
-                                <div class="box-minimal-icon fa-comments"></div>
-                            </div>
-                            <div class="unit-body">
-                                <h4 class="box-minimal-title"><a href="#">Consultas Gratis</a></h4>
-                                <div class="box-minimal-text">Lorem ipsum dolor sit amet conse ctetur adipisicing elit,
-                                    sed do eiusmod tempor incididunt ut labore et dolor.
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-                <div class="col-md-6 wow fadeInRight" data-wow-delay=".05s">
-                    <article class="box-minimal">
-                        <div class="unit unit-spacing-md flex-column flex-sm-row text-center text-sm-left">
-                            <div class="unit-left">
-                                <div class="box-minimal-icon fa-group"></div>
-                            </div>
-                            <div class="unit-body">
-                                <h4 class="box-minimal-title"><a href="#">Equipo calificado</a></h4>
-                                <div class="box-minimal-text">Barbatus, flavum genetrixs tandem amor de salvus, festus
-                                    vortex. Audax, peritus spatiis saepe aperto de.
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-                <div class="col-md-6 wow fadeInRight" data-wow-delay=".1s">
-                    <article class="box-minimal">
-                        <div class="unit unit-spacing-md flex-column flex-sm-row text-center text-sm-left">
-                            <div class="unit-left">
-                                <div class="box-minimal-icon fa-calendar-o"></div>
-                            </div>
-                            <div class="unit-body">
-                                <h4 class="box-minimal-title"><a href="#">Servicios extensos</a></h4>
-                                <div class="box-minimal-text">Fidess sunt ignigenas de secundus zirbus. A falsis, bubo
-                                    fortis vita. Festus particula unus quaestios palus est.
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-                <div class="col-md-6 wow fadeInRight" data-wow-delay=".15s">
-                    <article class="box-minimal">
-                        <div class="unit unit-spacing-md flex-column flex-sm-row text-center text-sm-left">
-                            <div class="unit-left">
-                                <div class="box-minimal-icon fa-thumbs-up"></div>
-                            </div>
-                            <div class="unit-body">
-                                <h4 class="box-minimal-title"><a href="#">99% de clientes satisfechos</a></h4>
-                                <div class="box-minimal-text">Amicitia moris, tanquam brevis mons. Sunt sensoremes
-                                    experientia barbatus, castus cannabises. Varius palus.
-                                </div>
-                            </div>
-                        </div>
-                    </article>
+                <div class="slide">
+                    <img src="/static/images_index/images/glint_hero_3.jpg" alt="Image">
                 </div>
             </div>
         </div>
         <div class="container">
-            <div class="row row-30">
-                <div class="col-md-6 col-lg-4 wow fadeInUp">
-                    <h3>Acerca de</h3><img src="/static/images/acercade.png" alt="" width="370" height="108"/>
-                    <p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                        voluptate velit esse cillum dolore eu fugiat nulla pariatu.<br>Lorem ipsum dolor sit amet conse
-                        ctetur adipisicing elit, sed do eiusmod tempor incididunt. Lorem ipsum dolor sit amet conse
-                        ctetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna.</p>
+            <div class="row">
+                <div class="col-md-6 ml-auto align-self-center">
+                    <div class="intro">
+                        <div class="heading">
+                            <h1>XEEFFY</h1>
+                        </div>
+                        <form method="get">
+                            <div class="text">
+                                <p class="sub-text mb-5">Clasificate con nosotros...Escoje tu perfil de empresa</p>
+                                <p class="sub-text mb-5">{{ usuario_xeeffy[0][1] }}</p>
+                                <a>Solo puedes ver los archivos asociados</br>
+                                    a las empresas publicas</a>
+                                <p><a href="/signup/{{ usuario_xeeffy[0][0] }}" target="_blank" class="btn btn-outline-primary btn-md">Escoger</a></p>
+                            </div>
+                            <div class="text">
+                                <p class="sub-text mb-5">{{ empresa_financiar[0][1] }}</p>
+                                <a>Empresa que busca financiamiento...</a>
+                                <p><a href="/signup/{{ empresa_financiar[0][0] }}" target="_blank" class="btn btn-outline-primary btn-md">Escoger</a></p>
+                            </div>
+                            <div class="text">
+                                <p class="sub-text mb-5">{{ relacionado[0][1] }}</p>
+                                <a>Asociados a accionistas ...</a>
+                                <p><a href="/signup/{{ relacionado[0][0] }}" target="_blank" class="btn btn-outline-primary btn-md">Escoger</a></p>
+                            </div>
+                            <div class="text">
+                                <p class="sub-text mb-5">{{ entidad_financiador[0][1] }}</p>
+                                <a>Buscas en que invertir tu dinero, Fianancialas !</br> sabiendo la rentabilidad </a>
+                                <p><a href="/signup/{{ entidad_financiador[0][0] }}" target="_blank" class="btn btn-outline-primary btn-md">Escoger</a></p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay=".05s">
-                    <h3>Servicios</h3>
-                    <p>Lorem ipsum dolor sit amet conse ctetur adipisicing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-                    <ul class="list-marked-1">
-                        <li><a href="#">Cash Management</a></li>
-                        <li><a href="#">Process Development</a></li>
-                        <li><a href="#">HR Management</a></li>
-                        <li><a href="#">Marketing Strategies</a></li>
-                        <li><a href="#">Cash Flow Management</a></li>
-                        <li><a href="#">Business Strategies</a></li>
-                        <li><a href="#">CFO Services</a></li>
-                        <li><a href="#">Business Plans</a></li>
-                        <li><a href="#">Tax Planning Strategies</a></li>
-                    </ul>
+            </div>
+        </div>
+    </div> <!-- END .site-blocks-cover -->
 
-                </div>
-                <div class="col-lg-4">
-                    <div class="row row-30">
-                        <div class="col-md-6 col-lg-12 wow fadeInUp" data-wow-delay=".1s">
-                            <div class="info">
-                                <div class="info-header">
-                                    <div class="icon fa-comment"></div>
-                                    <h3>Help center</h3>
-                                </div>
-                                <div class="info-item">
-                                    <h4 class="info-title">Profesionales:</h4>
-                                    <ul class="info-list">
-                                        <li>Lunes-Viernes: 9am-7pm</li>
-                                    </ul>
-                                </div>
-                                <div class="info-item">
-                                    <h4 class="info-title">Numero Soporte:</h4><a class="info-link" href="tel:#">+56944185770</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-12 wow fadeInUp" data-wow-delay=".1s">
-                            <div class="owl-carousel owl-style-1" data-items="1" data-dots="true" data-autoplay="true">
-                                <!-- Quote-->
-                                <article class="quote">
-                                    <div class="media"><img class="quote-image" src="/static/images/user-1-80x80.jpg"
-                                                            alt="" width="80" height="40"/>
-                                        <div class="media-body">
-                                            <div class="quote-text">
-                                                <p class="q">Lorem ipsum dolor sit amet conse ctetur adipisicing elit,
-                                                    sed do eiusmod tempor incididunt ut labore.</p>
-                                            </div>
-                                            <a class="quote-author" href="#">Richard Curtis</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                <!-- Quote-->
-                                <article class="quote">
-                                    <div class="media"><img class="quote-image" src="/static/images/user-2-80x80.jpg"
-                                                            alt="" width="80" height="40"/>
-                                        <div class="media-body">
-                                            <div class="quote-text">
-                                                <p class="q">Noster, regius omnias nunquam magicae de fidelis, azureus
-                                                    secula. Accelerare satis ducunt ad magnum abactus.</p>
-                                            </div>
-                                            <a class="quote-author" href="#">Anna Ramirez</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                <!-- Quote-->
-                                <article class="quote">
-                                    <div class="media"><img class="quote-image" src="/static/images/user-3-80x80.jpg"
-                                                            alt="" width="80" height="40"/>
-                                        <div class="media-body">
-                                            <div class="quote-text">
-                                                <p class="q">Nunquam acquirere gabalium. Mori satis ducunt ad teres
-                                                    stella. Studere satis ducunt ad brevis gluten.</p>
-                                            </div>
-                                            <a class="quote-author" href="#">Eva Adams</a>
-                                        </div>
-                                    </div>
-                                </article>
-                                <!-- Quote-->
-                                <article class="quote">
-                                    <div class="media"><img class="quote-image" src="/static/images/user-4-80x80.jpg"
-                                                            alt="" width="80" height="40"/>
-                                        <div class="media-body">
-                                            <div class="quote-text">
-                                                <p class="q">A falsis, amor brevis victrix. Cum tabes credere, omnes
-                                                    particulaes talem barbatus, audax hydraes.</p>
-                                            </div>
-                                            <a class="quote-author" href="#">Walter Evans</a>
-                                        </div>
-                                    </div>
-                                </article>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <a class="section section-banner" href="https://www.templatemonster.com/intense-multipurpose-html-template.html"
-       style="background-image: url(images/banner/background-03-1920x310.jpg); background-image: -webkit-image-set( url(images/banner/background-03-1920x310.jpg) 1x, url(images/banner/background-03-3840x620.jpg) 2x )"><img
-            src="/static/images/banner/foreground-03-1600x310.png"
-            srcset="/static/images/banner/foreground-03-1600x310.png 1x, /static/images/banner/foreground-03-3200x620.png 2x"
-            alt="" width="1600" height="310"></a>
-    <!--Contacts-->
-    <section class="section section-lg bg-gray-700">
-        <div class="container">
-            <div class="row row-30">
-                <div class="col-lg-4">
-                    <div class="row row-30">
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight">
-                            <article class="info-classic align-items-center">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-map-marker"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link"
-                                                              href="https://www.google.cl/maps/place/El+Juncal+240,+Quilicura,+Regi%C3%B3n+Metropolitana/@-33.3348172,-70.7309008,17z/data=!3m1!4b1!4m5!3m4!1s0x9662c0af53546ac7:0xbdbc4206770a1f71!8m2!3d-33.3348172!4d-70.7287121">
-                                        El Juncal 0240, Quilicura • Chile</a></div>
-                                </div>
-                            </article>
-                        </div>
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight" data-wow-delay=".05s">
-                            <article class="info-classic align-items-center">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-envelope"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link" href="mailto:#">aherrera@steelplus.cl</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="row row-30">
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight" data-wow-delay=".1s">
-                            <article class="info-classic align-items-center info-classic-2">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-phone"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link" href="tel:#">+56988295769</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight">
-                            <article class="info-classic align-items-center info-classic-2">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-fax"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link" href="tel:#">+56988295769</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="row row-30">
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight" data-wow-delay=".05s">
-                            <article class="info-classic align-items-center">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-facebook"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link" href="#">Follow on Facebook</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                        <div class="col-sm-6 col-lg-12 wow fadeInRight" data-wow-delay=".1s">
-                            <article class="info-classic align-items-center">
-                                <div class="unit unit-spacing-md align-items-center flex-column flex-md-row text-center text-md-left">
-                                    <div class="unit-left">
-                                        <div class="info-classic-icon fa-twitter"></div>
-                                    </div>
-                                    <div class="unit-body"><a class="info-classic-link" href="#">Follow on Twitter</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <footer class="section footer-classic">
-        <div class="container">
-            <p class="rights"><span>&copy;&nbsp; </span><span class="copyright-year"></span><span>&nbsp;</span><span>xEEFFy Company</span><span>.&nbsp;</span><a
-                    href="#">Privacy Policy</a>. Design&nbsp;by&nbsp;<a href="https://www.xeeffy.com/">XEEFFY</a></p>
-        </div>
-    </footer>
+{#    <div class="site-section" id="what-we-do-section">#}
+{#        <div class="container">#}
+{#            <div class="row mb-5">#}
+{#                <div class="col-lg-6 section-title">#}
+{#                    <span class="sub-title mb-2 d-block">What We Do</span>#}
+{#                    <h2 class="title text-primary">Far far away, behind the word mountains far from the countries</h2>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="row">#}
+{#                <div class="col-lg-10 ml-auto">#}
+{#                    <div class="row">#}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>Design</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>Development</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>eCommerce</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>Mobile Apps</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>CopyWriting</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="col-md-6 col-lg-4 mb-4 mb-lg-4">#}
+{#                            <div class="service h-100">#}
+{#                                <h3>Search Engine Optimization</h3>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia.</p>#}
+{#                                <p><a href="#" class="readmore">Learn more</a></p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div> <!-- END .site-section -->#}
+{##}
+{#    <div class="site-section" id="about-section">#}
+{#        <div class="container">#}
+{#            <div class="row align-items-center">#}
+{#                <div class="col-lg-6 mb-5">#}
+{#                    <img src="/static/images_index/images/glint_about_1.jpg" alt="Image" class="img-fluid">#}
+{#                </div>#}
+{#                <div class="col-lg-5 ml-auto section-title">#}
+{#                    <span class="sub-title mb-2 d-block">Acquaint Us</span>#}
+{#                    <h2 class="title text-primary mb-3">About us</h2>#}
+{#                    <p class="mb-4">A small river named Duden flows by their place and supplies it with the necessary#}
+{#                        regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your#}
+{#                        mouth.</p>#}
+{##}
+{##}
+{#                    <div class="d-flex">#}
+{#                        <ul class="list-unstyled ul-check success mr-5">#}
+{#                            <li>Design</li>#}
+{#                            <li>Development</li>#}
+{#                            <li>eCommerce</li>#}
+{##}
+{#                        </ul>#}
+{#                        <ul class="list-unstyled ul-check success">#}
+{##}
+{#                            <li>Mobile Apps</li>#}
+{#                            <li>Copywriting</li>#}
+{#                            <li>SEO</li>#}
+{#                        </ul>#}
+{#                    </div>#}
+{#                    <p><a data-fancybox data-ratio="2" href="https://vimeo.com/326176805"#}
+{#                          class="d-flex align-items-center"><span class="icon-play_circle_outline h4 m-0 mr-2"></span>#}
+{#                        <span>Watch the video</span></a></p>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div> <!-- .END site-section -->#}
+{##}
+{##}
+{#    <div class="site-section" id="what-we-do-section">#}
+{#        <div class="container">#}
+{#            <div class="row mb-5">#}
+{#                <div class="col-lg-6 section-title">#}
+{#                    <span class="sub-title mb-2 d-block">Meet The Team</span>#}
+{#                    <h2 class="title text-primary">We are talented people.</h2>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="row no-gutters">#}
+{#                <div class="col-lg-6 mb-5 person">#}
+{#                    <img src="/static/images_index/images/person_1.jpg" alt="Image" class="img-fluid mb-5">#}
+{##}
+{#                    <div class="row">#}
+{#                        <div class="col-lg-10 ml-auto">#}
+{#                            <div class="pr-lg-5">#}
+{#                                <h3>Jacob Spencer</h3>#}
+{#                                <span class="mb-4 d-block">CEO, Co-Founder</span>#}
+{#                                <p>Far far away, behind the word mountains, far from the countries Vokalia and#}
+{#                                    Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right#}
+{#                                    at the coast of the Semantics, a large language ocean.</p>#}
+{#                                <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                    regelialia. It is a paradisematic country, in which roasted parts of sentences fly#}
+{#                                    into your mouth.</p>#}
+{#                                <p class="d-flex align-items-center">#}
+{#                                    <span class="mr-3 text-black">Follow me:</span>#}
+{#                                    <a href="#" class="twitter pr-2 pt-2 pb-2 pl-0"><span#}
+{#                                            class="icon-twitter"></span></a>#}
+{#                                    <a href="#" class="facebook p-2"><span class="icon-facebook"></span></a>#}
+{#                                    <a href="#" class="dribbble p-2"><span class="icon-dribbble"></span></a>#}
+{#                                    <a href="#" class="instagram p-2"><span class="icon-instagram"></span></a>#}
+{#                                    <a href="#" class="linkedin p-2"><span class="icon-linkedin"></span></a>#}
+{#                                </p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="col-lg-6 person">#}
+{#                    <img src="/static/images_index/images/person_2.jpg" alt="Image" class="img-fluid mb-5">#}
+{#                    <div class="row">#}
+{#                        <div class="col-lg-10 ml-auto">#}
+{#                            <div class="pr-lg-5">#}
+{#                                <h3>Chris Peters</h3>#}
+{#                                <span class="mb-4 d-block">CTO, Co-Founder</span>#}
+{#                                <p>Even the all-powerful Pointing has no control about the blind texts it is an almost#}
+{#                                    unorthographic life One day however a small line of blind text by the name of Lorem#}
+{#                                    Ipsum decided to leave for the far World of Grammar.</p>#}
+{#                                <p>The Big Oxmox advised her not to do so, because there were thousands of bad Commas,#}
+{#                                    wild Question Marks and devious Semikoli, but the Little Blind Text didn’t listen.#}
+{#                                    She packed her seven versalia, put her initial into the belt and made herself on the#}
+{#                                    way.</p>#}
+{#                                <p class="d-flex align-items-center">#}
+{#                                    <span class="mr-3 text-black">Follow me:</span>#}
+{#                                    <a href="#" class="twitter pr-2 pt-2 pb-2 pl-0"><span#}
+{#                                            class="icon-twitter"></span></a>#}
+{#                                    <a href="#" class="github p-2"><span class="icon-github"></span></a>#}
+{#                                    <a href="#" class="dribbble p-2"><span class="icon-dribbble"></span></a>#}
+{#                                    <a href="#" class="instagram p-2"><span class="icon-instagram"></span></a>#}
+{#                                    <a href="#" class="linkedin p-2"><span class="icon-linkedin"></span></a>#}
+{#                                </p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{##}
+{##}
+{#    <div class="site-section" id="portfolio-section">#}
+{#        <div class="container">#}
+{#            <div class="row mb-5 ">#}
+{#                <div class="col-md-7 section-title text-center mx-auto">#}
+{#                    <span class="sub-title mb-2 d-block">Recent Works</span>#}
+{#                    <h2 class="title text-primary mb-3">We love what we do, check out some of our latest works</h2>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="row mb-5">#}
+{#                <div class="col-lg-6 mb-4 mb-lg-0">#}
+{#                    <img src="/static/images_index/images/sq_img_2.jpg" alt="Image" class="img-fluid">#}
+{#                </div>#}
+{#                <div class="col-lg-5 h-100 jm-sticky-top ml-auto">#}
+{#                    <h3>Project title one</h3>#}
+{#                    <p class="mb-4">A small river named Duden flows by their place and supplies it with the necessary#}
+{#                        regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your#}
+{#                        mouth.</p>#}
+{#                    <p class="mb-4"><a href="#" class="readmore">Visit website</a></p>#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;Far far away, behind the word mountains, <strong>far from the countries Vokalia#}
+{#                                and Consonantia, there live the blind texts. Separated they live in#}
+{#                                Bookmarksgrove</strong> right at the coast of the Semantics, a large language ocean.&rdquo;#}
+{#                            </p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_3.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jacob Spencer</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{##}
+{#            <div class="row mb-5">#}
+{#                <div class="col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">#}
+{#                    <img src="/static/images_index/images/sq_img_4.jpg" alt="Image" class="img-fluid">#}
+{#                </div>#}
+{#                <div class="col-lg-5 h-100 jm-sticky-top mr-auto order-2 order-lg-1">#}
+{#                    <h3>Project title two</h3>#}
+{#                    <p class="mb-4">A small river named Duden flows by their place and supplies it with the necessary#}
+{#                        regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your#}
+{#                        mouth.</p>#}
+{#                    <p class="mb-4"><a href="#" class="readmore">Visit website</a></p>#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;A small river named Duden <strong>flows by their place and supplies it with the#}
+{#                                necessary regelialia</strong>. It is a paradisematic country, in which roasted parts of#}
+{#                                sentences fly into your mouth.&rdquo;</p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_4.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jean Smith</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{##}
+{#            <div class="row mb-5">#}
+{#                <div class="col-lg-6 mb-4 mb-lg-0">#}
+{#                    <img src="/static/images_index/images/sq_img_6.jpg" alt="Image" class="img-fluid">#}
+{#                </div>#}
+{#                <div class="col-lg-5 h-100 jm-sticky-top ml-auto">#}
+{#                    <h3>Project title three</h3>#}
+{#                    <p class="mb-4">A small river named Duden flows by their place and supplies it with the necessary#}
+{#                        regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your#}
+{#                        mouth.</p>#}
+{#                    <p class="mb-4><a href=" #" class="readmore">Visit website</a></p>#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;Far far away, behind the word mountains, <strong>far from the countries Vokalia#}
+{#                                and Consonantia, there live the blind texts. Separated they live in#}
+{#                                Bookmarksgrove</strong> right at the coast of the Semantics, a large language ocean.&rdquo;#}
+{#                            </p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_3.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jacob Spencer</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{##}
+{#        </div>#}
+{#    </div>#}
+{##}
+{#    <div class="site-section bg-light">#}
+{#        <div class="container">#}
+{#            <div class="row mb-5 ">#}
+{#                <div class="col-md-7 section-title text-center mx-auto">#}
+{#                    <span class="sub-title mb-2 d-block">Testimonials</span>#}
+{#                    <h2 class="title text-primary mb-3">Our Client Sayings</h2>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="row">#}
+{#                <div class="col-lg-6 mb-4">#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;Far far away, behind the word mountains, <strong>far from the countries Vokalia#}
+{#                                and Consonantia, there live the blind texts. Separated they live in#}
+{#                                Bookmarksgrove</strong> right at the coast of the Semantics, a large language ocean.&rdquo;#}
+{#                            </p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_3.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jacob Spencer</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="col-lg-6 mb-4">#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;A small river named Duden <strong>flows by their place and supplies it with the#}
+{#                                necessary regelialia</strong>. It is a paradisematic country, in which roasted parts of#}
+{#                                sentences fly into your mouth.&rdquo;</p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_4.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jean Smith</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="col-lg-6 mb-4">#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;A small river named Duden <strong>flows by their place and supplies it with the#}
+{#                                necessary regelialia</strong>. It is a paradisematic country, in which roasted parts of#}
+{#                                sentences fly into your mouth.&rdquo;</p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_4.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jean Smith</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                </div>#}
+{#                <div class="col-lg-6 mb-4">#}
+{#                    <div class="testimonial bg-white h-100">#}
+{#                        <blockquote class="mb-3">#}
+{#                            <p>&ldquo;Far far away, behind the word mountains, <strong>far from the countries Vokalia#}
+{#                                and Consonantia, there live the blind texts. Separated they live in#}
+{#                                Bookmarksgrove</strong> right at the coast of the Semantics, a large language ocean.&rdquo;#}
+{#                            </p>#}
+{#                        </blockquote>#}
+{#                        <div class="d-flex align-items-center vcard">#}
+{#                            <figure class="mb-0 mr-3">#}
+{#                                <img src="/static/images_index/images/person_3.jpg" alt="Image"#}
+{#                                     class="img-fluid ounded-circle">#}
+{#                            </figure>#}
+{#                            <div class="vcard-text">#}
+{#                                <span class="d-block">Jacob Spencer</span>#}
+{#                                <span class="position">Web Designer</span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{##}
+{##}
+{#    <div class="site-section" id="studio-section">#}
+{#        <div class="container">#}
+{##}
+{#            <div class="row mb-5 ">#}
+{#                <div class="col-md-7 section-title text-center mx-auto">#}
+{#                    <span class="sub-title mb-2 d-block">Photos</span>#}
+{#                    <h2 class="title text-primary mb-3">Studio Gallery</h2>#}
+{#                </div>#}
+{#            </div>#}
+{##}
+{#            <div id="posts" class="row no-gutter">#}
+{#                <div class="item web col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_1.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_1.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{#                <div class="item web col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_2.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_2.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item brand col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_3.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_3.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item design col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_4.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_4.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item web col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_5.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_5.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item brand col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_6.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_6.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item web col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_7.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="images/sq_img_7.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item web col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_9.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_9.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item design col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_10.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_10.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item brand col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_11.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_11.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                <div class="item design col-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 mb-4">#}
+{#                    <a href="/static/images_index/images/sq_img_12.jpg" class="item-wrap" data-fancybox="gal">#}
+{#                        <span class="icon-search2"></span>#}
+{#                        <img class="img-fluid" src="/static/images_index/images/sq_img_12.jpg">#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{##}
+{#            </div>#}
+{#        </div>#}
+{#    </div> <!-- END .site-section -->#}
+{##}
+{#    <div class="site-section" id="contact-section">#}
+{#        <div class="container">#}
+{#            <form action="" class="contact-form">#}
+{##}
+{#                <div class="section-title text-center mb-5">#}
+{#                    <span class="sub-title mb-2 d-block">Get In Touch</span>#}
+{#                    <h2 class="title text-primary">Contact Us</h2>#}
+{#                </div>#}
+{##}
+{#                <div class="row mb-4">#}
+{#                    <div class="col-md-6 mb-4 mb-md-0">#}
+{#                        <input type="text" class="form-control" placeholder="First name">#}
+{#                    </div>#}
+{#                    <div class="col-md-6">#}
+{#                        <input type="text" class="form-control" placeholder="Last name">#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="row mb-4">#}
+{#                    <div class="col-12">#}
+{#                        <input type="text" class="form-control" placeholder="Email">#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="row mb-4">#}
+{#                    <div class="col-12">#}
+{#                        <textarea class="form-control" name="" id="" cols="30" rows="10"#}
+{#                                  placeholder="Message"></textarea>#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="row">#}
+{#                    <div class="col-12">#}
+{#                        <button type="submit" class="btn btn-primary btn-md">Send Message</button>#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#            </form>#}
+{#        </div>#}
+{#    </div> <!-- END .site-section -->#}
+{##}
+{#    <footer class="site-footer">#}
+{#        <div class="container">#}
+{#            <div class="row">#}
+{#                <div class="col-lg-4 mb-5 mb-lg-0">#}
+{#                    <div class="row mb-5">#}
+{#                        <div class="col-12">#}
+{#                            <h3 class="footer-heading mb-4">About Us</h3>#}
+{#                            <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                                regelialia. It is a paradisematic country, in which roasted parts of sentences fly into#}
+{#                                your mouth.</p>#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{##}
+{#                </div>#}
+{#                <div class="col-lg-3 ml-auto">#}
+{##}
+{#                    <div class="row mb-5">#}
+{#                        <div class="col-md-12">#}
+{#                            <h3 class="footer-heading mb-4">Navigation</h3>#}
+{#                        </div>#}
+{#                        <div class="col-md-6 col-lg-6">#}
+{#                            <ul class="list-unstyled">#}
+{#                                <li><a href="#home-section" class="smoothscroll">Home</a></li>#}
+{#                                <li><a href="#what-we-do-section" class="smoothscroll">What We Do</a></li>#}
+{#                                <li><a href="#about-section" class="smoothscroll">About Us</a></li>#}
+{#                                <li><a href="#team-section" class="smoothscroll">Team</a></li>#}
+{#                            </ul>#}
+{#                        </div>#}
+{##}
+{#                    </div>#}
+{##}
+{#                </div>#}
+{##}
+{##}
+{#                <div class="col-lg-4 mb-5 mb-lg-0">#}
+{##}
+{#                    <div class="mb-5">#}
+{#                        <h3 class="footer-heading mb-2">Subscribe Newsletter</h3>#}
+{#                        <p>A small river named Duden flows by their place and supplies it with the necessary#}
+{#                            regelialia.</p>#}
+{##}
+{#                        <form method="post" class="form-subscribe">#}
+{#                            <div class="form-group mb-3">#}
+{#                                <input type="text" class="form-control border-white text-white bg-transparent"#}
+{#                                       placeholder="Enter full name" aria-label="Enter Email"#}
+{#                                       aria-describedby="button-addon2">#}
+{#                            </div>#}
+{#                            <div class="form-group mb-3">#}
+{#                                <input type="text" class="form-control border-white text-white bg-transparent"#}
+{#                                       placeholder="Enter email" aria-label="Enter Email"#}
+{#                                       aria-describedby="button-addon2">#}
+{#                            </div>#}
+{#                            <div class="form-group">#}
+{#                                <button class="btn btn-primary px-5" type="submit">Subscribe</button>#}
+{#                            </div>#}
+{#                        </form>#}
+{##}
+{#                    </div>#}
+{##}
+{##}
+{#                </div>#}
+{##}
+{#            </div>#}
+{#            <div class="row pt-5 mt-5 text-center">#}
+{#                <div class="col-md-12">#}
+{#                    <div class="mb-4">#}
+{#                        <a href="#" class="pl-0 pr-3"><span class="icon-facebook"></span></a>#}
+{#                        <a href="#" class="pl-3 pr-3"><span class="icon-twitter"></span></a>#}
+{#                        <a href="#" class="pl-3 pr-3"><span class="icon-instagram"></span></a>#}
+{#                        <a href="#" class="pl-3 pr-3"><span class="icon-linkedin"></span></a>#}
+{#                    </div>#}
+{#                    <p>#}
+{#                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->#}
+{#                        Copyright &copy;<script>document.write(new Date().getFullYear());</script>#}
+{#                        All rights reserved | This template is made with <i class="icon-heart text-danger"#}
+{#                                                                            aria-hidden="true"></i> by <a#}
+{#                            href="https://colorlib.com" target="_blank">Colorlib</a>#}
+{#                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->#}
+{#                    </p>#}
+{#                </div>#}
+{##}
+{#            </div>#}
+{#        </div>#}
+{#    </footer>#}
 </div>
-<div class="snackbars" id="form-output-global"></div>
-<script src="/static/js/core.min.js"></script>
-<script src="/static/js/script.js"></script>
+
+<script src="/static/js_index/js/jquery-3.3.1.min.js"></script>
+<script src="/static/js_index/js/popper.min.js"></script>
+<script src="/static/js_index/js/bootstrap.min.js"></script>
+<script src="/static/js_index/js/owl.carousel.min.js"></script>
+<script src="/static/js_index/js/aos.js"></script>
+<script src="/static/js_index/js/jquery.sticky.js"></script>
+<script src="/static/js_index/js/stickyfill.min.js"></script>
+<script src="/static/js_index/js/jquery.easing.1.3.js"></script>
+<script src="/static/js_index/js/isotope.pkgd.min.js"></script>
+
+<script src="/static/js_index/js/jquery.fancybox.min.js"></script>
+<script src="/static/js_index/js/main.js"></script>
+
+
 </body>
 </html>

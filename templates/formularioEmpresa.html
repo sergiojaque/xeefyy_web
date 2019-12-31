@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}
+    FormularioEmpresa
+{% endblock %}
+{% block css %}
+{% endblock %}
+{% block content %}
+    <link href="/static/fontawesome-free-5.11.2-web/css/all.css" rel="stylesheet"/>
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <script src='/static/js/select.js'></script>
+    <link href="https://cdn.jsdelivr.net/sweetalert2/6.0.1/sweetalert2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/sweetalert2/6.0.1/sweetalert2.min.js"></script>
+
+
+
+    <div class="container">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <form id="frm_formulario">
+                        <div id="contenedorFormulario" class="demo-section k-content">
+                            <br>
+                            <h1><i class="fab fa-wpforms"></i> Formulario Empresas No CMF</h1>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fa fa-building">Empresa(Nombre)</i>
+                                    </label>
+                                    <input type="text" id="nombre_empresa" name="nombre_empresa" id="datepicker"
+                                           class="form-control" required/>
+                                </div>
+
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="far fa-address-card"></i>Rut Empresa(11.111.111-k)
+                                    </label>
+                                    <input type="text" name="rut_empresa" id="rut_empresa" class="form-control"
+                                           required/>
+                                </div>
+
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-book"></i>Tipo de empresa
+                                    </label>
+                                    <select id="update_empresa" name="update_empresa" class="form-control" required>
+                                        <option selected value="0"> Personalidad</option>
+                                        {% for c in cl %}
+                                            <option value="{{ c[0] }}">{{ c[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-archive"></i>Tipo
+                                    </label>
+                                    <select id="empresa1" name="empresa1" class="form-control">
+
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-chalkboard-teacher"></i>Rut Representante(11.111.111-k)
+                                    </label>
+                                    <input type="text" name="rut_representante" id="rut_representante"
+                                           class="form-control"
+                                           required/>
+                                </div>
+
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-male"></i>Nombre representante
+                                    </label>
+                                    <input type="text" name="nombre_representante" id="nombre_representante"
+                                           class="form-control" required/>
+                                </div>
+                            </div>
+                            <br>
+
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-landmark"></i>Banco asociado
+                                    </label>
+                                    <select id="banco" name="banco" class="form-control" required>
+                                        <option selected value="0">Seleccione Opción...</option>
+                                        {% for b in banco %}
+                                            <option value="{{ b[0] }}">{{ b[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <button id="adicionar" class="btn btn-success" type="button">Adicionar a la tabla</button>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <p>Elementos en la Tabla:
+                                    <div id="adicionados"></div>
+                                    </p>
+                                    <table id="mytable" class="table table-bordered table-hover ">
+                                        <thead>
+                                        <tr>
+                                            <th>Cod_banco</th>
+                                            <th>Nombre Banco</th>
+                                            <th>Eliminar</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                            </div>
+                            <br>
+                            <h3><i class="fab fa-wpforms"></i>Clasificación de empresa</h3>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-tasks"></i>Nivel 1
+                                    </label>
+                                    <select id="nivel1" name="nivel1" class="form-control">
+                                        <option selected value="0">Seleccione Opción...</option>
+                                        {% for l1 in lvl1 %}
+                                            <option value="{{ l1[0] }}">{{ l1[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-sitemap"></i>Nivel 2
+                                    </label>
+                                    <select id="nivel2" name="nivel2" value="0" class="form-control">
+                                        <option selected value="0">Seleccione anterior...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-sitemap"></i>Nivel 3
+                                    </label>
+                                    <select id="nivel3" name="nivel3" value="0" class="form-control">
+                                        <option selected value="0">Seleccione anterior...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-sitemap"></i>Nivel 4
+                                    </label>
+                                    <select id="nivel4" name="nivel4" value="0" class="form-control">
+                                        <option selected value="0">Seleccione anterior...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-sitemap"></i>CMF
+                                    </label>
+                                    <select id="CMF" name="CMF" value="0" class="form-control" required disabled>
+                                        <option selected value="no">no</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-sm-6">
+                                <div class="demo-section k-content">
+                                    <label class="col-lg-6 control-label"><i class="fas fa-kaaba"></i>Direccion
+                                    </label>
+                                    <input type="text" name="direccion" id="direccion" class="form-control"
+                                    required/>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-city"></i> Región
+                                    </label>
+                                    <select id="region" name="region" class="form-control" required>
+                                        <option selected value="0">Seleccione Opción...</option>
+                                        {% for r1 in region %}
+                                            <option value="{{ r1[0] }}">{{ r1[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-house-damage"></i> Provincia
+                                    </label>
+                                    <select id="provincia" name="provincia" value="0" class="form-control" required>
+                                        <option selected value="0">Seleccione anterior...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-hotel"></i> Comuna
+                                    </label>
+                                    <select id="comuna" name="comuna" value="0" class="form-control" required>
+                                        <option selected value="0">Seleccione anterior...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <label><i class="fas fa-male"></i>Telefono Celular(955555555)
+                                    </label>
+                                    <input type="text" name="celular" id="celular" onkeyup="this.value=Numeros(this.value)"
+                                           class="form-control" maxlength="9" required/>
+                                </div>
+                            </div>
+                            {#                            <button id="adicionarclasificacion" class="btn btn-success" type="button">Adicionar a la tabla</button>#}
+                            {#                            <br>#}
+                            {#                            <div class="col-md-6">#}
+                            {#                                <div class="demo-section k-content">#}
+                            {#                                    <p>Elementos en la Tabla:#}
+                            {#                                    <div id="adicionadosclasificacion"></div>#}
+                            {#                                    </p>#}
+                            {#                                    <table id="mytableclasificacion" class="table table-bordered table-hover ">#}
+                            {#                                        <thead>#}
+                            {#                                        <tr>#}
+                            {#                                            <th>Cod_Clasificacion</th>#}
+                            {#                                            <th>Clasificacion</th>#}
+                            {#                                            <th>Eliminar</th>#}
+                            {#                                        </tr>#}
+                            {#                                        </thead>#}
+                            {#                                        <tbody>#}
+                            {##}
+                            {#                                        </tbody>#}
+                            {##}
+                            {#                                    </table>#}
+                            {#                                </div>#}
+                            {#                            </div>#}
+
+                            <br>
+
+                            <div class="col-md-6">
+                                <div class="demo-section k-content">
+                                    <a id="btn_acutalizar" class="btn btn-warning btn-sm form-control"><i
+                                            class="far fa-save"></i> Guardar
+                                    </a>
+                                </div>
+                            </div>
+                            <br>
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    <div class="notification is-danger">
+                                        <i class="fas fa-award"></i>{{ messages[0] }}..
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                            <br>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+function Numeros(string){//Solo numeros
+    var out = '';
+    var filtro = '1234567890';//Caracteres validos
+
+    //Recorrer el texto y verificar si el caracter se encuentra en la lista de validos
+    for (var i=0; i<string.length; i++)
+       if (filtro.indexOf(string.charAt(i)) != -1)
+             //Se añaden a la salida los caracteres validos
+	     out += string.charAt(i);
+
+    //Retornar valor filtrado
+    return out;
+}
+</script>
+
+{% endblock %}
