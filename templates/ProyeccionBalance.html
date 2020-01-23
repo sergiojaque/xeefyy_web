@@ -16,11 +16,7 @@
     <link href="/static/css/all.css" rel="stylesheet">
     <!-- Custom styles for this template-->
     <link href="/static/css/sb-admin-2.min.css" rel="stylesheet">
-    <script src="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-    <script src="/static/js/jquery.tablesorter.min.js"></script>
-    <script src="/static/js/jquery.tablesorter.widgets.min.js"></script>
+
     <link href="/static/assets/css/argon-dashboard.css?v=1.1.0" rel="stylesheet"/>
     <link href="/static/assets/js/plugins/nucleo/css/nucleo.css" rel="stylesheet"/>
     <link href="/static/assets/js/plugins/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet"/>
@@ -191,109 +187,133 @@
             <!-- End of Topbar -->
 
             <!-- Begin Page Content -->
-            <div class="container-fluid">
+            <form method="post">
+                <div class="container-fluid">
 
-                <!-- Page Heading -->
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">Sistema XEFFY(Balance): Empresa({{ entidad }})</h1>
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <label id="porcentaje_ratios" value="{{ cod_entidad }}" class="h3 mb-0 text-gray-800">Sistema
+                            XEFFY(Balance y Ratios): Empresa({{ entidad }})</label>
+                    </div>
+                    <br>
 
-                </div>
-                <br>
-
-                <table class="table table-striped table-bordered" id="tabla_familia" align="center">
-                    <thead>
-                    <tr>
-                        {% for c in columnas2 %}
-                            <th scope="col">{{ c }}</th>
-                        {% endfor %}
-
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for d in data2 %}
-                        <tr>
-                            <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
-                            {% for c in range(d | length -1) %}
-                                <td>
-                                    {{ "{:,.2f}".format(d[c+1]) }}
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <br>
-                <h3>VER PROYECCIÓN ESTADO DE RESULTADO</h3>
-                <td><a class="btn btn-outline-info"
-                       href="/ProyeccionEERR1/{{ cod_entidad }}/2018/12">
-                    <i
-                            class="fas fa-archive"></i> Proyección Estado Resultado</a></td>
-                <br>
-            </div>
-            <div class="row">
-                <div class="container col-md-9">
-                    <table class="table table-striped table-bordered" id="tabla_familia">
+                    <div class="col-md-6">
+                        <div class="demo-section k-content">
+                            <button id="actualizar" name="actualizar" type="submit" onclick="history.go(0);"
+                                    class="btn btn-success"><i class="fas fa-cogs"></i> Actualizar
+                            </button>
+                        </div>
+                        <br>
+                    </div>
+                    <table class="table table-striped table-bordered" id="tabla_familia" align="center">
                         <thead>
                         <tr>
-                            {% for c in columnas %}
+                            {% for c in columnas2 %}
                                 <th scope="col">{{ c }}</th>
                             {% endfor %}
 
                         </tr>
                         </thead>
                         <tbody>
-                        {% for d in data %}
+                        {% for d in data2 %}
                             <tr>
-                                {% if d[0] == 'Otros pasivos financieros corrientes' %}
-                                    <td style="color:#ff0000"><a data-toggle="modal"
-                                                                 data-target="#exampleModalCenter">{{ d[0] }}</a></td>
-                                    {% for c in range(d | length -1) %}
-                                        <td style="color:#ff0000">
-                                            {{ "{:,.2f}".format(d[c+1]) }}
-                                        </td>
-                                    {% endfor %}
-                                {% else %}
-                                    <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
-                                    {% for c in range(d | length -1) %}
-                                        <td>
-                                            {{ "{:,.2f}".format(d[c+1]) }}
-                                        </td>
-                                    {% endfor %}
-                                {% endif %}
+                                <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
+                                {% for c in range(d | length -1) %}
+                                    {% if d[c+1] or d[c+1] == 0 %}
+                                        {% if c == 4 %}
+                                            <td>
+                                                <input id="{{ d[0] }}" style="width: 100%;" type="text"
+                                                       class="form-control porcentaje_ratios"
+                                                       value="{{ "{:,.3f}".format (d[c+1]) }}">
+                                            </td>
+                                        {% else %}
+                                            <td>
+                                                {{ "{:,.2f}".format(d[c+1]) }}
+                                            </td>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             </tr>
                         {% endfor %}
                         </tbody>
-                        {#            </form>#}
-                        <!-- Modal -->
-                        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
-                             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLongTitle">Añadir empresa</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <form method="get">
-                                        <div class="modal-body" class="table table-striped table-bordered">
-                                            <label><i class="fa fa-calendar"></i>Rut Empresa
-                                            </label>
-                                            <input type="text" id="empresa" name="empresa">
-                                            <input type="submit" value="Buscar" class="btn btn-primary">
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </table>
+
+                    <br>
+                    <h3>VER PROYECCIÓN ESTADO DE RESULTADO</h3>
+                    <td><a class="btn btn-outline-info"
+                           href="/ProyeccionEERR2/{{ cod_entidad }}/2018/12">
+                        <i
+                                class="fas fa-archive"></i> Proyección Estado Resultado</a></td>
+                    <br>
+                </div>
+
+                <div class="row">
+                    <div class="container col-md-9">
+                        <table class="table table-striped table-bordered" id="tabla_familia">
+                            <thead>
+                            <tr>
+                                {% for c in columnas %}
+                                    <th scope="col">{{ c }}</th>
+                                {% endfor %}
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for d in data %}
+                                <tr>
+                                    {% if d[0] == 'Otros pasivos financieros corrientes' %}
+                                        <td style="color:#ff0000"><a data-toggle="modal"
+                                                                     data-target="#exampleModalCenter">{{ d[0] }}</a>
+                                        </td>
+                                        {% for c in range(d | length -1) %}
+                                            <td style="color:#ff0000">
+                                                {{ "{:,.2f}".format(d[c+1]) }}
+                                            </td>
+                                        {% endfor %}
+                                    {% else %}
+                                        <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
+                                        {% for c in range(d | length -1) %}
+                                            <td>
+                                                {{ "{:,.2f}".format(d[c+1]) }}
+                                            </td>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                            {#            </form>#}
+                            <!-- Modal -->
+                            <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+                                 aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLongTitle">Añadir empresa</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
                                             </button>
-                                            <button type="button" class="btn btn-primary">Save changes</button>
                                         </div>
-                                    </form>
+                                        <form method="get">
+                                            <div class="modal-body" class="table table-striped table-bordered">
+                                                <label><i class="fa fa-calendar"></i>Rut Empresa
+                                                </label>
+                                                <input type="text" id="empresa" name="empresa">
+                                                <input type="submit" value="Buscar" class="btn btn-primary">
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    Close
+                                                </button>
+                                                <button type="button" class="btn btn-primary">Save changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </table>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </form>
             <!-- End of Main Content -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
@@ -329,36 +349,36 @@
 
     <!-- Custom scripts for all pages-->
     <script src="/static/js/sb-admin-2.min.js"></script>
-
-    <!-- Page level plugins -->
-    <script src="/static/js/Chart.min.js"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="/static/js/chart-area-demo.js"></script>
-    <script src="/static/js/chart-pie-demo.js"></script>
-    <script> $(document).ready(function () {
-        $("#myInput").on("keyup", function () {
-            var value = $(this).val().toLowerCase();
-            $("#tabla_familia tr").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-        });
-    });
-    </script>
-    <script>
-        $(document).ready(function () {
-            $('#tabla_familia').DataTable();
-        });
-    </script>
-    <script language=javascript>
-        function ventanaSecundaria(URL) {
-            window.open(URL, "ventana1", "width=120,height=300,scrollbars=NO")
-        }
-
-
-    </script>
+    <script src="/static/js/proyeccionbalance.js"></script>
 </div>
 </div>
+<script>
+
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+    gtag('config', 'UA-153417509-1');
+
+</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-153417509-1"></script>
+<script>
+
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+    gtag('config', 'UA-153417509-1', {'optimize_id': 'GTM-KNQLW6R'});
+
+</script>
+
 </body>
 
 </html>

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}
+    Industria
+{% endblock %}
+{% block css %}
+{% endblock %}
+{% block content %}
+
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <script src="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
+        <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+        <link href="/static/fontawesome-free-5.11.2-web/css/all.css" rel="stylesheet"/>
+        <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+
+    </head>
+    <body>
+    <div class="container">
+        <div class="container-fluid">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-12" align="center">
+                        <div class="demo-section k-content">
+                            <br>
+                            <h1><i class="fas fa-dna"></i>Industria</h1>
+                            <br>
+
+                            <div class="col-md-4">
+                                <div class="demo-section k-content">
+                                    <label><i class="fa fa-building">Nombre Industria</i>
+                                    </label>
+                                    <select name="industria" class="form-control">
+                                        <option selected value="0"> Elige una opción</option>
+                                        {% for e in enti %}
+                                            <option value="{{ e[1] }}">{{ e[0] }}</option>
+
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+
+                            <div class="col-md-4">
+                                <div class="demo-section k-content">
+                                    <button type="submit" class="btn btn-warning btn-sm form-control"><i
+                                            class="fas fa-search-plus">Buscar</i>
+                                    </button>
+                                </div>
+                            </div>
+                            <br>
+                            {% if m != 1 %}
+                                <td><a class="btn btn-primary"
+                                       href="/ResumenIndustria/{{ industria }}/2018/12">
+                                    <i
+                                            class="fa fa-clone"></i>PORTAL INDUSTRIA</a></td>
+
+
+                                <br>
+
+                                </div>
+                            {% endif %}
+                        <br>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <div class="notification is-danger">
+                                    <i class="fas fa-award"></i>{{ messages[0] }}..
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        <br>
+                    </div>
+                </div>
+        </div>
+        </form>
+    </div>
+    </div>
+    </body>
+
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'UA-153417509-1');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-153417509-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'UA-153417509-1', {'optimize_id': 'GTM-KNQLW6R'});
+    </script>
+    </html>
+{% endblock %}

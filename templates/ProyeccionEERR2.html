@@ -200,7 +200,7 @@
                 <br>
                 <br>
 
-                <h3>VALORIZACIÓN BALANCE</h3>
+                <h3>PROYECCIÓN BALANCE</h3>
                 <td><a class="btn btn-outline-info"
                        href="/ProyeccionBalance/{{ cod_entidad }}/2018/12">
                     <i
@@ -239,23 +239,24 @@
                                 {% set primero = loop.first %}
                                 <tr>
                                     <td><a data-toggle="modal" data-target="#exampleModalCenter">{{ d[0] }}</a></td>
+
                                     {% for c in range(d | length -1) %}
-                                        {% if d[c+1] %}
+                                        {% if d[c+1] or d[c+1] == 0 %}
                                             <td>
                                                 {% if c == 4 %}
-                                                    <input id="{{ d[0] }}" style="width: 200px;" type="text"
+                                                    <input id="{{ d[0] }}" style="width: 100%;" type="text"
                                                            class="form-control porcentaje_estado_resultado"
                                                            value="{{ "{:,.3f}".format (d[c+1]) }}">
-
                                                 {% elif c == 5 and primero %}
-                                                    <input id="{{ d[0] }}" style="width: 200px;" type="text"
+                                                    <input id="{{ d[0] }}" style="width: 100%;" type="text"
                                                            class="form-control porcentaje_estado_resultado"
                                                            value="{{ "{:,.0f}".format (d[c+1]) }}">
+                                                {% elif c == 6 %}
+                                                            {{ "{:,.3f}".format (d[c+1]) }}
 
                                                 {% else %}
 
                                                     {{ "{:,.0f}".format (d[c+1]) }}
-
                                                 {% endif %}
                                             </td>
 
@@ -281,7 +282,7 @@
                 <div class="row" align="center">
                     <div class="col-md-2" align="center">
                         <div class="demo-section k-content">
-                            <label style="color:red;"><i class="fa fa-calendar"></i>Valorizar a Tres años
+                            <label style="color:red;"><i class="fa fa-calendar"></i>Promedio Utimos Tres años
                         </label>
                             <input align="center" class="btn-outline-success form-control" type="submit" value="Proyectar"
                                    name="Proyectar"/>
@@ -290,7 +291,7 @@
                     </div>
                     <div class="col-md-2">
                         <div class="demo-section k-content" align="center">
-                            <label style="color:red;"><i class="fa fa-calendar"></i>Valorizar a Cinco años
+                            <label style="color:red;"><i class="fa fa-calendar"></i>Promedio Ultimos Cinco años
                         </label>
                             <input align="center" class="btn-outline-default form-control" type="submit" value="ProyectarCinco"
                                    name="ProyectarCinco"/>
@@ -396,44 +397,6 @@
     gtag('config', 'UA-153417509-1', {'optimize_id': 'GTM-KNQLW6R'});
 
 </script>
-{#<script>#}
-{# $(document).ready(function(){#}
-{#        /**#}
-{#         * Funcion para añadir una nueva columna en la tabla#}
-{#         */#}
-{#        $("#add").click(function(){#}
-{#            // Obtenemos el numero de filas (td) que tiene la primera columna#}
-{#            // (tr) del id "tabla"#}
-{#            var tds=$("#tabla_familia tr:first td").length;#}
-{#            // Obtenemos el total de columnas (tr) del id "tabla"#}
-{#            var trs=$("#tabla_familia tr").length;#}
-{#            var nuevaFila="<tr>";#}
-{#            for(var i=0;i<tds;i++){#}
-{#                // añadimos las columnas#}
-{#                nuevaFila+="<td>columna "+(i+1)+" Añadida con jquery</td>";#}
-{#            }#}
-{#            // Añadimos una columna con el numero total de filas.#}
-{#            // Añadimos uno al total, ya que cuando cargamos los valores para la#}
-{#            // columna, todavia no esta añadida#}
-{#            nuevaFila+="<td>"+(trs+1)+" filas";#}
-{#            nuevaFila+="</tr>";#}
-{#            $("#tabla_familia").append(nuevaFila);#}
-{#        });#}
-{#        /**#}
-{#         * Funcion para eliminar la ultima columna de la tabla.#}
-{#         * Si unicamente queda una columna, esta no sera eliminada#}
-{#         */#}
-{#        $("#del").click(function(){#}
-{#            // Obtenemos el total de columnas (tr) del id "tabla"#}
-{#            var trs=$("#tabla_familia tr").length;#}
-{#            if(trs>1)#}
-{#            {#}
-{#                // Eliminamos la ultima columna#}
-{#                $("#tabla tr:last").remove();#}
-{#            }#}
-{#        });#}
-{#    });#}
-{#    </script>#}
 
 </body>
 </html>

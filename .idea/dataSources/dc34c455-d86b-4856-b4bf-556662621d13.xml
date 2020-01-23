@@ -53,7 +53,6 @@
     <index id="17" parent="7" name="sqlite_autoindex_users_1">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>username</ColNames>
-      <ColumnCollations></ColumnCollations>
       <Unique>1</Unique>
     </index>
     <key id="18" parent="7">

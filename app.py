@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF8 -*-
+import decimal
 import hashlib
 import operator
 import sys
@@ -350,9 +351,12 @@ def formulario():
         test2 = cursor.fetchall()
         if test2 == []:
             cursor.execute(
-                """insert into entidad (cod_entidad,desc_entidad,cod_tipo_entidad,rut_representante,nombre_representante,cod_actividad_nivel1,cod_actividad_nivel2,cod_actividad_nivel3,cod_actividad_nivel4,cmf,direccion,comuna_id,celular) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);""" ,(
-                    rut_empresa, nombre_empresa, tipo_empresa, rut_representante, nombre_representante, nivel1 if nivel1 else None,
-                    nivel2 if nivel2 else None,nivel3 if nivel3 else None,nivel4 if nivel4 else None, CMF,direccion,comuna,celular))
+                """insert into entidad (cod_entidad,desc_entidad,cod_tipo_entidad,rut_representante,nombre_representante,cod_actividad_nivel1,cod_actividad_nivel2,cod_actividad_nivel3,cod_actividad_nivel4,cmf,direccion,comuna_id,celular) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);""",
+                (
+                    rut_empresa, nombre_empresa, tipo_empresa, rut_representante, nombre_representante,
+                    nivel1 if nivel1 else None,
+                    nivel2 if nivel2 else None, nivel3 if nivel3 else None, nivel4 if nivel4 else None, CMF, direccion,
+                    comuna, celular))
             for b in eval(banco):
                 cursor.execute(
                     """insert into entidad_banco(desc_entidad_banco,cod_banco,cod_entidad) values ((select desc_banco from banco where cod_banco='%s'),'%s','%s')""" % (
@@ -363,13 +367,15 @@ def formulario():
             return redirect('/docEmpresa')
         if test2 != []:
             cursor.execute(
-                """update entidad set desc_entidad=%s ,cod_tipo_entidad =%s, rut_representante = %s, nombre_representante=%s, cod_actividad_nivel1=%s,cod_actividad_nivel2=%s,cod_actividad_nivel3=%s,cod_actividad_nivel4=%s,cmf=%s,direccion=%s,comuna_id=%s,celular=%s where cod_entidad=%s""" , (
+                """update entidad set desc_entidad=%s ,cod_tipo_entidad =%s, rut_representante = %s, nombre_representante=%s, cod_actividad_nivel1=%s,cod_actividad_nivel2=%s,cod_actividad_nivel3=%s,cod_actividad_nivel4=%s,cmf=%s,direccion=%s,comuna_id=%s,celular=%s where cod_entidad=%s""",
+                (
                     nombre_empresa, tipo_empresa, rut_representante, nombre_representante, nivel1 if nivel1 else None,
-                    nivel2 if nivel2 else None,nivel3 if nivel3 else None,nivel4 if nivel4 else None, CMF,direccion,comuna,celular,rut_empresa))
+                    nivel2 if nivel2 else None, nivel3 if nivel3 else None, nivel4 if nivel4 else None, CMF, direccion,
+                    comuna, celular, rut_empresa))
             for b in eval(banco):
                 cursor.execute(
-                """update entidad_banco set desc_entidad_banco=(select desc_banco from banco where cod_banco='%s'), cod_banco='%s', cod_entidad='%s'""" % (
-                    b, b, rut_empresa))
+                    """update entidad_banco set desc_entidad_banco=(select desc_banco from banco where cod_banco='%s'), cod_banco='%s', cod_entidad='%s'""" % (
+                        b, b, rut_empresa))
             cnx.commit()
             success_message = 'Empresa Actualizada correctamente'
             flash(success_message)
@@ -425,26 +431,29 @@ def formulariocmf():
         test2 = cursor.fetchall()
         if test2 == []:
             cursor.execute(
-                """insert into entidad (cod_entidad,desc_entidad,cod_tipo_entidad,cod_actividad_nivel1,cod_actividad_nivel2,cod_actividad_nivel3,cod_actividad_nivel4,cmf,comuna_id) values (%s,%s,%s,%s,%s,%s,%s,%s,%s);""" ,(
-                    rut_empresa, nombre_empresa, tipo_empresa,nivel1 if nivel1 else None,
-                    nivel2 if nivel2 else None,nivel3 if nivel3 else None,nivel4 if nivel4 else None, CMF,comuna))
-            for b in eval(banco):
-                cursor.execute(
-                    """insert into entidad_banco(desc_entidad_banco,cod_banco,cod_entidad) values ((select desc_banco from banco where cod_banco='%s'),'%s','%s')""" % (
-                        b, b, rut_empresa))
+                """insert into entidad (cod_entidad,desc_entidad,cod_tipo_entidad,cod_actividad_nivel1,cod_actividad_nivel2,cod_actividad_nivel3,cod_actividad_nivel4,cmf,comuna_id) values (%s,%s,%s,%s,%s,%s,%s,%s,%s);""",
+                (
+                    rut_empresa, nombre_empresa, tipo_empresa, nivel1 if nivel1 else None,
+                    nivel2 if nivel2 else None, nivel3 if nivel3 else None, nivel4 if nivel4 else None, CMF, comuna))
+            # for b in eval(banco):
+            #     cursor.execute(
+            #         """insert into entidad_banco(desc_entidad_banco,cod_banco,cod_entidad) values ((select desc_banco from banco where cod_banco='%s'),'%s','%s')""" % (
+            #             b, b, rut_empresa))
             cnx.commit()
             success_message = 'Empresa Creada correctamente'
             flash(success_message)
             return redirect('/docEmpresa')
         if test2 != []:
             cursor.execute(
-                """update entidad set desc_entidad=%s ,cod_tipo_entidad =%s, cod_actividad_nivel1=%s,cod_actividad_nivel2=%s,cod_actividad_nivel3=%s,cod_actividad_nivel4=%s,cmf=%s,comuna_id=%s where cod_entidad=%s""" , (
+                """update entidad set desc_entidad=%s ,cod_tipo_entidad =%s, cod_actividad_nivel1=%s,cod_actividad_nivel2=%s,cod_actividad_nivel3=%s,cod_actividad_nivel4=%s,cmf=%s,comuna_id=%s where cod_entidad=%s""",
+                (
                     nombre_empresa, tipo_empresa, nivel1 if nivel1 else None,
-                    nivel2 if nivel2 else None,nivel3 if nivel3 else None,nivel4 if nivel4 else None, CMF,comuna,rut_empresa))
-            for b in eval(banco):
-                cursor.execute(
-                """update entidad_banco set desc_entidad_banco=(select desc_banco from banco where cod_banco='%s'), cod_banco='%s', cod_entidad='%s'""" % (
-                    b, b, rut_empresa))
+                    nivel2 if nivel2 else None, nivel3 if nivel3 else None, nivel4 if nivel4 else None, CMF, comuna,
+                    rut_empresa))
+            # for b in eval(banco):
+            #     cursor.execute(
+            #         """update entidad_banco set desc_entidad_banco=(select desc_banco from banco where cod_banco='%s'), cod_banco='%s', cod_entidad='%s'""" % (
+            #             b, b, rut_empresa))
             cnx.commit()
             success_message = 'Empresa Actualizada correctamente'
             flash(success_message)
@@ -476,7 +485,8 @@ def formularioEmpresaCMF():
         provincia = cursor.fetchall()
         cursor.execute("select * from comuna")
         comuna = cursor.fetchall()
-        return render_template("/formularioEmpresaCMF.html",region=region,comuna=comuna,provincia=provincia,cl=cl, lvl1=lvl1, lvl2=lvl2, lvl3=lvl3, lvl4=lvl4,
+        return render_template("/formularioEmpresaCMF.html", region=region, comuna=comuna, provincia=provincia, cl=cl,
+                               lvl1=lvl1, lvl2=lvl2, lvl3=lvl3, lvl4=lvl4,
                                banco=banco)
     return redirect("login")
 
@@ -503,7 +513,8 @@ def formularioEmpresa():
         provincia = cursor.fetchall()
         cursor.execute("select * from comuna")
         comuna = cursor.fetchall()
-        return render_template("/formularioEmpresa.html",region=region,comuna=comuna,provincia=provincia,cl=cl, lvl1=lvl1, lvl2=lvl2, lvl3=lvl3, lvl4=lvl4,
+        return render_template("/formularioEmpresa.html", region=region, comuna=comuna, provincia=provincia, cl=cl,
+                               lvl1=lvl1, lvl2=lvl2, lvl3=lvl3, lvl4=lvl4,
                                banco=banco)
     return redirect("login")
 
@@ -632,6 +643,665 @@ def docEmpresa():
     return redirect("login")
 
 
+@app.route('/industria', methods=["GET", "POST"])
+def industria():
+    if session["username"] != 'unknown':
+        m = 1
+        cursor = cnx.cursor()
+        # cursor.execute("""select distinct * from entidad ORDER BY desc_entidad ASC""")
+        cursor.execute("""SELECT distinct 
+public.industria.desc_industria,
+public.entidad.cod_industria
+FROM
+public.entidad
+INNER JOIN public.industria ON public.entidad.cod_industria = public.industria.cod_industria""")
+        enti = cursor.fetchall()
+        if request.method == "POST":
+            m = 0
+            cursor = cnx.cursor()
+            import urllib.request
+            import urllib
+            industria = request.form["industria"]
+            cursor.execute("""select * from entidad where cod_industria ='%s'"""%(industria))
+            ind = cursor.fetchall()
+            if enti:
+                success_message = 'Industria Encontrada'
+                flash(success_message)
+                return render_template("/industria.html", m=m,industria=industria,ind=ind)
+            else:
+                success_message = 'Empresa no existe'
+                flash(success_message)
+                return redirect(url_for('industria'))
+        return render_template("/industria.html", m=m, enti=enti)
+    return redirect("login")
+
+
+@app.route('/ResumenIndustria/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ResumenIndustria(cod_entidad, anio, mes):
+    if session.get("username"):
+        cursor = cnx.cursor()
+        parametros = {'cod_entidad': cod_entidad}
+        cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_industria =%(cod_entidad)s""",
+                       parametros)
+        rest = cursor.fetchall()
+        cursor.execute("""select * from industria where cod_industria = '%s'"""%(cod_entidad))
+        retail = cursor.fetchone()
+        if not rest:
+            abort(404)
+        cursor.execute("""SELECT
+                    public.entidad.cod_entidad,
+                    public.entidad.desc_entidad,
+                    public.documento.desc_documento,
+                    public.documento.anio,
+                    public.documento.mes,
+                    public.documento.cod_documento,
+                    public.documento.hash,
+                    public.entidad.cod_industria
+                    FROM
+                    public.documento
+                    INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad
+                    WHERE entidad.cod_industria = '%s'""" % (cod_entidad))
+        entidadC = cursor.fetchall()
+
+        # BALANCE
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='608' ORDER BY cod_entidad""" % (cod_entidad))
+        corriente = cursor.fetchall()
+        if corriente:
+            corriente = corriente
+        else:
+            corriente = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='825' ORDER BY cod_entidad""" % (cod_entidad))
+        Nocorriente = cursor.fetchall()
+        if Nocorriente:
+            Nocorriente = Nocorriente
+        else:
+            Nocorriente = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='808' ORDER BY cod_entidad""" % (
+                cod_entidad))
+        Total = cursor.fetchall()
+        if Total:
+            Total = Total
+        else:
+            Total = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='668' ORDER BY cod_entidad""" % (cod_entidad))
+        corrientepasivo = cursor.fetchall()
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='809' ORDER BY cod_entidad""" % (cod_entidad))
+        nocorrientepasivo = cursor.fetchall()
+        if nocorrientepasivo:
+            nocorrientepasivo = nocorrientepasivo
+        else:
+            nocorrientepasivo = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='681' ORDER BY cod_entidad""" % (cod_entidad))
+        patrimonio = cursor.fetchall()
+        if patrimonio:
+            patrimonio = patrimonio
+        else:
+            patrimonio = "n/a"
+        cursor.execute(
+            """select * from resumen_PortadaBalanceindustrias where cod_industria = '%s' and cod_cuenta='754' ORDER BY cod_entidad""" % (
+                cod_entidad))
+        totalpasivo = cursor.fetchall()
+        if totalpasivo:
+            totalpasivo = totalpasivo
+        else:
+            totalpasivo = "n/a"
+        # cursor.execute(
+        #     """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='582'""" % (
+        #         cod_entidad))
+        # rest = cursor.fetchone()
+        # if rest:
+        #     D1 = rest[9]
+        # else:
+        #     D1 = 1
+        # cursor.execute(
+        #     """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='791' """ % (
+        #         cod_entidad))
+        # rest = cursor.fetchone()
+        # if rest:
+        #     D2 = rest[9]
+        # else:
+        #     D2 = 1
+        # if D1 == 1 or D2 == 1:
+        #     Deudor = "n/a"
+        # else:
+        #     Deudor = (D1 + D2)
+        # cursor.execute(
+        #     """select * from resumen_PortadaEstructuraFinanciamiento where cod_entidad = '%s' and cod_cuenta='681'""" % (
+        #         cod_entidad))
+        # rest = cursor.fetchone()
+        # if rest:
+        #     Capital = rest[9]
+        # else:
+        #     Capital = "n/a"
+        # if Capital == "n/a" or Deudor == "n/a":
+        #     porcientodeuda = "n/a"
+        #     porcientoCapital = "n/a"
+        #     testructura = "n/a"
+        # else:
+        #     testructura = (Deudor + Capital)
+        #     porcientodeuda = (Deudor / testructura) * 100
+        #     porcientoCapital = (Capital / testructura) * 100
+        # RATIOS
+        data3, columnas3 = get_portadaratiosddindustria(cod_entidad, anio, mes)
+        # EERR
+        data4, columnas4 = get_portadaeresultadoindustria(cod_entidad, anio, mes)
+        return render_template("/ResumenIndustria.html",
+                               corriente=corriente, Nocorriente=Nocorriente, Total=Total,
+                               corrientepasivo=corrientepasivo, nocorrientepasivo=nocorrientepasivo,
+                               totalpasivo=totalpasivo, data3=data3,
+                               columnas3=columnas3, data4=list(data4), columnas4=columnas4, entidadC=entidadC,
+                               patrimonio=patrimonio,retail=retail)
+    return redirect("/login")
+
+def get_balanceindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Efectivo y equivalentes al efectivo'] = "(float(a.get(739,1)))  if  (a.get(739,0))  else 0"
+    RATIOS[
+        'Otros activos financieros corrientes'] = "(float(a.get(607,1)))  if  a.get(607,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros corrientes'] = "(float(a.get(835,1)))  if  a.get(835,0)  else 0"
+    RATIOS[
+        'Deudores comerciales y otras cuentas por cobrar corrientes'] = "(float(a.get(775,1)))  if  a.get(775,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, corrientes'] = "(float(a.get(787,1)))  if  a.get(787,0)  else 0"
+    RATIOS[
+        'Inventarios corrientes'] = "(float(a.get(695,1)))  if  a.get(695,0)  else 0"
+    RATIOS[
+        'Activos biológicos corrientes'] = "(float(a.get(1290,1)))  if  a.get(1290,0)  else 0"
+    RATIOS[
+        'Activos por impuestos corrientes, corrientes'] = "(float(a.get(481,1)))  if  a.get(481,0)  else 0"
+    RATIOS[
+        'Total de activos corrientes distintos de los activo o grupos de activos'] = "(float(a.get(797,1)))  if  a.get(797,0)  else 0"
+    RATIOS[
+        'Activos no corrientes o grupos de activos para su disposición clasificados'] = "(float(a.get(1291,1)))  if  a.get(1291,0)  else 0"
+    RATIOS[
+        'Activos corrientes totales'] = "(float(a.get(608,1)))  if  a.get(608,0)  else 0"
+    RATIOS[
+        'Otros activos financieros no corrientes'] = "(float(a.get(520,1)))  if  a.get(520,0)  else 0"
+    RATIOS[
+        'Otros activos no financieros no corrientes'] = "(float(a.get(462,1)))  if  a.get(462,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar no corrientes'] = "(float(a.get(753,1)))  if  a.get(753,0)  else 0"
+    RATIOS[
+        'Cuentas por cobrar a entidades relacionadas, no corrientes'] = "(float(a.get(680,1)))  if  a.get(680,0)  else 0"
+    RATIOS[
+        'Inversiones contabilizadas utilizando el método de la participación'] = "(float(a.get(713,1)))  if  a.get(713,0)  else 0"
+    RATIOS[
+        'Activos intangibles distintos de la plusvalía'] = "(float(a.get(748,1)))  if  a.get(748,0)  else 0"
+    RATIOS[
+        'Plusvalía'] = "(float(a.get(866,1)))  if  a.get(866,0)  else 0"
+    RATIOS[
+        'Propiedades, planta y equipo'] = "(float(a.get(456,1)))  if  a.get(456,0)  else 0"
+    RATIOS[
+        'Activos biológicos no corrientes'] = "(float(a.get(1294,1)))  if  a.get(1294,0)  else 0"
+    RATIOS[
+        'Propiedad de inversión'] = "(float(a.get(581,1)))  if  a.get(581,0)  else 0"
+    RATIOS[
+        'Activos por impuestos diferidos'] = "(float(a.get(622,1)))  if  a.get(622,0)  else 0"
+    RATIOS[
+        'Total de activos no corrientes'] = "(float(a.get(825,1)))  if  a.get(825,0)  else 0"
+    RATIOS[
+        'Total de activos'] = "(float(a.get(808,1)))  if  a.get(808,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros corrientes'] = "(float(a.get(582,1)))  if  a.get(582,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar comerciales y otras cuentas por pagar'] = "(float(a.get(783,1)))  if  a.get(783,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, corrientes'] = "(float(a.get(461,1)))  if  a.get(461,0)  else 0"
+    RATIOS[
+        'Otras provisiones a corto plazo'] = "(float(a.get(659,1)))  if  a.get(659,0)  else 0"
+    RATIOS[
+        'Pasivos por impuestos corrientes, corrientes'] = "(float(a.get(477,1)))  if  a.get(477,0)  else 0"
+    RATIOS[
+        'Provisiones corrientes por beneficios a los empleados'] = "(float(a.get(756,1)))  if  a.get(756,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros corrientes'] = "(float(a.get(621,1)))  if  a.get(621,0)  else 0"
+    RATIOS[
+        'Total de pasivos corrientes distintos de los pasivos incluidos'] = "(float(a.get(745,1)))  if  a.get(745,0)  else 0"
+    RATIOS[
+        'Pasivos corrientes totales'] = "(float(a.get(668,1)))  if  a.get(688,0)  else 0"
+    RATIOS[
+        'Otros pasivos financieros no corrientes'] = "(float(a.get(791,1)))  if  a.get(791,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar no corrientes'] = "(float(a.get(822,1)))  if  a.get(822,0)  else 0"
+    RATIOS[
+        'Cuentas por pagar a entidades relacionadas, no corrientes'] = "(float(a.get(486,1)))  if  a.get(486,0)  else 0"
+    RATIOS[
+        'Otras provisiones a largo plazo'] = "(float(a.get(524,1)))  if  a.get(524,0)  else 0"
+    RATIOS[
+        'Pasivo por impuestos diferidos'] = "(float(a.get(640,1)))  if  a.get(640,0)  else 0"
+    RATIOS[
+        'Provisiones no corrientes por beneficios a los empleados'] = "(float(a.get(629,1)))  if  a.get(629,0)  else 0"
+    RATIOS[
+        'Otros pasivos no financieros no corrientes'] = "(float(a.get(633,1)))  if  a.get(633,0)  else 0"
+    RATIOS[
+        'Total de pasivos no corrientes'] = "(float(a.get(809,1)))  if  a.get(809,0)  else 0"
+    RATIOS[
+        'Total de pasivos'] = "(float(a.get(519,1)))  if  a.get(519,0)  else 0"
+    RATIOS[
+        'Capital emitido'] = "(float(a.get(859,1)))  if  a.get(859,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) acumuladas'] = "(float(a.get(670,1)))  if  a.get(670,0)  else 0"
+    RATIOS[
+        'Prima de emisión'] = "(float(a.get(939,1)))  if  a.get(939,0)  else 0"
+    RATIOS[
+        'Acciones propias en cartera'] = "(float(a.get(1303,1)))  if  a.get(1303,0)  else 0"
+    RATIOS[
+        'Otras participaciones en el patrimonio'] = "(float(a.get(1304,1)))  if  a.get(1304,0)  else 0"
+    RATIOS[
+        'Otras reservas'] = "(float(a.get(789,1)))  if  a.get(789,0)  else 0"
+    RATIOS[
+        'Patrimonio atribuible a los propietarios de la controladora'] = "(float(a.get(879,1)))  if  a.get(879,0)  else 0"
+    RATIOS[
+        'Participaciones no controladoras'] = "(float(a.get(620,1)))  if  a.get(620,0)  else 0"
+    RATIOS[
+        'Patrimonio total'] = "(float(a.get(681,1)))  if  a.get(681,0)  else 0"
+    RATIOS[
+        'Total de patrimonio y pasivos'] = "(float(a.get(754,1)))  if  a.get(754,0)  else 0"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_balanceindustria  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_industria ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_balanceindustria  where cod_industria = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["BALANCE"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][2])
+            a = dict()
+            for r in resumen:
+                a[r[5]] = r[10]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+        b = a
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/balanceindustria/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def balanceindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_industria =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_balanceindustria(cod_entidad, anio, mes)
+        return render_template("/balanceindustria.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_balanceindustria(cod_entidad, anio, mes)
+    return render_template("/balanceindustria.html", entidad=entidad, data=list(data),
+                           columnas=columnas, cod_entidad=cod_entidad)
+
+
+# funcion extraccion ratios
+def get_analisis_relativoindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades'] = "(float(a.get(540,0)) / float(a.get(540,0))*100) if (a.get(540,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)) / float(a.get(540,1))*100) if (a.get(727,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,0)) / float(a.get(540,0))*100) if (a.get(682,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,0)) / float(a.get(540,0))*100) if (a.get(1324,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Gastos Administracion'] = "(float(a.get(618,0)) / float(a.get(540,0))*100) if (a.get(618,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otros Gastos'] = "(float(a.get(815,0)) / float(a.get(540,0))*100) if (a.get(815,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Otras Ganancias'] = "(float(a.get(1325,0)) / float(a.get(540,0))*100) if (a.get(1325,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias'] = "(float(a.get(817,0)) / float(a.get(540,0))*100) if (a.get(817,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Que Surgen'] = "(float(a.get(1326,0)) / float(a.get(540,0))*100) if (a.get(1326,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ingresos Financieros'] = "(float(a.get(558,0)) / float(a.get(540,0))*100) if (a.get(558,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Costos Financieros'] = "(float(a.get(764,0)) / float(a.get(540,0))*100) if (a.get(764,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Deterioro de Valor'] = "(float(a.get(9744,0)) / float(a.get(540,0))*100) if (a.get(9744,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Diferencias de Cambio'] = "(float(a.get(849,0)) / float(a.get(540,0))*100) if (a.get(849,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Resultados por Unidades'] = "(float(a.get(516,0)) / float(a.get(540,0))*100) if (a.get(516,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias de Cobertura'] = "(float(a.get(10377,0)) / float(a.get(540,0))*100) if (a.get(10377,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Antes del Impuesto'] = "(float(a.get(788,0)) / float(a.get(540,0))*100) if (a.get(788,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Gastos por Impuestos a las Ganancias'] = "(float(a.get(476,0)) / float(a.get(540,0))*100) if (a.get(476,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Procedentes Continuada'] = "(float(a.get(774,0)) / float(a.get(540,0))*100) if (a.get(774,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancias Porcentes Discontinuas'] = "(float(a.get(1328,0)) / float(a.get(540,0))*100) if (a.get(1328,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Ganancia (Perdida)'] = "(float(a.get(479,0)) / float(a.get(540,0))*100) if (a.get(479,0) and a.get(540,0)) else 0"
+
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from analisis_relativoindustria  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_industria ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from analisis_relativoindustria  where cod_industria = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][2])
+            a = dict()
+            for r in resumen:
+                a[r[5]] = r[10]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    return RESULTADO.values(), COLUMNAS
+
+
+# pagina estados de resutlados
+@app.route('/analisisrelativoindustria/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def analisisrelativoindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_industria =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_analisis_relativoindustria(cod_entidad, anio, mes)
+        return render_template("/analisisrelativoindustria.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_analisis_relativoindustria(cod_entidad, anio, mes)
+    return render_template("/analisisrelativoindustria.html", entidad=entidad, data=list(data), columnas=columnas,
+                           cod_entidad=cod_entidad)
+
+# pagina estados de resutlados
+@app.route('/eresultadoindustria/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def eresultadoindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_industria =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        data1, columnas1 = get_eresultado(cod_entidad, anio, mes)
+        return render_template("/eresultadoindustria.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad)
+    data, columnas = get_eresultadoindustria(cod_entidad, anio, mes)
+    return render_template("/eresultadoindustria.html", entidad=entidad, data=list(data), columnas=columnas,
+                           cod_entidad=cod_entidad)
+
+
+def get_eresultadoindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)))  if  (a.get(540,0))  else 0"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Ganancias Bruta'] = "(float(a.get(805,1)))  if  a.get(805,0)  else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,1)))  if  a.get(682,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Otros gastos, por función'] = "(float(a.get(1325,1)))  if  a.get(1325,0)  else 0"
+    RATIOS[
+        'Otras ganancias (pérdidas)'] = "(float(a.get(815,1)))  if  a.get(815,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) de actividades operacionales'] = "(float(a.get(817,1)))  if  a.get(817,0)  else 0"
+    RATIOS[
+        'Ingresos financieros'] = "(float(a.get(558,1)))  if  a.get(558,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Participación en las ganancias (pérdidas) de asociadas y negocios'] = "(float(a.get(824,1)))  if  a.get(824,0)  else 0"
+    RATIOS[
+        'Diferencias de cambio'] = "(float(a.get(849,1)))  if  a.get(849,0)  else 0"
+    RATIOS[
+        'Resultados por unidades de reajuste'] = "(float(a.get(516,1)))  if  a.get(516,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) que surgen de diferencias entre importes en libros'] = "(float(a.get(1327,1)))  if  a.get(1327,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), antes de impuestos'] = "(float(a.get(788,1)))  if  a.get(788,0)  else 0"
+    RATIOS[
+        'Gasto por impuestos a las ganancias'] = "(float(a.get(476,1)))  if  a.get(476,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida) procedente de operaciones continuadas'] = "(float(a.get(774,1)))  if  a.get(774,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a los propietarios de la controladora'] = "(float(a.get(704,1)))  if  a.get(704,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), atribuible a participaciones no controladoras'] = "(float(a.get(868,1)))  if  a.get(868,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_eerrindustria  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_industria ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_eerrindustria  where cod_industria = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][2])
+            a = dict()
+            for r in resumen:
+                a[r[5]] = r[10]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    return RESULTADO.values(), COLUMNAS
+
+
+@app.route('/industriaratiosdd/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def industriaratiosdd(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_industria =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchall()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    empresa = request.args.get("empresa")
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        if empresa != None:
+            cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
+            en = cursor.fetchone()[1]
+            data1, columnas1 = get_ratiosindustria(cod_entidad, anio, mes)
+            return render_template("/industriaratiosdd.html", entidad=entidad, data=list(data1),
+                                   columnas1=columnas1,
+                                   data1=list(data1), en=en, empresa=empresa, cod_entidad=cod_entidad)
+        data1, columnas1 = get_ratiosindustria(cod_entidad, anio, mes)
+        return render_template("/industriaratiosdd.html", entidad=entidad, data=list(data1),
+                               columnas=columnas1,
+                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad, empresa=empresa)
+    data, columnas = get_ratiosindustria(cod_entidad, anio, mes)
+    return render_template("/industriaratiosdd.html", entidad=entidad, data=list(data), columnas=columnas, empresa=empresa,
+                           cod_entidad=cod_entidad,rest=rest)
+
+
+# funcion extraccion ratios
+def get_ratiosindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS['Liquidez'] = "(float(a.get(608,1)) / float(a.get(668,1))) if (a.get(608,0) and a.get(668,0)) else 0"
+    RATIOS[
+        'Prueba Acida'] = "(float(a.get(608,0)) - float(a.get(695,0))) / float(a.get(668,0)) if (a.get(608,0) and a.get(668,0) and a.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Cobro'] = "float(a.get(775) or 0) / (float(a.get(540) or 0) * float(1.19))* 365 if (a.get(775,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Dias De Pago'] = "((float(a.get(783) or 0)) / (float(a.get(727) or 0) + float(a.get(695) or 0) - float(b.get(695) or 0)))*365 if (a.get(783,0) and a.get(727,0)and b.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Existencia'] = "((float(a.get(695) or 0) / float(a.get(727) or 0)) * float(365)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'ROI'] = "(float(a.get(479) or 0) / float(a.get(808) or 0)*100) if (a.get(479,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'ROE'] = "(float(a.get(479) or 0) / float(a.get(681) or 0)*100) if (a.get(479,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Leverage'] = "(float(a.get(519) or 0) / float(a.get(681) or 0)) if (a.get(519,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Corriente'] = "(float(a.get(668) or 0) / float(a.get(519) or 0)*100) if (a.get(668,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'No Corriente'] = "(float(a[809] or 0) / float(a[519] or 0)*100) if (a.get(809,0) and a.get(519,0)) else 0"
+    RATIOS[
+        'Margen Neto'] = "(float(a.get(479) or 0) / float(a.get(540) or 0)*100) if (a.get(479,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Rotacion Activos'] = "(float(a.get(540) or 0) / float(a.get(808) or 0)) if (a.get(540,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'Apalancamiento'] = "(float(a.get(808) or 0) / float(a.get(681) or 0)) if (a.get(808,0) and a.get(681,0)) else 0"
+    RATIOS[
+        'Dupont'] = "(((float(a.get(479) or 0) / float(a.get(540) or 0)) * (float(a.get(540) or 0) / float(a.get(808) or 0))) * (float(a.get(808) or 0) / float(a.get(681) or 0))*100)  if (a.get(479,0) and a.get(540,0)and a.get(808,0)and a.get(681,0)) else 0"
+    RATIOS[
+        'BPA'] = "(float(a.get(479) or 0) / float(a.get(685) or 0)) if (a.get(479,0) and a.get(685,0)) else 0"
+    RATIOS[
+        'Dias de Caja'] = "((float(a.get(739) or 0) / (float(a.get(540) or 1) - float(a.get(479)))) * 365) if (a.get(739,0) and a.get(540,0) and a.get(479)) else 0"
+    RATIOS[
+        'Ebitda'] = "(float(a.get(479) or 0) + float(a.get(764)or 0) + float(a.get(476)or 0) + float(a.get(864)or 0)) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(864)) else 0"
+    RATIOS[
+        'Cobertura Interes'] = "((float(a.get(479) or 0) + float(a.get(764)) + float(a.get(476)) + float(a.get(832)) + float(a.get(865)))) / float(a.get(764) or 0) if (a.get(479,0) and a.get(764,0) and a.get(476) and a.get(832) and a.get(865)) else 0"
+    RATIOS[
+        'Rotacion De Inventarios'] = "(float(a.get(695) or 0) / float(a.get(727) or 0)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'Tasa Interes Promedio'] = "float(a.get(764) or 0) / (((float(a.get(582) or 0) + float(a.get(791) or 0) + float(b.get(582) or 0)+ float(b.get(791) or 0)))/2) if (a.get(764,0) and a.get(582,0)and a.get(791,0)  and b.get(582,0)and b.get(791,0)) else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_ratiosindustria  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    cod_entidad,desc_entidad from entidad where cod_industria ='%s' order by cod_entidad""" % (
+            cod_entidad))
+    entidad = cursor.fetchall()
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_ratiosindustria  where cod_industria = '%s' and anio in ('%s') and mes in ('%s') order by cod_entidad"""
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+
+            COLUMNAS.insert(1, resumen[0][2])
+            b = dict()
+            a = dict()
+            ant = []
+            rest = dict()
+            RESULTADO = {}
+            for e in entidad:
+                if ant:
+                    if ant[0] != e[0] and ant != None:
+                        a = dict()
+                        rest[ant[0]] = RESULTADO
+                        RESULTADO = {}
+                for r in resumen:
+                    a[r[5]] = r[10]
+                for r in RATIOS:
+                    raux = RESULTADO.get(r, [r])
+                    raux.insert(1, eval(RATIOS[r]))
+                    RESULTADO[r] = raux
+                ant = e
+                b=a
+            rest[ant[0]] = RESULTADO
+    return rest, COLUMNAS
+
+
 @app.route('/roles', methods=["GET", "POST"])
 def roles():
     if session["username"] != 'unknown':
@@ -685,75 +1355,6 @@ def reportes(cod_documento, cod_role):
         return render_template("/reportes.html", data=data, desc_role=desc_role, entidad=entidad, cuenta=cuenta,
                                dineros=dineros, fechas=fechas)
     return redirect("login")
-
-
-# @app.route('/documentos', methods=["GET", "POST"])
-# def documentos():
-#     if session["username"] != 'unknown':
-#         cur = cnx.cursor()
-#         cur.execute("""SELECT
-#         public.entidad.cod_entidad,
-#         public.entidad.desc_entidad,
-#         public.documento.desc_documento,
-#         public.documento.anio,
-#         public.documento.mes,
-#         public.documento.cod_documento,
-#         public.documento.hash
-#         FROM
-#         public.documento
-#         INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad""")
-#         data = cur.fetchall()
-#         return render_template("/documentos.html", dato=data)
-#     return redirect("login")
-
-#
-# @app.route('/documentosAjax', methods=["GET", "POST"])
-# def ajax():
-#     import psycopg2.extras
-#     if session["username"] != 'unknown':
-#         cur = cnx.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-#         cur.execute("""SELECT
-#         public.entidad.cod_entidad,
-#         public.entidad.desc_entidad,
-#         public.documento.desc_documento,
-#          coalesce (public.documento.anio,0) anio,
-#         coalesce (public.documento.mes,0) mes,
-#         public.documento.cod_documento,
-#         coalesce (public.documento.hash,'') hash
-#         FROM
-#         public.documento
-#         INNER JOIN public.entidad ON public.documento.cod_entidad = public.entidad.cod_entidad""")
-#         data = cur.fetchall()
-#         return json.dumps(data)
-#     return redirect("login")
-
-
-# @app.route('/detalle_documento/<cod_documento>', methods=["GET", "POST"])
-# def detalle_documentos(cod_documento):
-#     if session["username"] != 'unknown':
-#         cur1 = cnx.cursor()
-#         cur = cnx.cursor()
-#         cur1.execute("""SELECT
-# public.role.cod_role,
-# public.role.desc_role
-# FROM
-# public.role""")
-#         cur.execute("""SELECT
-# public.detalle_documento.cod_documento,
-# public.cuenta.desc_cuenta
-# FROM
-# public.cuenta
-# INNER JOIN public.detalle_documento ON public.detalle_documento.cod_cuenta = public.cuenta.cod_cuenta
-# WHERE
-# public.detalle_documento.cod_documento ='%s'""" % cod_documento)
-#         data = cur.fetchall()
-#         data1 = cur1.fetchall()
-#         if data == []:
-#             flash("NO ENCONTRADO")
-#             return redirect("/documentos")
-#         else:
-#             return render_template("/detalle_documento.html", dato1=data1, dato=data, cod_documento=cod_documento)
-#     return redirect("login")
 
 
 @app.route('/pdf/<cod_documento>/<cod_role>', methods=["GET", "POST"])
@@ -1586,10 +2187,6 @@ def get_eresultado(cod_entidad, anio, mes):
     return RESULTADO.values(), COLUMNAS
 
 
-
-
-
-
 def get_proyeccionbalance(cod_entidad, anio, mes):
     cursor = cnx.cursor()
     # DEFINICION DE RATIOS
@@ -1737,6 +2334,14 @@ def get_proyeccionbalance(cod_entidad, anio, mes):
                 raux.append((eval(RATIOS[r])))
                 RESULTADO[r] = raux
         b = a
+    user = session['username']
+    # select a la tabla user_eerr.
+    cursor.execute("select id from usuario where usuario='%s'" % (user))
+    id_user = cursor.fetchone()[0]
+    # consultar por id de usuario
+    cursor.execute(
+        "select cuenta,valor from usuario_eerr where cod_entidad='%s' and usuario='%s'" % (cod_entidad, id_user))
+    resultado = cursor.fetchall()
     # GET RATIOS
     dataratios = get_ratiosdd(cod_entidad, anio, mes)[0]
     calculoratio2018 = list(dataratios)[15][1] * 0.8
@@ -1753,9 +2358,10 @@ def get_proyeccionbalance(cod_entidad, anio, mes):
     calculardiasdepago = calculodiasdepago2018 + calculodiasdepago2017
     dataproyeccion = get_proyeccionEERR(cod_entidad, anio, mes)[0]
     # GET BALANCE
-    Ingresos_ordinarias = list(dataproyeccion)[0][6]
+    Ingresos_ordinarias = float(list(dataproyeccion)[0][6])
     ganancia_perdida = list(dataproyeccion)[18][6]
     costos_ventas = list(dataproyeccion)[1][6]
+
     RESULTADO['Efectivo y equivalentes al efectivo'].append(
         (calculodiascaja * (Ingresos_ordinarias - ganancia_perdida) / 365))
     RESULTADO['Otros activos financieros corrientes'].append(
@@ -1911,25 +2517,11 @@ def ProyeccionBalance(cod_entidad, anio, mes):
     if not rest:
         abort(404)
     entidad = rest[1]
-    if request.args.get("mes"):
-        mes = request.args.get("mes")
-        empresa = request.args.get("empresa")
-        data1, columnas1 = get_proyeccionbalance(cod_entidad, anio, mes)
-        return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data1),
-                               columnas=columnas1,
-                               data1=list(data1), columnas1=columnas1, cod_entidad=cod_entidad, empresa=empresa)
     data, columnas = get_proyeccionbalance(cod_entidad, anio, mes)
-    data2, columnas2 = get_proyeccionRatios(cod_entidad,anio,mes)
+    data2, columnas2 = get_proyeccionRatios(cod_entidad, anio, mes)
     empresa = request.args.get("empresa")
-    if empresa != None:
-        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
-        en = cursor.fetchone()[1]
-        data1, columnas1 = get_ratiosdd(empresa, anio)
-        return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data),
-                               columnas=columnas,
-                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
     return render_template("/ProyeccionBalance.html", entidad=entidad, data=list(data), columnas=columnas,
-                           empresa=empresa, cod_entidad=cod_entidad,data2=data2,columnas2=columnas2)
+                           empresa=empresa, cod_entidad=cod_entidad, data2=data2, columnas2=columnas2)
 
 
 def get_proyeccionEERR(cod_entidad, anio, mes):
@@ -2029,21 +2621,30 @@ def get_proyeccionEERR(cod_entidad, anio, mes):
             print(process, factor[i - 2])
             asignado += process * factor[i - 2]
         anterior = p[0][i]
-    # select a la tabla user_eerr.
+
     user = session['username']
+    # select a la tabla user_eerr.
     cursor.execute("select id from usuario where usuario='%s'" % (user))
     id_user = cursor.fetchone()[0]
     # consultar por id de usuario
-    cursor.execute("select cuenta,valor from usuario_eerr where cod_entidad='%s' and usuario='%s'" % (cod_entidad,id_user))
+    cursor.execute(
+        "select cuenta,valor from usuario_eerr where cod_entidad='%s' and usuario='%s'" % (cod_entidad, id_user))
     resultado = cursor.fetchall()
+
     # append a las tabla de proyeccion con dos nuevos campos
     RESULTADO['Ingresos de Actividades ordinarias'].append(0)
-    RESULTADO['Ingresos de Actividades ordinarias'].append(dict(resultado).get('Ingresos de Actividades ordinarias', float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * asignado +
-        RESULTADO['Ingresos de Actividades ordinarias'][-2]))
-    RESULTADO['Costos de Ventas'].append(dict(resultado).get('Costos de Ventas', float(RESULTADO['Costos de Ventas'][-1]) /
-                                                             float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    RESULTADO['Ingresos de Actividades ordinarias'].append(dict(resultado).get('Ingresos de Actividades ordinarias',
+                                                                               float(RESULTADO[
+                                                                                         'Ingresos de Actividades ordinarias'][
+                                                                                         -2]) * asignado +
+                                                                               RESULTADO[
+                                                                                   'Ingresos de Actividades ordinarias'][
+                                                                                   -2]))
     RESULTADO['Costos de Ventas'].append(
-       float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Ventas'][-1]))
+        dict(resultado).get('Costos de Ventas', float(RESULTADO['Costos de Ventas'][-1]) /
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    RESULTADO['Costos de Ventas'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Ventas'][-1]))
     RESULTADO['Ganancias Bruta'].append(dict(resultado).get('Ganancias Bruta', RESULTADO['Ganancias Bruta'][-1] /
                                                             RESULTADO['Ingresos de Actividades ordinarias'][-3]))
     RESULTADO['Ganancias Bruta'].append(
@@ -2060,9 +2661,11 @@ def get_proyeccionEERR(cod_entidad, anio, mes):
     RESULTADO['Gastos de administración'].append(
         float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Gastos de administración'][-1]))
     RESULTADO['Otros gastos, por función'].append(dict(resultado).get('Otros gastos, por función',
-                                                                      float(RESULTADO['Otros gastos, por función'][-1]) /
-                                                                      float(RESULTADO['Ingresos de Actividades ordinarias'][
-                                                                          -1])))
+                                                                      float(
+                                                                          RESULTADO['Otros gastos, por función'][-1]) /
+                                                                      float(RESULTADO[
+                                                                                'Ingresos de Actividades ordinarias'][
+                                                                                -1])))
     RESULTADO['Otros gastos, por función'].append(0)
     RESULTADO['Otras ganancias (pérdidas)'].append(0)
     RESULTADO['Otras ganancias (pérdidas)'].append(0)
@@ -2076,24 +2679,27 @@ def get_proyeccionEERR(cod_entidad, anio, mes):
     RESULTADO['Ingresos financieros'].append(0)
     RESULTADO['Costos financieros'].append(dict(resultado).get('Costos financieros',
                                                                float(RESULTADO['Costos financieros'][-1]) /
-                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][-1])))
+                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -1])))
     RESULTADO['Costos financieros'].append(
         float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos financieros'][-1]))
     RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
     RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
     RESULTADO['Diferencias de cambio'].append(dict(resultado).get('Diferencias de cambio',
                                                                   float(RESULTADO['Diferencias de cambio'][-1]) /
-                                                                  float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+                                                                  float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                            -3])))
     RESULTADO['Diferencias de cambio'].append(
         float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Diferencias de cambio'][-1]))
     RESULTADO['Resultados por unidades de reajuste'].append(dict(resultado).get('Resultados por unidades de reajuste',
                                                                                 float(RESULTADO[
-                                                                                    'Resultados por unidades de reajuste'][
-                                                                                    -1]) / float(RESULTADO[
-                                                                                    'Ingresos de Actividades ordinarias'][
-                                                                                    -3])))
-    RESULTADO['Resultados por unidades de reajuste'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
-        RESULTADO['Resultados por unidades de reajuste'][-1]))
+                                                                                          'Resultados por unidades de reajuste'][
+                                                                                          -1]) / float(RESULTADO[
+                                                                                                           'Ingresos de Actividades ordinarias'][
+                                                                                                           -3])))
+    RESULTADO['Resultados por unidades de reajuste'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+            RESULTADO['Resultados por unidades de reajuste'][-1]))
     RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
     RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
     RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
@@ -2105,61 +2711,1043 @@ def get_proyeccionEERR(cod_entidad, anio, mes):
         RESULTADO['Diferencias de cambio'][-1] - RESULTADO['Resultados por unidades de reajuste'][-1])
     RESULTADO['Gasto por impuestos a las ganancias'].append(dict(resultado).get('Gasto por impuestos a las ganancias',
                                                                                 float(RESULTADO[
-                                                                                    'Gasto por impuestos a las ganancias'][
-                                                                                    -1]) / float(RESULTADO[
-                                                                                    'Ingresos de Actividades ordinarias'][
-                                                                                    -3])))
+                                                                                          'Gasto por impuestos a las ganancias'][
+                                                                                          -1]) / float(RESULTADO[
+                                                                                                           'Ingresos de Actividades ordinarias'][
+                                                                                                           -3])))
     RESULTADO['Gasto por impuestos a las ganancias'].append(
         RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] * 0.27)
     RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
         dict(resultado).get('Ganancia (pérdida) procedente de operaciones continuadas',
                             float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]) /
-                             float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
     RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
         RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] + float(
             RESULTADO['Gasto por impuestos a las ganancias'][-1]))
     RESULTADO['Ganancia (pérdida)'].append(dict(resultado).get('Ganancia (pérdida)',
                                                                float(RESULTADO['Ganancia (pérdida)'][-1]) /
-                                                                float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -3])))
     RESULTADO['Ganancia (pérdida)'].append(
         float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]))
     RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(
         dict(resultado).get('Ganancia (pérdida), atribuible a los propietarios de la controladora',
-                            float(RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'][-1]) /
-                             float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+                            float(
+                                RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'][-1]) /
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
     RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
     RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(
         dict(resultado).get('Ganancia (pérdida), atribuible a participaciones no controladoras',
                             float(RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'][-1]) /
-                             float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
     RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
     COLUMNAS.append("%")
     COLUMNAS.append("Proyección Un Año")
+
+    print(request.method)
+    if request.method == 'POST':
+        if request.form.get('Proyectar'):
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(RESULTADO['Costos de Ventas'][-2]))
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Ventas'][-3]))
+
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-1]))
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-2]))
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * (
+                float(RESULTADO['Gastos de administración'][-2])))
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * (
+                float(RESULTADO['Gastos de administración'][-3])))
+
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-2]) - float(RESULTADO['Gastos de administración'][-2]))
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-1]) - float(RESULTADO['Gastos de administración'][-1]))
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(RESULTADO['Costos financieros'][-2]))
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos financieros'][-3]))
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(
+                    RESULTADO['Diferencias de cambio'][-2]))
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+                    RESULTADO['Diferencias de cambio'][-3]))
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-2]))
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-3]))
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-2]) - float(
+                    RESULTADO['Costos financieros'][-2])
+                + float(RESULTADO['Diferencias de cambio'][-2]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-2]))
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1]) - float(
+                    RESULTADO['Costos financieros'][-1])
+                + float(RESULTADO['Diferencias de cambio'][-1]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-1]))
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-2] * 0.27)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] * 0.27)
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-2] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-2]))
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-3] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-3]))
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-2]))
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]))
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            COLUMNAS.append("Proyección Dos Años")
+            COLUMNAS.append("Proyección Tres Años")
+
+        elif request.form.get('ProyectarCinco'):
+            # proyectadouno = float(asignado * 0.2)
+            # proyectadodos = float(proyectadouno * 0.2)
+            # proyectadotres = float(proyectadodos * 0.2)
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * asignado +
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-4]) * float(RESULTADO['Costos de Ventas'][-2]))
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-3]) * float(RESULTADO['Costos de Ventas'][-3]))
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(RESULTADO['Costos de Ventas'][-4]))
+            RESULTADO['Costos de Ventas'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Ventas'][-5]))
+
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-1]))
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-2]))
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-3]))
+            RESULTADO['Ganancias Bruta'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-4]))
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-4]) * (
+                float(RESULTADO['Gastos de administración'][-2])))
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-3]) * (
+                float(RESULTADO['Gastos de administración'][-3])))
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * (
+                float(RESULTADO['Gastos de administración'][-4])))
+            RESULTADO['Gastos de administración'].append(float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * (
+                float(RESULTADO['Gastos de administración'][-5])))
+
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otros gastos, por función'].append(0)
+
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-4]) - float(RESULTADO['Gastos de administración'][-4]))
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-3]) - float(RESULTADO['Gastos de administración'][-3]))
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-2]) - float(RESULTADO['Gastos de administración'][-2]))
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                float(RESULTADO['Ganancias Bruta'][-1]) - float(RESULTADO['Gastos de administración'][-1]))
+
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-4]) * float(RESULTADO['Costos financieros'][-2]))
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-3]) * float(RESULTADO['Costos financieros'][-3]))
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(RESULTADO['Costos financieros'][-4]))
+            RESULTADO['Costos financieros'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos financieros'][-5]))
+
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-4]) * float(
+                    RESULTADO['Diferencias de cambio'][-2]))
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-3]) * float(
+                    RESULTADO['Diferencias de cambio'][-3]))
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(
+                    RESULTADO['Diferencias de cambio'][-4]))
+            RESULTADO['Diferencias de cambio'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+                    RESULTADO['Diferencias de cambio'][-5]))
+
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-4]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-2]))
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-3]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-3]))
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-2]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-4]))
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+                    RESULTADO['Resultados por unidades de reajuste'][-5]))
+
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4]) - float(
+                    RESULTADO['Costos financieros'][-4])
+                + float(RESULTADO['Diferencias de cambio'][-4]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-4]))
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-3]) - float(
+                    RESULTADO['Costos financieros'][-3])
+                + float(RESULTADO['Diferencias de cambio'][-3]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-3]))
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-2]) - float(
+                    RESULTADO['Costos financieros'][-2])
+                + float(RESULTADO['Diferencias de cambio'][-2]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-2]))
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                float(RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1]) - float(
+                    RESULTADO['Costos financieros'][-1])
+                + float(RESULTADO['Diferencias de cambio'][-1]) - float(
+                    RESULTADO['Resultados por unidades de reajuste'][-1]))
+
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] * 0.27)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-3] * 0.27)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-2] * 0.27)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] * 0.27)
+
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-4]))
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-3] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-3]))
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-2] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-2]))
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] + float(
+                    RESULTADO['Gasto por impuestos a las ganancias'][-1]))
+
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4]))
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-3]))
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-2]))
+            RESULTADO['Ganancia (pérdida)'].append(
+                float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]))
+
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+
+            COLUMNAS.append("Proyección Dos Años")
+            COLUMNAS.append("Proyección Tres Años")
+            COLUMNAS.append("Proyección Cuatro Años")
+            COLUMNAS.append("Proyección Cinco Años")
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_proyeccionEERR2(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos de Actividades ordinarias'] = "(float(a.get(540,1)))"
+    RATIOS[
+        'Costos de Ventas'] = "(float(a.get(727,1)))  if  a.get(727,0)  else 0"
+    RATIOS[
+        'Ganancias Bruta'] = "(float(a.get(805,1)))  if  a.get(805,0)  else 0"
+    RATIOS[
+        'Otros Ingresos'] = "(float(a.get(682,1)))  if  a.get(682,0)  else 0"
+    RATIOS[
+        'Costos de Distribucion'] = "(float(a.get(1324,1)))  if  a.get(1324,0)  else 0"
+    RATIOS[
+        'Gastos de administración'] = "(float(a.get(618,1)))  if  a.get(618,0)  else 0"
+    RATIOS[
+        'Otros gastos, por función'] = "(float(a.get(1325,1)))  if  a.get(1325,0)  else 0"
+    RATIOS[
+        'Otras ganancias (pérdidas)'] = "(float(a.get(815,1)))  if  a.get(815,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) de actividades operacionales'] = "(float(a.get(817,1)))  if  a.get(817,0)  else 0"
+    RATIOS[
+        'Ingresos financieros'] = "(float(a.get(558,1)))  if  a.get(558,0)  else 0"
+    RATIOS[
+        'Costos financieros'] = "(float(a.get(764,1)))  if  a.get(764,0)  else 0"
+    RATIOS[
+        'Participación en las ganancias (pérdidas) de asociadas y negocios'] = "(float(a.get(824,1)))  if  a.get(824,0)  else 0"
+    RATIOS[
+        'Diferencias de cambio'] = "(float(a.get(849,1)))  if  a.get(849,0)  else 0"
+    RATIOS[
+        'Resultados por unidades de reajuste'] = "(float(a.get(516,1)))  if  a.get(516,0)  else 0"
+    RATIOS[
+        'Ganancias (pérdidas) que surgen de diferencias entre importes en libros'] = "(float(a.get(1327,1)))  if  a.get(1327,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida), antes de impuestos'] = "(float(a.get(788,1)))  if  a.get(788,0)  else 0"
+    RATIOS[
+        'Gasto por impuestos a las ganancias'] = "(float(a.get(476,1)))  if  a.get(476,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida) procedente de operaciones continuadas'] = "(float(a.get(774,1)))  if  a.get(774,0)  else 0"
+    RATIOS[
+        'Ganancia (pérdida)'] = "(float(a.get(479,1)))  if  a.get(479,0)  else 0"
+    # RATIOS[
+    #     'Ganancia (pérdida), atribuible a los propietarios de la controladora'] = "(float(a.get(704,1)))  if  a.get(704,0)  else 0"
+    # RATIOS[
+    #     'Ganancia (pérdida), atribuible a participaciones no controladoras'] = "(float(a.get(868,1)))  if  a.get(868,0)  else 0"
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio >= '2015' and mes='12'"""
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_entidad ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_proyeccioneerr  where cod_entidad = '%s' and anio in ('%s') and mes in ('%s') order by anio"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["PROYECCION ESTADO RESULTADO"]
+    b = dict()
+    fecha = list(range(anios[0], anios[1] + 1))
+    fecha.sort()
+    for anio in fecha:
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.append(resumen[0][1])
+            a = dict()
+            for r in resumen:
+                a[r[4]] = r[9]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.append((eval(RATIOS[r])))
+                RESULTADO[r] = raux
+        b = a
+    p = list(RESULTADO.values())
+    per = int(anio) + 1
+    anterior = None
+    factor = [0.05, 0.15, 0.8]
+    asignado = 0
+    for i in range(1, len(p[0])):
+        if anterior:
+            # ACTUAL
+            process = (p[0][i] - anterior) / anterior
+            print(process, factor[i - 2])
+            asignado += process * factor[i - 2]
+        anterior = p[0][i]
+
+    user = session['username']
+    # select a la tabla user_eerr.
+    cursor.execute("select id from usuario where usuario='%s'" % (user))
+    id_user = cursor.fetchone()[0]
+    # consultar por id de usuario
+    cursor.execute(
+        "select cuenta,valor from usuario_eerr where cod_entidad='%s' and usuario='%s'" % (cod_entidad, id_user))
+    resultado = cursor.fetchall()
+    # append a las tabla de proyeccion con dos nuevos campos
+    RESULTADO['Ingresos de Actividades ordinarias'].append(0)
+    RESULTADO['Ingresos de Actividades ordinarias'].append(dict(resultado).get('Ingresos de Actividades ordinarias',
+                                                                               float(RESULTADO[
+                                                                                         'Ingresos de Actividades ordinarias'][
+                                                                                         -2]) * asignado +
+                                                                               RESULTADO[
+                                                                                   'Ingresos de Actividades ordinarias'][
+                                                                                   -2]))
+    RESULTADO['Costos de Ventas'].append(
+        dict(resultado).get('Costos de Ventas', float(RESULTADO['Costos de Ventas'][-1]) /
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    RESULTADO['Costos de Ventas'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Ventas'][-1]))
+    RESULTADO['Ganancias Bruta'].append(dict(resultado).get('Ganancias Bruta', RESULTADO['Ganancias Bruta'][-1] /
+                                                            RESULTADO['Ingresos de Actividades ordinarias'][-3]))
+    RESULTADO['Ganancias Bruta'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) - float(RESULTADO['Costos de Ventas'][-1]))
+
+    if dict(resultado).get('Otros Ingresos'):
+        RESULTADO['Otros Ingresos'].append(dict(resultado).get('Otros Ingresos', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) / float(RESULTADO['Otros Ingresos'][-1])))
+        RESULTADO['Costos de Distribucion'].append(float(dict(resultado).get('Otros Ingresos')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+    elif RESULTADO['Otros Ingresos'][-1]:
+        RESULTADO['Otros Ingresos'].append(dict(resultado).get('Otros Ingresos', RESULTADO['Otros Ingresos'][-1] /
+                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -3])))
+        RESULTADO['Otros Ingresos'].append(dict(resultado).get('Otros Ingresos', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Otros Ingresos'][-1])))
+    else:
+        RESULTADO['Otros Ingresos'].append(0)
+        RESULTADO['Otros Ingresos'].append(0)
+
+    if dict(resultado).get('Costos de Distribucion'):
+        RESULTADO['Costos de Distribucion'].append(dict(resultado).get('Costos de Distribucion', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) / float(RESULTADO['Costos de Distribucion'][-1])))
+        RESULTADO['Costos de Distribucion'].append(float(dict(resultado).get('Costos de Distribucion')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+    elif RESULTADO['Costos de Distribucion'][-2]:
+        RESULTADO['Costos de Distribucion'].append(dict(resultado).get('Costos de Distribucion', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Distribucion'][-1])))
+        RESULTADO['Costos de Distribucion'].append(dict(resultado).get('Costos de Distribucion', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos de Distribucion'][-2])))
+    else:
+        RESULTADO['Costos de Distribucion'].append(0)
+        RESULTADO['Costos de Distribucion'].append(0)
+
+    RESULTADO['Gastos de administración'].append(dict(resultado).get('Gastos de administración',
+                                                                     RESULTADO['Gastos de administración'][-1] /
+                                                                     RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -3]))
+    RESULTADO['Gastos de administración'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Gastos de administración'][-1]))
+
+    if dict(resultado).get('Otros gastos, por función'):
+        RESULTADO['Otros gastos, por función'].append(dict(resultado).get('Otros gastos, por función',
+                                                                      float(
+                                                                          RESULTADO['Otros gastos, por función'][-1]) /
+                                                                      float(RESULTADO[
+                                                                                'Ingresos de Actividades ordinarias'][
+                                                                                -1])))
+        RESULTADO['Otros gastos, por función'].append(float(dict(resultado).get('Otros gastos, por función')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+    elif RESULTADO['Otros gastos, por función'][-2]:
+        RESULTADO['Otros gastos, por función'].append(dict(resultado).get('Otros gastos, por función', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Otros gastos, por función'][-1])))
+        RESULTADO['Otros gastos, por función'].append(dict(resultado).get('Otros gastos, por función', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Otros gastos, por función'][-2])))
+    else:
+        RESULTADO['Otros gastos, por función'].append(0)
+        RESULTADO['Otros gastos, por función'].append(0)
+
+    if RESULTADO['Otras ganancias (pérdidas)'][-1]:
+        RESULTADO['Otras ganancias (pérdidas)'].append(dict(resultado).get('Otras ganancias (pérdidas)', float(
+            RESULTADO['Otras ganancias (pérdidas)'][-1]) / float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+        RESULTADO['Otras ganancias (pérdidas)'].append(dict(resultado).get('Otras ganancias (pérdidas)', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Otras ganancias (pérdidas)'][-1])))
+    else:
+        RESULTADO['Otras ganancias (pérdidas)'].append(0)
+        RESULTADO['Otras ganancias (pérdidas)'].append(0)
+
+    RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+        dict(resultado).get('Ganancias (pérdidas) de actividades operacionales',
+                            RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1] /
+                            RESULTADO['Ingresos de Actividades ordinarias'][-3]))
+    RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+        RESULTADO['Ganancias Bruta'][-1] - float(RESULTADO['Gastos de administración'][-1]))
+
+    if dict(resultado).get('Ingresos financieros'):
+        RESULTADO['Ingresos financieros'].append(dict(resultado).get('Ingresos financieros',
+                                                                      float(
+                                                                          RESULTADO['Ingresos financieros'][-1]) /
+                                                                      float(RESULTADO[
+                                                                                'Ingresos de Actividades ordinarias'][
+                                                                                -1])))
+        RESULTADO['Ingresos financieros'].append(float(dict(resultado).get('Ingresos financieros')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+    elif RESULTADO['Ingresos financieros'][-2]:
+        RESULTADO['Ingresos financieros'].append(dict(resultado).get('Ingresos financieros', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Ingresos financieros'][-1])))
+        RESULTADO['Ingresos financieros'].append(dict(resultado).get('Ingresos financieros', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Ingresos financieros'][-2])))
+    else:
+        RESULTADO['Ingresos financieros'].append(0)
+        RESULTADO['Ingresos financieros'].append(0)
+
+    RESULTADO['Costos financieros'].append(dict(resultado).get('Costos financieros',
+                                                               float(RESULTADO['Costos financieros'][-1]) /
+                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -1])))
+    RESULTADO['Costos financieros'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Costos financieros'][-1]))
+
+    if dict(resultado).get('Participación en las ganancias (pérdidas) de asociadas y negocios'):
+        RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(dict(resultado).get('Participación en las ganancias (pérdidas) de asociadas y negocios',
+                                                                      float(
+                                                                          RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'][-1]) /
+                                                                      float(RESULTADO[
+                                                                                'Ingresos de Actividades ordinarias'][
+                                                                                -1])))
+        RESULTADO['Ingresos financieros'].append(float(dict(resultado).get('Participación en las ganancias (pérdidas) de asociadas y negocios')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+    elif RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'][-2]:
+        RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(dict(resultado).get('Participación en las ganancias (pérdidas) de asociadas y negocios', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'][-1])))
+        RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(dict(resultado).get('Participación en las ganancias (pérdidas) de asociadas y negocios', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'][-2])))
+    else:
+        RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+        RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+
+    RESULTADO['Diferencias de cambio'].append(dict(resultado).get('Diferencias de cambio',
+                                                                  float(RESULTADO['Diferencias de cambio'][-1]) /
+                                                                  float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                            -3])))
+    RESULTADO['Diferencias de cambio'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Diferencias de cambio'][-1]))
+    RESULTADO['Resultados por unidades de reajuste'].append(dict(resultado).get('Resultados por unidades de reajuste',
+                                                                                float(RESULTADO[
+                                                                                          'Resultados por unidades de reajuste'][
+                                                                                          -1]) / float(RESULTADO[
+                                                                                                           'Ingresos de Actividades ordinarias'][
+                                                                                                           -3])))
+    RESULTADO['Resultados por unidades de reajuste'].append(
+        float(RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(
+            RESULTADO['Resultados por unidades de reajuste'][-1]))
+
+    if dict(resultado).get('Ganancias (pérdidas) que surgen de diferencias entre importes en libros'):
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(dict(resultado).get('Ganancias (pérdidas) que surgen de diferencias entre importes en libros',
+                                                                      float(
+                                                                          RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'][-1]) /
+                                                                      float(RESULTADO[
+                                                                                'Ingresos de Actividades ordinarias'][
+                                                                                -1])))
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(float(dict(resultado).get('Ganancias (pérdidas) que surgen de diferencias entre importes en libros')) * float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]))
+
+    elif RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'][-2]:
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(dict(resultado).get('Ganancias (pérdidas) que surgen de diferencias entre importes en libros', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'][-1])))
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(dict(resultado).get('Ganancias (pérdidas) que surgen de diferencias entre importes en libros', float(
+            RESULTADO['Ingresos de Actividades ordinarias'][-1]) * float(RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'][-2])))
+    else:
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+        RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+    RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+        dict(resultado).get('Ganancia (pérdida), antes de impuestos',
+                            float(RESULTADO['Ganancia (pérdida), antes de impuestos'][-1]) /
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+        RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-1] - RESULTADO['Costos financieros'][-1] +
+        RESULTADO['Diferencias de cambio'][-1] - RESULTADO['Resultados por unidades de reajuste'][-1])
+    RESULTADO['Gasto por impuestos a las ganancias'].append(dict(resultado).get('Gasto por impuestos a las ganancias',
+                                                                                float(RESULTADO[
+                                                                                          'Gasto por impuestos a las ganancias'][
+                                                                                          -1]) / float(RESULTADO[
+                                                                                                           'Ingresos de Actividades ordinarias'][
+                                                                                                           -3])))
+    RESULTADO['Gasto por impuestos a las ganancias'].append(
+        RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] * 0.27)
+    RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+        dict(resultado).get('Ganancia (pérdida) procedente de operaciones continuadas',
+                            float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]) /
+                            float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+        RESULTADO['Ganancia (pérdida), antes de impuestos'][-1] + float(
+            RESULTADO['Gasto por impuestos a las ganancias'][-1]))
+    RESULTADO['Ganancia (pérdida)'].append(dict(resultado).get('Ganancia (pérdida)',
+                                                               float(RESULTADO['Ganancia (pérdida)'][-1]) /
+                                                               float(RESULTADO['Ingresos de Actividades ordinarias'][
+                                                                         -3])))
+    RESULTADO['Ganancia (pérdida)'].append(
+        float(RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-1]))
+    # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(
+    #     dict(resultado).get('Ganancia (pérdida), atribuible a los propietarios de la controladora',
+    #                         float(
+    #                             RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'][-1]) /
+    #                         float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+    # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(
+    #     dict(resultado).get('Ganancia (pérdida), atribuible a participaciones no controladoras',
+    #                         float(RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'][-1]) /
+    #                         float(RESULTADO['Ingresos de Actividades ordinarias'][-3])))
+    # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+    COLUMNAS.append("%")
+    COLUMNAS.append("Proyección Un Año")
+    print(request.method)
+    if request.method == 'POST':
+        if request.form.get('Proyectar'):
+            primero = ((RESULTADO['Ingresos de Actividades ordinarias'][-4] /
+                        RESULTADO['Ingresos de Actividades ordinarias'][-5]) - 1)
+            segundo = ((RESULTADO['Ingresos de Actividades ordinarias'][-3] /
+                        RESULTADO['Ingresos de Actividades ordinarias'][-4]) - 1)
+            porcentaje = (primero + segundo) / 2
+            RESULTADO['Ingresos de Actividades ordinarias'].append(porcentaje)
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                RESULTADO['Ingresos de Actividades ordinarias'][-4] * (porcentaje + 1))
+
+            primero1 = ((RESULTADO['Costos de Ventas'][-4] /
+                         RESULTADO['Costos de Ventas'][-5]) - 1)
+            segundo1 = ((RESULTADO['Costos de Ventas'][-3] /
+                         RESULTADO['Costos de Ventas'][-4]) - 1)
+            porcentaje1 = (primero1 + segundo1) / 2
+            RESULTADO['Costos de Ventas'].append(porcentaje1)
+            RESULTADO['Costos de Ventas'].append(
+                RESULTADO['Costos de Ventas'][-4] * (porcentaje1 + 1))
+
+            primero2 = ((RESULTADO['Ganancias Bruta'][-4] /
+                         RESULTADO['Ganancias Bruta'][-5]) - 1)
+            segundo2 = ((RESULTADO['Ganancias Bruta'][-3] /
+                         RESULTADO['Ganancias Bruta'][-4]) - 1)
+            porcentaje2 = (primero2 + segundo2) / 2
+            RESULTADO['Ganancias Bruta'].append(porcentaje2)
+            RESULTADO['Ganancias Bruta'].append(
+                RESULTADO['Ganancias Bruta'][-4] * (porcentaje2 + 1))
+
+            # if dict(resultado).get('Otros Ingresos'):
+            #     prim = ((RESULTADO['Otros Ingresos'][-4] /
+            #              RESULTADO['Otros Ingresos'][-5]) - 1)
+            #     seg = ((RESULTADO['Otros Ingresos'][-3] /
+            #              RESULTADO['Otros Ingresos'][-4]) - 1)
+            #     porc = (prim + seg) / 2
+            #     RESULTADO['Otros Ingresos'].append(porc)
+            #     RESULTADO['Otros Ingresos'].append(
+            #         RESULTADO['Otros Ingresos'][-4] * (porc + 1))
+            #
+            # elif RESULTADO['Otros Ingresos'][-1]:
+            #     prim = ((RESULTADO['Otros Ingresos'][-4] /
+            #              RESULTADO['Otros Ingresos'][-5]) - 1)
+            #     seg = ((RESULTADO['Otros Ingresos'][-3] /
+            #             RESULTADO['Otros Ingresos'][-4]) - 1)
+            #     porc = (prim + seg) / 2
+            #     RESULTADO['Otros Ingresos'].append(porc)
+            #     RESULTADO['Otros Ingresos'].append(
+            #         RESULTADO['Otros Ingresos'][-4] * (porc + 1))
+            # else:
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+
+
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+
+            primero3 = ((RESULTADO['Gastos de administración'][-4] /
+                         RESULTADO['Gastos de administración'][-5]) - 1)
+            segundo3 = ((RESULTADO['Gastos de administración'][-3] /
+                         RESULTADO['Gastos de administración'][-4]) - 1)
+            porcentaje3 = (primero3 + segundo3) / 2
+            RESULTADO['Gastos de administración'].append(porcentaje3)
+            RESULTADO['Gastos de administración'].append(
+                RESULTADO['Gastos de administración'][-4] * (porcentaje3 + 1))
+
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otros gastos, por función'].append(0)
+
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+
+            primero4 = ((RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4] /
+                         RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-5]) - 1)
+            segundo4 = ((RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-3] /
+                         RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4]) - 1)
+            porcentaje4 = (primero4 + segundo4) / 2
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(porcentaje4)
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4] * (porcentaje4 + 1))
+
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+
+            primero5 = ((RESULTADO['Costos financieros'][-4] /
+                         RESULTADO['Costos financieros'][-5]) - 1)
+            segundo5 = ((RESULTADO['Costos financieros'][-3] /
+                         RESULTADO['Costos financieros'][-4]) - 1)
+            porcentaje5 = (primero5 + segundo5) / 2
+            RESULTADO['Costos financieros'].append(porcentaje5)
+            RESULTADO['Costos financieros'].append(
+                RESULTADO['Costos financieros'][-4] * (porcentaje5 + 1))
+
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+
+            primero6 = ((RESULTADO['Diferencias de cambio'][-4] /
+                         RESULTADO['Diferencias de cambio'][-5]) - 1)
+            segundo6 = ((RESULTADO['Diferencias de cambio'][-3] /
+                         RESULTADO['Diferencias de cambio'][-4]) - 1)
+            porcentaje6 = (primero6 + segundo6) / 2
+            RESULTADO['Diferencias de cambio'].append(porcentaje6)
+            RESULTADO['Diferencias de cambio'].append(
+                RESULTADO['Diferencias de cambio'][-4] * (porcentaje6 + 1))
+
+            primero7 = ((RESULTADO['Resultados por unidades de reajuste'][-4] /
+                         RESULTADO['Resultados por unidades de reajuste'][-5]) - 1)
+            segundo7 = ((RESULTADO['Resultados por unidades de reajuste'][-3] /
+                         RESULTADO['Resultados por unidades de reajuste'][-4]) - 1)
+            porcentaje7 = (primero7 + segundo7) / 2
+            RESULTADO['Resultados por unidades de reajuste'].append(porcentaje7)
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                RESULTADO['Resultados por unidades de reajuste'][-4] * (porcentaje7 + 1))
+
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+
+            primero8 = ((RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] /
+                         RESULTADO['Ganancia (pérdida), antes de impuestos'][-5]) - 1)
+            segundo8 = ((RESULTADO['Ganancia (pérdida), antes de impuestos'][-3] /
+                         RESULTADO['Ganancia (pérdida), antes de impuestos'][-4]) - 1)
+            porcentaje8 = (primero8 + segundo8) / 2
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(porcentaje8)
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] * (porcentaje8 + 1))
+
+            primero9 = ((RESULTADO['Gasto por impuestos a las ganancias'][-4] /
+                         RESULTADO['Gasto por impuestos a las ganancias'][-5]) - 1)
+            segundo9 = ((RESULTADO['Gasto por impuestos a las ganancias'][-3] /
+                         RESULTADO['Gasto por impuestos a las ganancias'][-4]) - 1)
+            porcentaje9 = (primero9 + segundo9) / 2
+            RESULTADO['Gasto por impuestos a las ganancias'].append(porcentaje9)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Gasto por impuestos a las ganancias'][-4] * (porcentaje9 + 1))
+
+            primero10 = ((RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4] /
+                          RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-5]) - 1)
+            segundo10 = ((RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-3] /
+                          RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4]) - 1)
+            porcentaje10 = (primero10 + segundo10) / 2
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(porcentaje10)
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4] * (porcentaje10 + 1))
+
+            primero11 = ((RESULTADO['Ganancia (pérdida)'][-4] /
+                          RESULTADO['Ganancia (pérdida)'][-5]) - 1)
+            segundo11 = ((RESULTADO['Ganancia (pérdida)'][-3] /
+                          RESULTADO['Ganancia (pérdida)'][-4]) - 1)
+            porcentaje11 = (primero11 + segundo11) / 2
+            RESULTADO['Ganancia (pérdida)'].append(porcentaje11)
+            RESULTADO['Ganancia (pérdida)'].append(
+                RESULTADO['Ganancia (pérdida)'][-4] * (porcentaje11 + 1))
+
+            # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            # 
+            # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            COLUMNAS.append("% PROYECTADO")
+            COLUMNAS.append("Proyección Tres Años")
+
+        if request.form.get('ProyectarCinco'):
+            primero = ((RESULTADO['Ingresos de Actividades ordinarias'][-5] /
+                        RESULTADO['Ingresos de Actividades ordinarias'][-6]) - 1)
+            segundo = ((RESULTADO['Ingresos de Actividades ordinarias'][-4] /
+                        RESULTADO['Ingresos de Actividades ordinarias'][-5]) - 1)
+            tercero = ((RESULTADO['Ingresos de Actividades ordinarias'][-3] /
+                        RESULTADO['Ingresos de Actividades ordinarias'][-4]) - 1)
+            porcentaje = (primero + segundo + tercero) / 3
+            RESULTADO['Ingresos de Actividades ordinarias'].append(porcentaje)
+            RESULTADO['Ingresos de Actividades ordinarias'].append(
+                RESULTADO['Ingresos de Actividades ordinarias'][-4] * (porcentaje + 1))
+
+            primero1 = ((RESULTADO['Costos de Ventas'][-5] /
+                         RESULTADO['Costos de Ventas'][-6]) - 1)
+            segundo1 = ((RESULTADO['Costos de Ventas'][-4] /
+                         RESULTADO['Costos de Ventas'][-5]) - 1)
+            tercero1 = ((RESULTADO['Costos de Ventas'][-3] /
+                         RESULTADO['Costos de Ventas'][-4]) - 1)
+            porcentaje1 = (primero1 + segundo1 + tercero1) / 3
+            RESULTADO['Costos de Ventas'].append(porcentaje1)
+            RESULTADO['Costos de Ventas'].append(
+                RESULTADO['Costos de Ventas'][-4] * (porcentaje1 + 1))
+
+            primero2 = ((RESULTADO['Ganancias Bruta'][-5] /
+                         RESULTADO['Ganancias Bruta'][-6]) - 1)
+            segundo2 = ((RESULTADO['Ganancias Bruta'][-4] /
+                         RESULTADO['Ganancias Bruta'][-5]) - 1)
+            tercero2 = ((RESULTADO['Ganancias Bruta'][-3] /
+                         RESULTADO['Ganancias Bruta'][-4]) - 1)
+            porcentaje2 = (primero2 + segundo2 + tercero2) / 3
+            RESULTADO['Ganancias Bruta'].append(porcentaje2)
+            RESULTADO['Ganancias Bruta'].append(
+                RESULTADO['Ganancias Bruta'][-4] * (porcentaje2 + 1))
+
+            RESULTADO['Otros Ingresos'].append(0)
+            RESULTADO['Otros Ingresos'].append(0)
+
+            RESULTADO['Costos de Distribucion'].append(0)
+            RESULTADO['Costos de Distribucion'].append(0)
+
+            primero3 = ((RESULTADO['Gastos de administración'][-5] /
+                         RESULTADO['Gastos de administración'][-6]) - 1)
+            segundo3 = ((RESULTADO['Gastos de administración'][-4] /
+                         RESULTADO['Gastos de administración'][-5]) - 1)
+            tercero3 = ((RESULTADO['Gastos de administración'][-3] /
+                         RESULTADO['Gastos de administración'][-4]) - 1)
+            porcentaje3 = (primero3 + segundo3 + tercero3) / 3
+            RESULTADO['Gastos de administración'].append(porcentaje3)
+            RESULTADO['Gastos de administración'].append(
+                RESULTADO['Gastos de administración'][-4] * (porcentaje3 + 1))
+
+            RESULTADO['Otros gastos, por función'].append(0)
+            RESULTADO['Otros gastos, por función'].append(0)
+
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+            RESULTADO['Otras ganancias (pérdidas)'].append(0)
+
+            primero4 = ((RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-5] /
+                         RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-6]) - 1)
+            segundo4 = ((RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4] /
+                         RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-5]) - 1)
+            tercero4 = ((RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-3] /
+                         RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4]) - 1)
+            porcentaje4 = (primero4 + segundo4 + tercero4) / 3
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(porcentaje4)
+            RESULTADO['Ganancias (pérdidas) de actividades operacionales'].append(
+                RESULTADO['Ganancias (pérdidas) de actividades operacionales'][-4] * (porcentaje4 + 1))
+
+            RESULTADO['Ingresos financieros'].append(0)
+            RESULTADO['Ingresos financieros'].append(0)
+            primero5 = ((RESULTADO['Costos financieros'][-5] /
+                         RESULTADO['Costos financieros'][-6]) - 1)
+            segundo5 = ((RESULTADO['Costos financieros'][-4] /
+                         RESULTADO['Costos financieros'][-5]) - 1)
+            tercero5 = ((RESULTADO['Costos financieros'][-3] /
+                         RESULTADO['Costos financieros'][-4]) - 1)
+            porcentaje5 = (primero5 + segundo5 + tercero5) / 3
+            RESULTADO['Costos financieros'].append(porcentaje5)
+            RESULTADO['Costos financieros'].append(
+                RESULTADO['Costos financieros'][-4] * (porcentaje5 + 1))
+
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+            RESULTADO['Participación en las ganancias (pérdidas) de asociadas y negocios'].append(0)
+
+            primero6 = ((RESULTADO['Diferencias de cambio'][-5] /
+                         RESULTADO['Diferencias de cambio'][-6]) - 1)
+            segundo6 = ((RESULTADO['Diferencias de cambio'][-4] /
+                         RESULTADO['Diferencias de cambio'][-5]) - 1)
+            tercero6 = ((RESULTADO['Diferencias de cambio'][-3] /
+                         RESULTADO['Diferencias de cambio'][-4]) - 1)
+            porcentaje6 = (primero6 + segundo6 + tercero6) / 3
+            RESULTADO['Diferencias de cambio'].append(porcentaje6)
+            RESULTADO['Diferencias de cambio'].append(
+                RESULTADO['Diferencias de cambio'][-4] * (porcentaje6 + 1))
+
+            primero7 = ((RESULTADO['Resultados por unidades de reajuste'][-5] /
+                         RESULTADO['Resultados por unidades de reajuste'][-6]) - 1)
+            segundo7 = ((RESULTADO['Resultados por unidades de reajuste'][-4] /
+                         RESULTADO['Resultados por unidades de reajuste'][-5]) - 1)
+            tercero7 = ((RESULTADO['Resultados por unidades de reajuste'][-3] /
+                         RESULTADO['Resultados por unidades de reajuste'][-4]) - 1)
+            porcentaje7 = (primero7 + segundo7 + tercero7) / 3
+            RESULTADO['Resultados por unidades de reajuste'].append(porcentaje7)
+            RESULTADO['Resultados por unidades de reajuste'].append(
+                RESULTADO['Resultados por unidades de reajuste'][-4] * (porcentaje7 + 1))
+
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+            RESULTADO['Ganancias (pérdidas) que surgen de diferencias entre importes en libros'].append(0)
+
+            primero8 = ((RESULTADO['Ganancia (pérdida), antes de impuestos'][-5] /
+                         RESULTADO['Ganancia (pérdida), antes de impuestos'][-6]) - 1)
+            segundo8 = ((RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] /
+                         RESULTADO['Ganancia (pérdida), antes de impuestos'][-5]) - 1)
+            tercero8 = ((RESULTADO['Ganancia (pérdida), antes de impuestos'][-3] /
+                         RESULTADO['Ganancia (pérdida), antes de impuestos'][-4]) - 1)
+            porcentaje8 = (primero8 + segundo8 + tercero8) / 3
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(porcentaje8)
+            RESULTADO['Ganancia (pérdida), antes de impuestos'].append(
+                RESULTADO['Ganancia (pérdida), antes de impuestos'][-4] * (porcentaje8 + 1))
+
+            primero9 = ((RESULTADO['Gasto por impuestos a las ganancias'][-5] /
+                         RESULTADO['Gasto por impuestos a las ganancias'][-6]) - 1)
+            segundo9 = ((RESULTADO['Gasto por impuestos a las ganancias'][-4] /
+                         RESULTADO['Gasto por impuestos a las ganancias'][-5]) - 1)
+            tercero9 = ((RESULTADO['Gasto por impuestos a las ganancias'][-3] /
+                         RESULTADO['Gasto por impuestos a las ganancias'][-4]) - 1)
+            porcentaje9 = (primero9 + segundo9 + tercero9) / 3
+            RESULTADO['Gasto por impuestos a las ganancias'].append(porcentaje9)
+            RESULTADO['Gasto por impuestos a las ganancias'].append(
+                RESULTADO['Gasto por impuestos a las ganancias'][-4] * (porcentaje9 + 1))
+
+            primero10 = ((RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4] /
+                          RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-5]) - 1)
+            segundo10 = ((RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-3] /
+                          RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4]) - 1)
+            porcentaje10 = (primero10 + segundo10) / 2
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(porcentaje10)
+            RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'].append(
+                RESULTADO['Ganancia (pérdida) procedente de operaciones continuadas'][-4] * (porcentaje10 + 1))
+
+            primero11 = ((RESULTADO['Ganancia (pérdida)'][-4] /
+                          RESULTADO['Ganancia (pérdida)'][-5]) - 1)
+            segundo11 = ((RESULTADO['Ganancia (pérdida)'][-3] /
+                          RESULTADO['Ganancia (pérdida)'][-4]) - 1)
+            porcentaje11 = (primero11 + segundo11) / 3
+            RESULTADO['Ganancia (pérdida)'].append(porcentaje11)
+            RESULTADO['Ganancia (pérdida)'].append(
+                RESULTADO['Ganancia (pérdida)'][-4] * (porcentaje11 + 1))
+
+            # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            # RESULTADO['Ganancia (pérdida), atribuible a los propietarios de la controladora'].append(0)
+            # 
+            # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            # RESULTADO['Ganancia (pérdida), atribuible a participaciones no controladoras'].append(0)
+            COLUMNAS.append("% PROYECTADO")
+            COLUMNAS.append("Proyección Cinco Años")
     return RESULTADO.values(), COLUMNAS
 
 
 # actualizacion de valores en tabla de proyeccion estados de resultados.
 @app.route('/porcentaje_estado_resultado/<cuenta>/<valor>/<entidad>', methods=['GET', 'POST'])
-def actualizacion(cuenta, valor,entidad):
+def actualizacion(cuenta, valor, entidad):
     cursor = cnx.cursor()
-    valor = float(valor.replace(",","") )
+    valor = float(valor.replace(",", ""))
     user = session['username']
     cursor.execute("select id from usuario where usuario='%s'" % (user))
     id_user = cursor.fetchone()[0]
-    cursor.execute("""select usuario,cuenta from usuario_eerr where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (id_user, cuenta,entidad))
+    cursor.execute(
+        """select usuario,cuenta from usuario_eerr where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (
+            id_user, cuenta, entidad))
     test = cursor.fetchall()
     if test:
         cursor.execute(
-            """update usuario_eerr set valor ='%s' where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (valor, id_user, cuenta,entidad))
+            """update usuario_eerr set valor ='%s' where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (
+                valor, id_user, cuenta, entidad))
         cnx.commit()
     else:
         cursor.execute(
-            """insert into usuario_eerr (usuario, cuenta, valor,cod_entidad) values ('%s','%s','%s','%s')""" % (id_user, cuenta, valor,entidad))
+            """insert into usuario_eerr (usuario, cuenta, valor,cod_entidad) values ('%s','%s','%s','%s')""" % (
+                id_user, cuenta, valor, entidad))
         cnx.commit()
     return ("cuenta actualizada")
 
 
+@app.route('/porcentaje_ratios/<cuenta>/<valor>/<entidad>', methods=['GET', 'POST'])
+def actualizacionratios(cuenta, valor, entidad):
+    cursor = cnx.cursor()
+    valor = float(valor.replace(",", ""))
+    user = session['username']
+    cursor.execute("select id from usuario where usuario='%s'" % (user))
+    id_user = cursor.fetchone()[0]
+    cursor.execute(
+        """select usuario,cuenta from usuario_eerr where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (
+            id_user, cuenta, entidad))
+    test = cursor.fetchall()
+    if test:
+        cursor.execute(
+            """update usuario_eerr set valor ='%s' where usuario='%s' and cuenta='%s' and cod_entidad='%s'""" % (
+                valor, id_user, cuenta, entidad))
+        cnx.commit()
+    else:
+        cursor.execute(
+            """insert into usuario_eerr (usuario, cuenta, valor,cod_entidad) values ('%s','%s','%s','%s')""" % (
+                id_user, cuenta, valor, entidad))
+        cnx.commit()
+    return ("cuenta actualizada")
+
 # Proyeccion estados de resultados
+@app.route('/ProyeccionEERR2/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
+def ProyeccionEERR2(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    parametros = {'cod_entidad': cod_entidad}
+    cursor.execute("""select cod_entidad,desc_entidad from entidad where cod_entidad =%(cod_entidad)s""", parametros)
+    rest = cursor.fetchone()
+    if not rest:
+        abort(404)
+    entidad = rest[1]
+    if request.args.get("mes"):
+        mes = request.args.get("mes")
+        empresa = request.args.get("empresa")
+        data, columnas = get_proyeccionEERR2(cod_entidad, anio, mes)
+        empresa = request.args.get("empresa")
+        p = list(data)
+        per = int(anio) + 1
+        anterior = None
+        factor = [0.05, 0.15, 0.8]
+        asignado = 0
+        for i in range(1, len(p[0])):
+            if anterior:
+                # ACTUAL
+                process = (p[0][i] - anterior) / anterior
+                print(process, factor[i - 2])
+                asignado += process * factor[i - 2]
+                if p[0][0] == 'Ingresos de Actividades ordinarias':
+                    ingresos = p[0][0]
+            anterior = p[0][i]
+        return render_template("/ProyeccionEERR2.html", entidad=entidad, data=list(data),
+                               columnas=columnas,
+                               data1=list(data), columnas1=columnas, cod_entidad=cod_entidad, empresa=empresa,
+                               asignado=asignado, per=per)
+    data, columnas = get_proyeccionEERR2(cod_entidad, anio, mes)
+    empresa = request.args.get("empresa")
+    return render_template("/ProyeccionEERR2.html", entidad=entidad, data=list(data), columnas=columnas,
+                           empresa=empresa, cod_entidad=cod_entidad)
+
+
+# valorización
 @app.route('/ProyeccionEERR1/<cod_entidad>/<anio>/<mes>', methods=["GET", "POST"])
 def ProyeccionEERR1(cod_entidad, anio, mes):
     cursor = cnx.cursor()
@@ -2194,30 +3782,8 @@ def ProyeccionEERR1(cod_entidad, anio, mes):
                                asignado=asignado, per=per)
     data, columnas = get_proyeccionEERR(cod_entidad, anio, mes)
     empresa = request.args.get("empresa")
-    p = list(data)
-    per = int(anio) + 1
-    anterior = None
-    factor = [0.05, 0.15, 0.8]
-    asignado = 0
-    for i in range(1, len(p[0])):
-        if anterior:
-            if p[0][0] == 'Ingresos de Actividades ordinarias':
-                ingresos = p[0][6]
-            # ACTUAL
-            if p[0][i]:
-                process = (p[0][i] - anterior) / anterior
-                print(process, factor[i - 2])
-                asignado += process * factor[i - 2]
-        anterior = p[0][i]
-    if empresa != None:
-        cursor.execute("""select * from entidad where cod_entidad='%s'""" % (empresa))
-        en = cursor.fetchone()[1]
-        data1, columnas1 = get_ratiosdd(empresa, anio)
-        return render_template("/ProyeccionEERR1.html", entidad=entidad, data=list(data),
-                               columnas=columnas,
-                               data1=list(data1), columnas1=columnas1, en=en, empresa=empresa)
     return render_template("/ProyeccionEERR1.html", entidad=entidad, data=list(data), columnas=columnas,
-                           empresa=empresa, cod_entidad=cod_entidad, asignado=asignado, per=per)
+                           empresa=empresa, cod_entidad=cod_entidad)
 
 
 # pagina estados de resutlados
@@ -2501,7 +4067,6 @@ def get_proyeccionRatios(cod_entidad, anio, mes):
     anios = {}
     cursor.execute(
         SQL_ANIOS % (anio, anio, cod_entidad))
-
     anios = cursor.fetchone()
     anio = anios[0]
     # ENTIDAD
@@ -2535,18 +4100,34 @@ def get_proyeccionRatios(cod_entidad, anio, mes):
                 raux.append((eval(RATIOS[r])))
                 RESULTADO[r] = raux
         b = a
-    RESULTADO['Dias de Caja'].append(
-        RESULTADO['Dias de Caja'][-1] * 0.8 + RESULTADO['Dias de Caja'][
-            -2] * 0.2)
-    RESULTADO['Dias De Cobro'].append(
-        RESULTADO['Dias De Cobro'][-1] * 0.8 + RESULTADO['Dias De Cobro'][
-            -2] * 0.2)
-    RESULTADO['Dias de Inventarios'].append(
-        RESULTADO['Dias de Inventarios'][-1] * 0.8 + RESULTADO['Dias de Inventarios'][
-            -2] * 0.2)
+    user = session['username']
+    # select a la tabla user_eerr.
+    cursor.execute("select id from usuario where usuario='%s'" % (user))
+    id_user = cursor.fetchone()[0]
+    # consultar por id de usuario
+    cursor.execute(
+        "select cuenta,valor from usuario_eerr where cod_entidad='%s' and usuario='%s'" % (cod_entidad, id_user))
+    resultado = cursor.fetchall()
+    RESULTADO['Dias de Caja'].append(dict(resultado).get('Dias de Caja', float(RESULTADO['Dias de Caja'][-1]) * 0.8 + RESULTADO['Dias de Caja'][-2] * 0.2))
+    # RESULTADO['Dias de Caja'].append(
+    #     RESULTADO['Dias de Caja'][-1] * 0.8 + RESULTADO['Dias de Caja'][
+    #         -2] * 0.2)
+    RESULTADO['Dias De Cobro'].append(dict(resultado).get('Dias De Cobro', float(RESULTADO['Dias De Cobro'][-1]) * 0.8 +
+                                                         RESULTADO['Dias De Cobro'][-2] * 0.2))
+    # RESULTADO['Dias De Cobro'].append(
+    #     RESULTADO['Dias De Cobro'][-1] * 0.8 + RESULTADO['Dias De Cobro'][
+    #         -2] * 0.2)
+    RESULTADO['Dias de Inventarios'].append(dict(resultado).get('Dias de Inventarios', float(RESULTADO['Dias de Inventarios'][-1]) * 0.8 +
+                                                          RESULTADO['Dias de Inventarios'][-2] * 0.2))
+    # RESULTADO['Dias de Inventarios'].append(
+    #     RESULTADO['Dias de Inventarios'][-1] * 0.8 + RESULTADO['Dias de Inventarios'][
+    #         -2] * 0.2)
     RESULTADO['Dias De Pago'].append(
-        RESULTADO['Dias De Pago'][-1] * 0.8 + RESULTADO['Dias De Pago'][
-            -2] * 0.2)
+        dict(resultado).get('Dias De Pago', float(RESULTADO['Dias De Pago'][-1]) * 0.8 +
+                            RESULTADO['Dias De Pago'][-2] * 0.2))
+    # RESULTADO['Dias De Pago'].append(
+    #     RESULTADO['Dias De Pago'][-1] * 0.8 + RESULTADO['Dias De Pago'][
+    #         -2] * 0.2)
     COLUMNAS.append("Proyección")
     return RESULTADO.values(), COLUMNAS
 
@@ -2731,6 +4312,7 @@ def get_ratiosdd(cod_entidad, anio, mes):
                 raux.insert(1, eval(RATIOS[r]))
                 RESULTADO[r] = raux
             b = a
+
     return RESULTADO.values(), COLUMNAS
 
 
@@ -3111,6 +4693,127 @@ def get_portadaeresultado(cod_entidad, anio, mes):
     #         SQL_RESUMEN % (cod_entidad, anio))
     #     resumen = cursor.fetchall()
     #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_portadaratiosddindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    aniom = int(anio) - 1
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+
+    RATIOS[
+        'Dias De Cobro'] = "float(a.get(775) or 0) / (float(a.get(540) or 0) * float(1.19))* 365 if (a.get(775,0) and a.get(540,0)) else 0"
+    RATIOS[
+        'Dias De Pago'] = "((float(a.get(783) or 0)) / (float(a.get(727) or 0) + float(a.get(695) or 0) - float(b.get(695) or 0)))*365 if (a.get(783,0) and a.get(727,0)and b.get(695,0)) else 0"
+    RATIOS[
+        'Dias De Existencia'] = "((float(a.get(695) or 0) / float(a.get(727) or 0)) * float(365)) if (a.get(695,0) and a.get(727,0)) else 0"
+    RATIOS[
+        'ROI'] = "(float(a.get(479) or 0) / float(a.get(808) or 0)*100) if (a.get(479,0) and a.get(808,0)) else 0"
+    RATIOS[
+        'ROE'] = "(float(a.get(479) or 0) / float(a.get(681) or 0)*100) if (a.get(479,0) and a.get(681,0)) else 0"
+
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_portadaratiosindustria  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_industria ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_portadaratiosindustria  where cod_industria = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["RATIOS"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][2])
+            a = dict()
+            for r in resumen:
+                a[r[5]] = r[10]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
+    # while existan_datos:
+    #     COLUMNAS.append(anio)
+    #     a = dict()
+    #     for r in resumen:
+    #         a[r[1]] = r[3]
+    #     for r in RATIOS:
+    #         RESULTADO[r] = RESULTADO.get(r, [r]) + [eval(RATIOS[r])]
+    #     anio = int(anio) - 1
+    #     cursor.execute(
+    #         SQL_RESUMEN % (cod_entidad, anio))
+    #     resumen = cursor.fetchall()
+    #     existan_datos = resumen != []
+    return RESULTADO.values(), COLUMNAS
+
+
+def get_portadaeresultadoindustria(cod_entidad, anio, mes):
+    cursor = cnx.cursor()
+    # DEFINICION DE RATIOS
+    RATIOS = {}
+    RATIOS[
+        'Ingresos'] = "(float(a.get(540,1)),(float(a.get(540,1))/float(a.get(540,1)))*100  if  (a.get(540,0))  else 0)"
+    RATIOS[
+        'Margen Bruto'] = "(float(a.get(805,1)),(float(a.get(805,1))/float(a.get(540,1)))*100  if  (a.get(805,0))  else 0)"
+    RATIOS[
+        'GAV + Distribucion'] = "(float(a.get(1324,1)),(float(a.get(1324,1))+float(a.get(618,1)))/3  if  (a.get(1324,0))  else 0)"
+    RATIOS[
+        'Financieros'] = "(float(a.get(764,1)),(float(a.get(764,1))/float(a.get(540,1)))*100  if  (a.get(764,0))  else 0)"
+    RATIOS[
+        'Resultado'] = "(float(a.get(479,1)),(float(a.get(479,1))/float(a.get(540,1)))*100  if  (a.get(479,0))  else 0)"
+
+    # AÑOS
+    SQL_ANIOS = """select coalesce(min(anio),%s), coalesce(max(anio),%s)  from resumen_portadaeerrindustrias  where cod_industria = '%s' and anio <= %s """
+    anios = {}
+    cursor.execute(
+        SQL_ANIOS % (anio, anio, cod_entidad, anio))
+
+    anios = cursor.fetchone()
+    anio = anios[0]
+    # ENTIDAD
+    cursor.execute(
+        """SELECT DISTINCT
+    * from entidad where cod_industria ='%s'""" % (
+            cod_entidad))
+    entidad = cursor.fetchone()[1]
+    # FIN ENTIDAD
+    SQL_RESUMEN = """select distinct *  from resumen_portadaeerrindustrias  where cod_industria = '%s' and anio in ('%s') and mes in ('%s')"""
+    RESULTADO = {}
+    cursor.execute(
+        SQL_RESUMEN % (cod_entidad, anio, mes))
+    resumen = cursor.fetchall()
+    existan_datos = resumen != []
+    COLUMNAS = ["ESTADO RESULTADO"]
+    b = dict()
+    for anio in range(anios[0], anios[1] + 1):
+        cursor.execute(
+            SQL_RESUMEN % (cod_entidad, anio, mes))
+        resumen = cursor.fetchall()
+        if resumen:
+            COLUMNAS.insert(1, resumen[0][2])
+            a = dict()
+            for r in resumen:
+                a[r[5]] = r[10]
+            for r in RATIOS:
+                raux = RESULTADO.get(r, [r])
+                raux.insert(1, eval(RATIOS[r]))
+                RESULTADO[r] = raux
     return RESULTADO.values(), COLUMNAS
 
 

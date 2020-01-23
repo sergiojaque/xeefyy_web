@@ -163,7 +163,7 @@ $(document).ready(function () {
         $.ajax({
             type: "post",
             data: $("#frm_formulario").serialize() + "&banco=[" + valores_banco + "]" + "&clasificacion=[" + valores_clasificacion + "]",
-            url: '/formularioCMF',
+            url: '/formulariocmf',
             success: function (respuesta) {
                 console.log(respuesta)
                 if (respuesta == 'error rut no valido') {

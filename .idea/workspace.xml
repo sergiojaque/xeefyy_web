@@ -2,117 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="43cf4b27-51c3-48a2-ae21-247b2a41fd38" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/form.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/animate.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/aos.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/bootstrap-datepicker.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/bootstrap.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/bootstrap.min.css.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/bootstrap/bootstrap-grid.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/bootstrap/bootstrap-reboot.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/jquery-ui.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/jquery.fancybox.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/magnific-popup.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/owl.carousel.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/owl.theme.default.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css_index/css/style.css.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/backup.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/Flaticon.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/Flaticon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/Flaticon.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/Flaticon.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/Flaticon.woff2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/_flaticon.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/flaticon.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/font/flaticon.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/flaticon/license/license.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/Read Me.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/demo-files/demo.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/demo-files/demo.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/demo.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/fonts/icomoon.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/fonts/icomoon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/fonts/icomoon.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/fonts/icomoon.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/selection.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/font_index/fonts/icomoon/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/glint_about_1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/glint_hero_1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/glint_hero_2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/glint_hero_3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/person_1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/person_2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/person_3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/person_4.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_10.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_11.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_12.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_13.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_4.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_5.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_6.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_7.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_8.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images_index/images/sq_img_9.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js/captcha.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js/proyeccion.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js/select.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js/select1.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/aos.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/bootstrap-datepicker.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/bootstrap.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/isotope.pkgd.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery-3.3.1.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery-migrate-3.0.1.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery-ui.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.countdown.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.easing.1.3.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.fancybox.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.magnific-popup.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.stellar.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/jquery.sticky.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/main.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/owl.carousel.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/popper.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/slick.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/js_index/js/stickyfill.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/backup.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/Flaticon.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/Flaticon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/Flaticon.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/Flaticon.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/Flaticon.woff2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/_flaticon.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/flaticon.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/font/flaticon.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/flaticon/license/license.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/Read Me.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/demo-files/demo.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/demo-files/demo.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/demo.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/fonts/icomoon.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/fonts/icomoon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/fonts/icomoon.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/fonts/icomoon.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/selection.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/scss_index/fonts/icomoon/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/formularioEmpresa.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/formularioEmpresaCMF.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/register.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/static/js/proyeccionbalance.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/ProyeccionEERR2.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/ResumenIndustria.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/analisisrelativoindustria.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/balanceindustria.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/eresultadoindustria.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/industria.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/industriaratiosdd.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/dc34c455-d86b-4856-b4bf-556662621d13.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/dc34c455-d86b-4856-b4bf-556662621d13.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/js/jquery.tablesorter.widgets.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/js/select1.js" beforeDir="false" afterPath="$PROJECT_DIR$/static/js/select1.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/ProyeccionBalance.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/ProyeccionBalance.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/ProyeccionEERR1.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/ProyeccionEERR1.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/ResumenEmpresa.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/ResumenEmpresa.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/signup.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/signup.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/docEmpresa.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/docEmpresa.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/formularioEmpresaCMF.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/formularioEmpresaCMF.html" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -167,8 +74,8 @@
       <list>
         <option value="CSS File" />
         <option value="Python Script" />
-        <option value="HTML File" />
         <option value="JavaScript File" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -183,7 +90,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="database.console.LAST_STATE" value="false" />
     <property name="jsx.switch.disabled" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/static/scss_index" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../dbEscalada" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
@@ -319,18 +226,13 @@
       <workItem from="1575125663450" duration="1174000" />
       <workItem from="1575290139525" duration="100883000" />
       <workItem from="1575982266763" duration="122617000" />
-      <workItem from="1577104958571" duration="63542000" />
+      <workItem from="1577104958571" duration="69667000" />
+      <workItem from="1577968776375" duration="38722000" />
+      <workItem from="1578419054195" duration="95541000" />
+      <workItem from="1579102588917" duration="32447000" />
+      <workItem from="1579285998321" duration="73125000" />
     </task>
     <servers />
-  </component>
-  <component name="TodoView">
-    <todo-panel id="selected-file">
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-    <todo-panel id="all">
-      <are-packages-shown value="true" />
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
@@ -350,6 +252,13 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app.py</url>
+          <line>1203</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -360,6 +269,6 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/XEEFFY_WEB$XEEFFY_WEB.coverage" NAME="XEEFFY_WEB Coverage Results" MODIFIED="1577799593524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/XEEFFY_WEB$XEEFFY_WEB.coverage" NAME="XEEFFY_WEB Coverage Results" MODIFIED="1579782642203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

@@ -153,79 +153,35 @@
                 </li>
                 <li class="nav-item">
                     <a class=" nav-link"
-                       href="/balance/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
+                       href="/balanceindustria/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
                             class="far fa-copy"></i>Balance
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class=" nav-link"
-                       href="/eresultado/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
+                       href="/eresultadoindustria/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
                             class="fas fa-crop-alt"></i>Estado de Resultado
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a class=" nav-link"
-                       href="/ratioLiquidez/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
+                       href="/industriaratiosdd/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
                             class="fas fa-layer-group"></i>Ratios
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a class=" nav-link"
-                       href="/analisisRelativo/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}"><i class="fas fa-crop"></i>Analisis
+                       href="/analisisrelativoindustria/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}"><i class="fas fa-crop"></i>Analisis
                         Relativo
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a class=" nav-link"
-                       href="/usoyfuentes/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="fas fa-crop"></i>Uso y Fuentes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class=" nav-link"
-                       href="/ventasxtrimestre/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}"><i class="fas fa-archive"></i>Ventas
-                        por Trimestre
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class=" nav-link"
-                       href="/nof/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="fas fa-arrow-right"></i>NOF-FM
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class=" nav-link"
-                       href="/EstructuraFinanciamiento/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="fas fa-ruler-combined"></i>Estructura de Financiamiento
-                    </a>
-                </li>
 
             </ul>
             <!-- Divider -->
-            <hr class="my-3">
-            <h6 class="navbar-heading text-muted" align="center"><i class="far fa-clipboard"></i>ENTIDAD</h6>
-            <ul class="navbar-nav mb-md-3">
-                 <li class="nav-item">
-                    <a class=" nav-link active fas fa-word"
-                       href="/ProyeccionEERR2/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="fab fa-react"></i>Proyecciones
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class=" nav-link active fas fa-word"
-                       href="/ProyeccionEERR1/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="fab fa-react"></i>Valorización
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active fas fa-word"
-                       href="/comparatuempresa/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"><i
-                            class="far fa-chart-bar"></i>Compara Tu Empresa
-                    </a>
-                </li>
+
                 <hr class="my-3">
                 <h6 class="navbar-heading text-muted" align="center"><i class="far fa-clipboard"></i>Empresa</h6>
                 <ul class="navbar-nav mb-md-3">
@@ -235,7 +191,6 @@
                         </a>
                     </li>
                     <!-- Heading -->
-
 
                 </ul>
                 <hr class="my-3">
@@ -261,7 +216,8 @@
         <div class="container-fluid">
             <!-- Brand -->
             <a class="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block" href="/index"><i
-                    class="far fa-address-card"></i> {{ entidad }}</a><span class="avatar avatar-sm rounded-circle">
+                    class="far fa-address-card"></i> Industria : {{ retail[1] }}</a><span class="avatar avatar-sm rounded-circle">
+
                 <img alt="Image placeholder" border="0" src="/static/images/chile.png">
               </span>
             <br>
@@ -282,6 +238,7 @@
                     <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true"
                        aria-expanded="false">
                         <div class="media align-items-center">
+
                 <span class="avatar avatar-sm rounded-circle">
                   <img alt="Image placeholder" src="/static/images/xeeffy_logo_index.png">
                 </span>
@@ -309,161 +266,15 @@
     <!-- Header -->
     <div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
         <div class="container-fluid">
-            {% if CLP == 'CLP' %}
-                <h2>MONEDA UTILIZADA: {{ CLP }} <span class="avatar avatar-sm rounded-circle">
-                <img alt="Image placeholder" src="/static/images/chile.png">
-              </span></h2>
-            {% else %}
-                <h4>MONEDA UTILIZADA: {{ USD }} <span class="avatar avatar-sm rounded-circle">
-                <img alt="Image placeholder" src="/static/images/eeuu.png">
-              </span></h4>
-            {% endif %}
+
             <div class="header-body">
                 <!-- Card stats -->
-                <div class="row">
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="card card-stats mb-4 mb-xl-0">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">CORRIENTE</h5>
-                                        {% if corriente == 'n/a' %}
-                                            <span class="h2 font-weight-bold mb-0">{{ corriente }}</span>
-                                        {% else %}
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(corriente[0][9]) }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted text-sm">
-                                    <span class="text-success mr-2"><i class="fa fa-arrow-up"></i></span>
-                                    {% if corriente == 'n/a' %}
-                                        <span class="h2 font-weight-bold mb-0">{{ corriente }}</span>
-                                    {% else %}
-                                        <span class="text-nowrap">{{ corriente[0][1] }}</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="card card-stats mb-4 mb-xl-0">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">NO CORRIENTE</h5>
-                                        {% if Nocorriente == 'n/a' %}
-                                            <span class="h2 font-weight-bold mb-0">{{ Nocorriente }}</span>
-                                        {% else %}
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(Nocorriente[0][9]) }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
-                                            <i class="fas fa-chart-pie"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted text-sm">
-                                    <span class="text-danger mr-2"><i class="fas fa-arrow-down"></i></span>
-                                    {% if Nocorriente == 'n/a' %}
-                                        <span class="h2 font-weight-bold mb-0">{{ Nocorriente }}</span>
-                                    {% else %}
-                                        <span class="text-nowrap">{{ Nocorriente[0][1] }}</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="card card-stats mb-4 mb-xl-0">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">TOTAL</h5>
-                                        {% if Total == 'n/a' %}
-                                            <span class="h2 font-weight-bold mb-0">{{ Total }}</span>
-                                        {% else %}
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(Total[0][9]) }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-yellow text-white rounded-circle shadow">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted text-sm">
-                                    <span class="text-warning mr-2"><i class="fas fa-arrow-down"></i></span>
-                                    {% if Total == 'n/a' %}
-                                        <span class="h2 font-weight-bold mb-0">{{ Total }}</span>
-                                    {% else %}
-                                        <span class="text-nowrap">{{ Total[0][1] }}</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
             </div>
         </div>
     </div>
     <div class="container-fluid mt--7">
-        <div class="row">
-            <div class="col-xl-8 mb-5 mb-xl-0">
-                <div class="card bg-gradient-default shadow">
-                    <div class="card-header bg-transparent">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h6 class="text-uppercase text-light ls-1 mb-1">Resumen</h6>
-                                <h2 class="text-white mb-0"><i class="fal fa-atom-alt"></i>NOF-FM</h2>
-                            </div>
-                            <div class="col text-right">
-                                <a href="/nof/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"
-                                   class="btn btn-outline-info">VER NOF-FM</a>
-                            </div>
-                            <div class="col">
 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Chart -->
-                        <div class="chart">
-                            <!-- Chart wrapper -->
-                            <canvas id="speedChart" width="300" height="100"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-4">
-                <div class="card shadow">
-                    <div class="card-header bg-transparent">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h6 class="text-uppercase text-muted ls-1 mb-1">Resumen</h6>
-                                <h2 class="mb-0"><i class="fab fa-whmcs"></i>Ventas Trimestre</h2>
-                            </div>
-                            <div class="col text-right">
-                                <a href="/ventasxtrimestre/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}"
-                                   class="btn btn-outline-info"><i class="fab fa-whmcs"></i>VentasxTrimestre</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Chart -->
-                        <div class="chart">
-                            <canvas id="densityChart" width="300" height="100"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="row mt-5">
             <div class="col-xl-8 mb-5 mb-xl-0">
                 <div class="card shadow">
@@ -474,7 +285,7 @@
                             </div>
 
                             <div class="col text-right">
-                                <a href="/balance/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"
+                                <a href="/balanceindustria/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}"
                                    class="btn btn-outline-info">Ver Balance</a>
                             </div>
                         </div>
@@ -487,7 +298,7 @@
                                 <th scope="col">ACTIVOS</th>
                                 {% for a in corriente %}
                                     <th scope="row">
-                                        {{ a[1] }}
+                                        {{ a[2] }}
                                     </th>
                                 {% endfor %}
 
@@ -503,11 +314,11 @@
                                 {% for h in corriente %}
                                     {% if corriente == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h[10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h[10]) }}</span>
                                         </td>
                                     {% endif %}
 
@@ -523,11 +334,11 @@
                                 {% for h1 in Nocorriente %}
                                     {% if Nocorriente == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h1[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h1[10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -543,11 +354,11 @@
                                 {% for h2 in Total %}
                                     {% if Total == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h2[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h2[0][10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h2[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h2[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -566,7 +377,7 @@
                                 <th scope="col">PASIVOS</th>
                                 {% for a in corriente %}
                                     <th scope="row">
-                                        {{ a[1] }}
+                                        {{ a[2] }}
                                     </th>
                                 {% endfor %}
 
@@ -582,11 +393,11 @@
                                 {% for h in corrientepasivo %}
                                     {% if corrientepasivo == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h[10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -601,11 +412,11 @@
                                 {% for h1 in nocorrientepasivo %}
                                     {% if nocorrientepasivo == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h1[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h1[10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -620,11 +431,11 @@
                                 {% for h1 in patrimonio %}
                                     {% if patrimonio == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h1[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h1[10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h1[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -639,11 +450,11 @@
                                 {% for h2 in totalpasivo %}
                                     {% if totalpasivo == 'n/a' %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ h2[9] }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ h2[0][10] }}</span>
                                         </td>
                                     {% else %}
                                         <td>
-                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h2[9]) }}</span>
+                                            <span class="h2 font-weight-bold mb-0">{{ "{:,.0f}".format(h2[10]) }}</span>
                                         </td>
                                     {% endif %}
                                 {% endfor %}
@@ -652,111 +463,6 @@
 
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-4">
-                <div class="card shadow">
-                    <div class="card-header border-0">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h3 class="mb-0"><i class="fab fa-squarespace"></i>Estructura de Financiamiento</h3>
-                            </div>
-                            <div class="col text-right">
-                                <a href="/EstructuraFinanciamiento/{{ entidadC[0][0] }}/2018/12"
-                                   class="btn btn-outline-info">ver EF</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <!-- Projects table -->
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Estructura</th>
-                                <th scope="col">Dinero</th>
-                                <th scope="col">%</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <th scope="row">
-                                    Deuda
-                                </th>
-                                {% if Deudor == "n/a" %}
-                                    <td>
-                                        {{ Deudor }}
-                                    </td>
-                                {% else %}
-                                    <td>
-                                        {{ "{:,.0f}".format(Deudor) }}
-                                    </td>
-                                {% endif %}
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if porcientodeuda == "n/a" %}
-                                            <span class="mr-2">{{ porcientodeuda }}%</span>
-                                        {% else %}
-                                            <span class="mr-2">{{ "{:,.0f}".format(porcientodeuda) }}%</span>
-                                        {% endif %}
-                                        <div>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-gradient-success" role="progressbar"
-                                                     aria-valuenow="73" aria-valuemin="0" aria-valuemax="100"
-                                                     style="width: 60%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    Capital
-                                </th>
-                                {% if Capital == "n/a" %}
-                                    <td>
-                                        {{ Capital }}
-                                    </td>
-                                {% else %}
-                                    <td>
-                                        {{ "{:,.0f}".format(Capital) }}
-                                    </td>
-                                {% endif %}
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if porcientoCapital == "n/a" %}
-                                            <span class="mr-2">{{ porcientoCapital }}%</span>
-                                        {% else %}
-                                            <span class="mr-2">{{ "{:,.0f}".format(porcientoCapital) }}%</span>
-                                        {% endif %}
-                                        <div>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-gradient-danger" role="progressbar"
-                                                     aria-valuenow="27" aria-valuemin="0" aria-valuemax="100"
-                                                     style="width: 70%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    Total
-                                </th>
-                                {% if testructura == "n/a" %}
-                                    <td>
-                                        {{ testructura }}
-                                    </td>
-                                {% else %}
-                                    <td>
-                                        {{ "{:,.0f}".format(testructura) }}
-                                    </td>
-                                {% endif %}
-                            </tr>
-
-                            </tbody>
-                        </table>
-
                     </div>
                 </div>
             </div>
@@ -798,7 +504,7 @@
         </table>
         <br>
         <td><a class="btn btn-outline-primary"
-               href="/ratioLiquidez/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}">
+               href="/industriaratiosdd/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}">
             <i
                     class="fa fa-industry"></i>Ratios</a></td>
         <br>
@@ -834,11 +540,11 @@
         </table>
         <br>
         <td><a class="btn btn-outline-info"
-               href="/eresultado/{{ entidadC[0][0] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}">
+               href="/eresultadoindustria/{{ entidadC[0][7] }}/{{ entidadC[0][3] }}/{{ entidadC[0][4] }}">
             <i
                     class="fas fa-archive"></i>Estado de Resultado</a></td>
         <a class="btn btn-outline-danger"
-           href="/analisisRelativo/{{ entidadC[0][0] }}/2018">
+           href="/analisisrelativoindustria/{{ entidadC[0][7] }}/2018/12">
             <i
                     class="fas fa-archive"></i>Analisis Relativo</a>
         <br>
@@ -891,59 +597,6 @@
 <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
 
 <script>
-    window.onload = function () {
-
-        var chart = new CanvasJS.Chart("chartContainer", {
-                animationEnabled: true,
-                title: {
-                    text: "ESTADO DE RESULTADO"
-                },
-                axisX: {
-                    valueFormatString: "DDD"
-                },
-                axisY: {
-                    prefix: "$"
-                },
-                toolTip: {
-                    shared: true
-                },
-                legend: {
-                    cursor: "pointer",
-                    itemclick: toggleDataSeries
-                },
-                data: [{% for a in data5 %}{
-
-                        type: "stackedBar",
-                        name: "Meals",
-                        showInLegend: "true",
-                        xValueFormatString: "DD, MMM",
-                        yValueFormatString: "$#,##0",
-                        dataPoints: [
-                            {% for i in a %}
-                                {% if loop.index > 1 %}
-                                    {x: {{columnas5[loop.index-1]}}, y: {{i}}},
-                                {% endif %}
-                            {% endfor %}
-
-                        ]
-                        },
-                    {% endfor %}
-            }
-        );
-        chart.render();
-
-        function toggleDataSeries(e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
-            chart.render();
-        }
-
-    }
-</script>
-<script>
     window.TrackJS &&
     TrackJS.install({
         token: "ee6fab19c5a04ac1a32a645abde4613a",
@@ -961,114 +614,6 @@
 });
 
 </script>
-
-<script>
-    $(document).ready(function () {
-        $('#tabla_familia').DataTable();
-    });
-</script>
-<script language=javascript>
-    function ventanaSecundaria(URL) {
-        window.open(URL, "ventana1", "width=120,height=300,scrollbars=NO")
-    }
-
-
-</script>
-
-<script>
-    var speedCanvas = document.getElementById("speedChart");
-
-    Chart.defaults.global.defaultFontFamily = "Lato";
-    Chart.defaults.global.defaultFontSize = 18;
-
-    var dataFirst = {
-        label: "NOF",
-        data: {{datonof | tojson}},
-        lineTension: 0,
-        fill: false,
-        borderColor: 'red'
-    };
-
-    var dataSecond = {
-        label: "FM",
-        data:{{dato2nof | tojson}},
-        lineTension: 0,
-        fill: false,
-        borderColor: 'blue'
-    };
-
-    var speedData = {
-        labels: {{columna|tojson}},
-        {#datasets: [dataFirst]#}
-        datasets: [dataFirst, dataSecond]
-    };
-
-    var chartOptions = {
-        legend: {
-            display: true,
-            position: 'top',
-            labels: {
-                boxWidth: 80,
-                fontColor: 'black'
-            }
-        }
-    };
-
-    var lineChart = new Chart(speedCanvas, {
-        type: 'line',
-        data: speedData,
-        options: chartOptions
-    });
-
-</script>
-<script>var densityCanvas = document.getElementById("densityChart");
-
-Chart.defaults.global.defaultFontFamily = "Lato";
-Chart.defaults.global.defaultFontSize = 18;
-
-var densityData = {
-    label: "periodo",
-    data: {{datonvxt1 | tojson}},
-    backgroundColor: 'rgba(0, 99, 132, 0.6)',
-    borderWidth: 0,
-    yAxisID: "y-axis-density"
-};
-
-{#var gravityData = {#}
-{#  label: "FM",#}
-{#    data:{{da | tojson}} ,#}
-{#  backgroundColor: 'rgba(99, 132, 0, 0.6)',#}
-{#  borderWidth: 0,#}
-{#  yAxisID: "y-axis-gravity"#}
-
-
-var planetData = {
-    labels: {{columna1|tojson}},
-    datasets: [densityData]
-};
-
-var chartOptions = {
-    scales: {
-        xAxes: [{
-            barPercentage: 1,
-            categoryPercentage: 0.6
-        }],
-        yAxes: [{
-            id: "y-axis-density"
-        }, {
-            id: "y-axis-gravity"
-        }]
-    }
-};
-
-var barChart = new Chart(densityCanvas, {
-    type: 'bar',
-    data: planetData,
-    options: chartOptions
-});
-
-</script>
-
 <link href="/static/images/xeeffy_logo_index.png" rel="icon" type="image/png">
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
